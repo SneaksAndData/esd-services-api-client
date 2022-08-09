@@ -30,7 +30,7 @@ jobs:
           pypath=$(pwd)
           export PYTHONPATH="$pypath:$PYTHONPATH"
 
-          find ./esd-services-api-client -type f -name "*.py" | xargs poetry run pylint
+          find ./esd_services_api_client -type f -name "*.py" | xargs poetry run pylint
       - name: Unit test
         run: |
           set -e
