@@ -1,0 +1,19 @@
+name: Release a new version
+
+on: workflow_dispatch
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [ validate_commit ]
+    if: ${{ github.ref == 'refs/heads/main' && (needs.validate_commit.result == 'success' || needs.validate_commit.result == 'skipped') && always() }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: git fetch --prune --unshallow
+      - name: Create Release
+        uses: SneaksAndData/github-actions/semver_release@v0.0.4
+        with:
+          major_v: 0
+          minor_v: 0

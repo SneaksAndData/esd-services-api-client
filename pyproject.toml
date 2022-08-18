@@ -1,16 +1,23 @@
 [tool.poetry]
-name = "python-project"
+name = "esd-services-api-client"
 version = "0.0.0"
-description = "My ESD Python Project"
+description = "Python clients for ESD services"
 authors = ["ECCO Sneaks & Data <esdsupport@ecco.com>"]
 readme = "README.md"
+license = 'Proprietary'
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
 
+proteus = {version = "0.6.20"}
+
 [tool.poetry.group.dev.dependencies]
 pytest = "~6.2"
 pylint = "~2.12"
+
+[[tool.poetry.source]]
+name = "azops"
+url = "https://pkgs.dev.azure.com/eccoSneaksAndData/_packaging/eccoSneaksAndData/pypi/simple/"
 
 [build-system]
 requires = ["poetry-core"]
