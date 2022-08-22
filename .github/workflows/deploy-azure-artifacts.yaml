@@ -1,6 +1,10 @@
 name: Release to Azure Artifacts
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  issue_comment:
+    types:
+      - created
 jobs:
   release_to_azure_artifacts:
     name: Release distribution to Azure Artifacts
