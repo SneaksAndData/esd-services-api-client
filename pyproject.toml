@@ -11,6 +11,7 @@ license = 'Proprietary'
 python = ">=3.8,<3.11"
 
 proteus = { version = "0.6.20" }
+dataclasses-json = "~0.5.7"
 pycryptodome = { version = "~3.15", optional = true }
 azure-identity = { version = "~1.7", optional = true }
 pyjwt = { version = "~2.4.0", optional = true }
