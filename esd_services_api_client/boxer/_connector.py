@@ -5,10 +5,9 @@ import os
 from typing import Iterator
 
 import jwt
-from proteus.connectors.boxer._auth import BoxerAuth
-from proteus.connectors.boxer._helpers import (_iterate_user_claims_response,
-                                               _iterate_boxer_claims_response)
-from proteus.connectors.boxer._models import BoxerClaim, UserClaim
+from esd_services_api_client.boxer._auth import BoxerAuth
+from esd_services_api_client.boxer._helpers import _iterate_user_claims_response, _iterate_boxer_claims_response
+from esd_services_api_client.boxer._models import BoxerClaim, UserClaim
 from proteus.utils import session_with_retries
 
 

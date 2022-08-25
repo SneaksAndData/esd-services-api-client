@@ -7,7 +7,7 @@ from typing import Optional, List, Dict, Iterable
 
 from requests.auth import HTTPBasicAuth
 
-from proteus.connectors.arcane._models import StreamInfo, StreamState, StreamConfiguration
+from esd_services_api_client.arcane._models import StreamInfo, StreamState, StreamConfiguration
 from proteus.utils import session_with_retries, doze
 
 

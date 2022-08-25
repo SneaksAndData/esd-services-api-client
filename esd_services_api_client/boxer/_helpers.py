@@ -2,7 +2,7 @@
 """
 from requests import Response
 
-from proteus.connectors.boxer._models import UserClaim, BoxerClaim
+from esd_services_api_client.boxer._models import UserClaim, BoxerClaim
 
 
 def _iterate_user_claims_response(user_claim_response: Response):
@@ -16,6 +16,7 @@ def _iterate_user_claims_response(user_claim_response: Response):
             yield UserClaim.from_dict(api_response_item)
     else:
         raise ValueError('Expected response body of type application/json')
+
 
 def _iterate_boxer_claims_response(boxer_claim_response: Response):
     """ Creates an iterator to iterate user claims from Json Response

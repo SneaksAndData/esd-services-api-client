@@ -1,4 +1,4 @@
 """init file"""
 
-from proteus.connectors.crystal._connector import CrystalConnector
-from proteus.connectors.crystal._models import AlgorithmRunResult, RequestLifeCycleStage, RequestResult
+from esd_services_api_client.crystal._connector import CrystalConnector
+from esd_services_api_client.crystal._models import AlgorithmRunResult, RequestLifeCycleStage, RequestResult

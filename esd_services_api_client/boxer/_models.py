@@ -36,6 +36,7 @@ class BoxerClaim:
             issuer=json_data['issuer']
         )
 
+
 @dataclass
 class UserClaim:
     """
@@ -66,6 +67,7 @@ class UserClaim:
             user_claim_id=json_data['userClaimId'],
             claim=BoxerClaim.from_dict(json_data['claim'])
         )
+
 
 @dataclass
 class GroupClaim:
