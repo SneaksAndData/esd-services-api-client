@@ -5,9 +5,9 @@ import json
 from http.client import HTTPException
 from typing import Optional
 
+from proteus.utils import doze, session_with_retries
 from esd_services_api_client.beast._auth import BeastAuth
 from esd_services_api_client.beast._models import JobRequest, BeastJobParams
-from proteus.utils import doze, session_with_retries
 
 
 class BeastConnector:
