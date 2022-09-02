@@ -1,4 +1,4 @@
-# ESD services Api clients
+# ESD services Api client
 
 This repository contains connectors to internal services:
 - Arcane
