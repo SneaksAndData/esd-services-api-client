@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from proteus.connectors.beast import JobSocket
+from esd_services_api_client.beast import JobSocket
 
 
 def _assert_socket_is_equal(socket_1: JobSocket, socket_2: JobSocket):

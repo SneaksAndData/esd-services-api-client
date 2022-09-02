@@ -3,7 +3,7 @@ from typing import Type
 import pandas
 from proteus.storage.models.format import DictJsonSerializationFormat, SerializationFormat, \
     DataFrameParquetSerializationFormat, DataFrameJsonSerializationFormat
-from proteus.connectors.crystal import CrystalConnector
+from esd_services_api_client.crystal import CrystalConnector
 from proteus.utils import CrystalEntrypointArguments
 
 
@@ -39,7 +39,7 @@ def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data:
     Test that the function `read_input` in the `CrystalConnector` object deserializes and returns the correct data.
     """
     mocker.patch(
-        'proteus.connectors.crystal._connector.session_with_retries',
+        'esd_services_api_client.crystal._connector.session_with_retries',
         return_value=MockHttpConnection(MockHttpResponse(serializer().serialize(data)))
     )
 
