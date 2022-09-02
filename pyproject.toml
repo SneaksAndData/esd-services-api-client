@@ -3,17 +3,25 @@ name = "esd-services-api-client"
 version = "0.0.0"
 description = "Python clients for ESD services"
 authors = ["ECCO Sneaks & Data <esdsupport@ecco.com>"]
+maintainers = ['GZU <gzu@ecco.com>', 'JRB <ext-jrb@ecco.com>', 'VISA <visa@ecco.com>']
 readme = "README.md"
 license = 'Proprietary'
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
-
-proteus = {version = "0.6.20"}
+python = ">=3.9,<3.11"
+proteus = { version = "~0.6.26" }
+dataclasses-json = "~0.5.7"
+pycryptodome = { version = "~3.15", optional = true }
+azure-identity = { version = "~1.7", optional = true }
+pyjwt = { version = "~2.4.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "~6.2"
 pylint = "~2.12"
+pytest-mock = "~3.6.1"
+pytest-cov = "~2.12"
+requests = "~2.27"
+cryptography = "~36.0"
 
 [[tool.poetry.source]]
 name = "azops"
@@ -22,3 +30,13 @@ url = "https://pkgs.dev.azure.com/eccoSneaksAndData/_packaging/eccoSneaksAndData
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.extras]
+azure = [
+    'azure-identity'
+]
+
+boxer = [
+    'pycryptodome',
+    'pyjwt'
+]
