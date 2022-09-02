@@ -3,7 +3,7 @@ from typing import Type
 import pandas
 from proteus.storage.models.format import DictJsonSerializationFormat, SerializationFormat, \
     DataFrameParquetSerializationFormat, DataFrameJsonSerializationFormat
-from proteus.connectors.crystal import CrystalConnector
+from esd_services_api_client.crystal import CrystalConnector
 from proteus.utils import CrystalEntrypointArguments
 
 
