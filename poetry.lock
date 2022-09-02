@@ -512,7 +512,7 @@ reference = "azops"
 
 [[package]]
 name = "proteus"
-version = "0.6.26"
+version = "1.0.0"
 description = "Logging, data connectors, monitoring, secret handling and general lifehacks to make data people lives easier."
 category = "main"
 optional = false
@@ -529,7 +529,6 @@ requests = ">=2.26,<3.0"
 
 [package.extras]
 azure = ["adlfs (>=2022,<2023)", "azure-identity (>=1.7,<1.8)", "azure-keyvault-secrets (>=4.3,<5.0)", "azure-mgmt-storage (>=19.1.0,<19.2.0)", "azure-servicebus (>=7.3,<7.4)", "azure-storage-blob (>12.7.0,<=12.10.0)"]
-boxer = ["pycryptodome (>=3.15,<3.16)", "pyjwt (>=2.4.0,<2.5.0)"]
 databases = ["SQLAlchemy (>=1.4,<1.5)", "pyodbc (>=4.0,<4.1)"]
 datadog = ["datadog (>=0.44.0,<0.45.0)", "datadog-api-client (>=1.12.0,<1.13.0)", "kubernetes (==24.2.0)"]
 
@@ -896,7 +895,7 @@ boxer = ["pycryptodome", "pyjwt"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "74f727affe7093eb4e5149acc4f944efd84c08868f58a12927762ee5fce94c4e"
+content-hash = "148bb6f8e82c64404c23487aae4cfab1b8429ed7cb4b29e532e465cb918ca1a3"
 
 [metadata.files]
 astroid = [
@@ -1230,8 +1229,8 @@ portalocker = [
     {file = "portalocker-2.5.1.tar.gz", hash = "sha256:ae8e9cc2660da04bf41fa1a0eef7e300bb5e4a5869adfb1a6d8551632b559b2b"},
 ]
 proteus = [
-    {file = "proteus-0.6.26-py3-none-any.whl", hash = "sha256:47452334540d639fceb9556b299453723ce45f0faa0d69a8e3e0810d0cf3d508"},
-    {file = "proteus-0.6.26.tar.gz", hash = "sha256:09e53042997c9a334c8fc2e0f0d7ddcaa40f1b4b91575d5cd8af7ede530f3ec5"},
+    {file = "proteus-1.0.0-py3-none-any.whl", hash = "sha256:848a2243c5de3eed1ec1aa9129518fa6231af0c2c865e46010b933bd0155caf2"},
+    {file = "proteus-1.0.0.tar.gz", hash = "sha256:aa08785634b3d2aeefa4376886161e1c2f38c3f151238063be9edda7a5876e91"},
 ]
 py = [
     {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},
