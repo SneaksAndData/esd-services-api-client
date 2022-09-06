@@ -15,7 +15,7 @@ class BeastConnector:
       Beast API connector
     """
 
-    __SUPPORTED_BEAST_RELEASE__ = "1.2.*"
+    __SUPPORTED_BEAST_RELEASE__ = "2.*.*"
 
     def __init__(self, *, base_url, code_root="/ecco/dist", lifecycle_check_interval: int = 60,
                  failure_type: Optional[Exception] = None):
@@ -35,25 +35,10 @@ class BeastConnector:
         self.http.auth = BeastAuth()
         self._failure_type = failure_type or Exception
 
-    @staticmethod
-    def redact_sensitive(json_str: str) -> str:
-        """
-          Redacts sensitive info when preparing a request to be printed
-
-        :param json_str: Serialized JobRequest to print
-        :return:
-        """
-        request_json = json.loads(json_str)
-
-        for arg_key, _ in request_json['extraArgs'].items():
-            if 'password' in arg_key or 'secret' in arg_key:
-                request_json['extraArgs'][arg_key] = '***'
-        return json.dumps(request_json)
-
     def _submit(self, request: JobRequest) -> (str, str):
-        request_json = request.to_json()
+        request_json = request.to_dict()
 
-        print(f"Submitting request: {self.redact_sensitive(json.dumps(request_json))}")
+        print(f"Submitting request: {json.dumps(request_json)}")
 
         submission_result = self.http.post(f"{self.base_url}/job/submit", json=request_json)
         submission_json = submission_result.json()
@@ -126,7 +111,10 @@ class BeastConnector:
                 flexible_driver=job_params.flexible_driver,
                 max_runtime_hours=job_params.max_runtime_hours,
                 runtime_tags=job_params.runtime_tags,
-                execution_group=job_params.execution_group
+                execution_group=job_params.execution_group,
+                debug_mode=job_params.debug_mode,
+                expected_parallelism=job_params.expected_parallelism,
+                submission_mode=job_params.submission_mode
             )
 
             (request_id, request_lifecycle) = self._submit(submit_request)
