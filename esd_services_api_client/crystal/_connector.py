@@ -7,9 +7,9 @@ from typing import Dict, Optional, Type, TypeVar
 
 from requests.auth import HTTPBasicAuth
 
-from proteus.utils import session_with_retries, CrystalEntrypointArguments
+from proteus.utils import session_with_retries
 from proteus.storage.models.format import SerializationFormat
-from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult
+from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments
 
 T = TypeVar('T')  # pylint: disable=C0103
 
