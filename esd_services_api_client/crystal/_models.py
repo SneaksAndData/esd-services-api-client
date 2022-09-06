@@ -75,7 +75,11 @@ class AlgorithmConfigurationEntry(DataClassJsonMixin):
     """
     name: str
     value: str
-    value_type: Optional[AlgorithmConfigurationValueType] = None
+    value_type: Optional[AlgorithmConfigurationValueType] = field(
+        metadata=config(
+            encoder=lambda v: v.value if v else None,
+            decoder=AlgorithmConfigurationValueType
+        ), default=None)
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
