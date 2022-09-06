@@ -9,7 +9,8 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v2
-      - run: git fetch --prune --unshallow
+        with:
+          fetch-depth: 0
       - name: Create Release
         uses: SneaksAndData/github-actions/semver_release@v0.0.4
         with:
