@@ -29,7 +29,11 @@ class RequestResult(DataClassJsonMixin):
     The Crystal result when retrieving an existing run.
     """
     run_id: str = field(metadata=config(field_name='requestId'))
-    status: RequestLifeCycleStage
+    status: RequestLifeCycleStage = field(
+        metadata=config(
+            encoder=lambda v: v.value if v else None,
+            decoder=RequestLifeCycleStage
+        ), default=None)
     result_uri: Optional[str] = None
     run_error_message: Optional[str] = None
 
