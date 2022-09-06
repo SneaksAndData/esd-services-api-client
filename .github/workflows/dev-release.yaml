@@ -14,9 +14,10 @@ jobs:
           python-version: '3.9.x'
           architecture: 'x64'
       - uses: actions/checkout@v2
-      - run: git fetch --prune --unshallow
+        with:
+          fetch-depth: 0
       - name: Install Poetry and dependencies
-        uses: SneaksAndData/github-actions/install_poetry@v0.0.6
+        uses: SneaksAndData/github-actions/install_poetry@v0.0.7
         with:
           pypi_repo_url: ${{ secrets.AZOPS_PYPI_REPO_URL }}
           pypi_token_username: ${{ secrets.AZOPS_PAT_USER }}
