@@ -99,6 +99,9 @@ class SubmissionMode(Enum):
 
 
 def enum_ser(value: Enum) -> str:
+    """
+     Custom enum serializer.
+    """
     return value.value
 
 
