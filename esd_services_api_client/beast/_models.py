@@ -98,13 +98,6 @@ class SubmissionMode(Enum):
     K8S = "K8S"
 
 
-def enum_ser(value: Enum) -> str:
-    """
-     Custom enum serializer.
-    """
-    return value.value
-
-
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class JobRequest(DataClassJsonMixin):
@@ -123,7 +116,7 @@ class JobRequest(DataClassJsonMixin):
     cost_optimized: Optional[bool]
     job_size: Optional[JobSize] = field(
         metadata=config(
-            encoder=enum_ser,
+            encoder=lambda v: v.value,
             decoder=JobSize
         ))
     execution_group: Optional[str]
@@ -134,7 +127,7 @@ class JobRequest(DataClassJsonMixin):
     expected_parallelism: Optional[int]
     submission_mode: Optional[SubmissionMode] = field(
         metadata=config(
-            encoder=enum_ser,
+            encoder=lambda v: v.value,
             decoder=SubmissionMode
         ))
 
