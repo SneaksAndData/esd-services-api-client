@@ -24,7 +24,7 @@ class RequestLifeCycleStage(Enum):
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class RequestResult:
+class RequestResult(DataClassJsonMixin):
     """
     The Crystal result when retrieving an existing run.
     """
