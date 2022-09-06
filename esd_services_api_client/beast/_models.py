@@ -116,7 +116,7 @@ class JobRequest(DataClassJsonMixin):
     cost_optimized: Optional[bool]
     job_size: Optional[JobSize] = field(
         metadata=config(
-            encoder=lambda v: v.value,
+            encoder=lambda v: v.value if v else None,
             decoder=JobSize
         ))
     execution_group: Optional[str]
@@ -127,7 +127,7 @@ class JobRequest(DataClassJsonMixin):
     expected_parallelism: Optional[int]
     submission_mode: Optional[SubmissionMode] = field(
         metadata=config(
-            encoder=lambda v: v.value,
+            encoder=lambda v: v.value if v else None,
             decoder=SubmissionMode
         ))
 
