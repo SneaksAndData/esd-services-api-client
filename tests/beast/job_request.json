@@ -1,0 +1,34 @@
+{
+    "rootPath": "/ecco/dist",
+    "projectName": "shrek",
+    "version": "v2.2.11-7-g7dac8fa",
+    "runnable": "shrek/kits/generalized/extract_data.py",
+    "inputs": [
+        {
+            "alias": "source",
+            "dataPath": "abfss://prdtheobaldsa@prdtheobaldsa.dfs.core.windows.net/8ZRTSL_C06/",
+            "dataFormat": "csv"
+        }
+    ],
+    "outputs": [
+        {
+            "alias": "target",
+            "dataPath": "abfss://bronze@eccodatalaketest.dfs.core.windows.net/SAP/Theobald/8ZRTSL_C06",
+            "dataFormat": "delta"
+        }
+    ],
+    "overwrite": false,
+    "extraArgs": {
+        "include-source-filename": "",
+        "entity-name": "'8ZRTSL_C06'",
+        "reader-options": "'{\"delimiter\": \";\", \"header\": true, \"escape\": \"\\u0000\"}'",
+        "clean-column-names": "",
+        "fail-on-empty-src": "",
+        "write-mode": "overwrite"
+    },
+    "clientTag": "theobaldCopy__8ZRTSL_C06__20220822",
+    "costOptimized": true,
+    "jobSize": "SMALL",
+    "flexibleDriver": true,
+    "submissionMode": "K8S"
+}

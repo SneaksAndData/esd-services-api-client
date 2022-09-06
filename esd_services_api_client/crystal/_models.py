@@ -56,3 +56,14 @@ class AlgorithmRunResult:
     cause: Optional[str] = None
     message: Optional[str] = None
     sas_uri: Optional[str] = None
+
+
+@dataclass
+class CrystalEntrypointArguments:
+    """
+    Holds Crystal arguments parsed from command line.
+    """
+    sas_uri: str
+    request_id: str
+    results_receiver: str
+    sign_result: Optional[bool] = None

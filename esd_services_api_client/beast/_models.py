@@ -3,13 +3,25 @@
 """
 import os
 from dataclasses import dataclass, field
-from enum import Enum, auto
+from enum import Enum
 from typing import List, Dict, Optional, Union
 from warnings import warn
 
 from cryptography.fernet import Fernet
+from dataclasses_json import dataclass_json, LetterCase, DataClassJsonMixin, config
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class RequestDebugMode:
+    """
+     Debug mode parameters for the request.
+    """
+    event_log_location: str
+    max_size_per_file: str
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class JobSocket:
     """
@@ -67,16 +79,28 @@ class JobSize(Enum):
       XLARGE - extra large workload, two or 60% pod cores, all available executor memory
       XXLARGE - x-extra large workloads, all available cores, all available memory
     """
-    TINY = auto()
-    SMALL = auto()
-    MEDIUM = auto()
-    LARGE = auto()
-    XLARGE = auto()
-    XXLARGE = auto()
+    TINY = "TINY"
+    SMALL = "SMALL"
+    MEDIUM = "MEDIUM"
+    LARGE = "LARGE"
+    XLARGE = "XLARGE"
+    XXLARGE = "XXLARGE"
 
 
+class SubmissionMode(Enum):
+    """
+     Submission modes supported by Beast.
+
+     SWARM - submit a job to a shared cluster.
+     K8S - submit a job directly to k8s.
+    """
+    SWARM = "SWARM"
+    K8S = "K8S"
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class JobRequest:
+class JobRequest(DataClassJsonMixin):
     """
      Request body for a Beast submission
     """
@@ -90,56 +114,22 @@ class JobRequest:
     extra_args: Dict[str, str]
     client_tag: str
     cost_optimized: Optional[bool]
-    job_size: Optional[JobSize]
+    job_size: Optional[JobSize] = field(
+        metadata=config(
+            encoder=lambda v: v.value,
+            decoder=JobSize
+        ))
     execution_group: Optional[str]
     flexible_driver: Optional[bool]
     max_runtime_hours: Optional[int]
     runtime_tags: Optional[Dict[str, str]]
-
-    def to_json(self) -> Dict:
-        """
-         Converts this to POST body sent to Beast.
-        :return:
-        """
-        base_request = {
-            "rootPath": self.root_path,
-            "projectName": self.project_name,
-            "version": self.version,
-            "runnable": self.runnable,
-            "inputs": list(map(lambda js: {
-                "alias": js.alias,
-                "dataPath": js.data_path,
-                "dataFormat": js.data_format
-            }, self.inputs)),
-            "outputs": list(map(lambda js: {
-                "alias": js.alias,
-                "dataPath": js.data_path,
-                "dataFormat": js.data_format
-            }, self.outputs)),
-            "overwrite": self.overwrite,
-            "extraArgs": self.extra_args,
-            "clientTag": self.client_tag
-        }
-
-        if self.cost_optimized:
-            base_request.setdefault("costOptimized", self.cost_optimized)
-
-        if self.job_size:
-            base_request.setdefault("jobSize", self.job_size.name)
-
-        if self.flexible_driver:
-            base_request.setdefault("flexibleDriver", self.flexible_driver)
-
-        if self.max_runtime_hours:
-            base_request.setdefault("maxRuntimeHours", str(self.max_runtime_hours))
-
-        if self.runtime_tags:
-            base_request.setdefault("runtimeTags", self.runtime_tags)
-
-        if self.execution_group:
-            base_request.setdefault('executionGroup', self.execution_group)
-
-        return base_request
+    debug_mode: Optional[RequestDebugMode]
+    expected_parallelism: Optional[int]
+    submission_mode: Optional[SubmissionMode] = field(
+        metadata=config(
+            encoder=lambda v: v.value,
+            decoder=SubmissionMode
+        ))
 
 
 class ArgumentValue:
@@ -242,4 +232,13 @@ class BeastJobParams:
         'description': 'Sets maximum allowed job run duration. Server-side default is 12 hours'}, default=None)
     runtime_tags: Optional[Dict[str, str]] = field(metadata={
         'description': 'Limits available runtimes to provided tags'
+    }, default=None)
+    debug_mode: Optional[RequestDebugMode] = field(metadata={
+        'description': 'Enables saving Spark event log for later viewing through History Server'
+    }, default=None)
+    expected_parallelism: Optional[int] = field(metadata={
+        'description': 'Expected number of tasks per node. Lowering this setting increases number of nodes requested in K8S mode,'
+    }, default=None)
+    submission_mode: Optional[SubmissionMode] = field(metadata={
+        'description': 'Mode to submit a request in: shared cluster or direct k8s.'
     }, default=None)
