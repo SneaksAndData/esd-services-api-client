@@ -512,7 +512,7 @@ reference = "azops"
 
 [[package]]
 name = "proteus"
-version = "1.0.0"
+version = "1.0.1"
 description = "Logging, data connectors, monitoring, secret handling and general lifehacks to make data people lives easier."
 category = "main"
 optional = false
@@ -895,7 +895,7 @@ boxer = ["pycryptodome", "pyjwt"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.11"
-content-hash = "148bb6f8e82c64404c23487aae4cfab1b8429ed7cb4b29e532e465cb918ca1a3"
+content-hash = "26cc7472cedc7942a71ef1c49a3d824e334cc18db94a938547ee28126ebd8b7c"
 
 [metadata.files]
 astroid = [
@@ -1229,8 +1229,8 @@ portalocker = [
     {file = "portalocker-2.5.1.tar.gz", hash = "sha256:ae8e9cc2660da04bf41fa1a0eef7e300bb5e4a5869adfb1a6d8551632b559b2b"},
 ]
 proteus = [
-    {file = "proteus-1.0.0-py3-none-any.whl", hash = "sha256:848a2243c5de3eed1ec1aa9129518fa6231af0c2c865e46010b933bd0155caf2"},
-    {file = "proteus-1.0.0.tar.gz", hash = "sha256:aa08785634b3d2aeefa4376886161e1c2f38c3f151238063be9edda7a5876e91"},
+    {file = "proteus-1.0.1-py3-none-any.whl", hash = "sha256:7e8cb226e0a10ea13a0413de037737355825d9a6d9a26205243a75245634b39e"},
+    {file = "proteus-1.0.1.tar.gz", hash = "sha256:1533fe23175143bfaf0330fc2620b6953a77ef7ec78461936a827b13e50586d1"},
 ]
 py = [
     {file = "py-1.11.0-py2.py3-none-any.whl", hash = "sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"},
