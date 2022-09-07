@@ -2,8 +2,10 @@
   Models for Crystal connector
 """
 from enum import Enum
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, Dict, List
+
+from dataclasses_json import dataclass_json, LetterCase, DataClassJsonMixin, config
 
 
 class RequestLifeCycleStage(Enum):
@@ -20,31 +22,20 @@ class RequestLifeCycleStage(Enum):
     THROTTLED = 'THROTTLED'
 
 
+@dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class RequestResult:
+class RequestResult(DataClassJsonMixin):
     """
     The Crystal result when retrieving an existing run.
     """
-    run_id: str
-    status: RequestLifeCycleStage
+    run_id: str = field(metadata=config(field_name='requestId'))
+    status: RequestLifeCycleStage = field(
+        metadata=config(
+            encoder=lambda v: v.value if v else None,
+            decoder=RequestLifeCycleStage
+        ), default=None)
     result_uri: Optional[str] = None
     run_error_message: Optional[str] = None
-
-    @classmethod
-    def from_dict(cls, dict_: dict):
-        """
-        Constructs a CrystalResult object from a dictionary containing the
-        keys from the /result HTTP GET request.
-
-        :param dict_: The (JSON) dict from the HTTP request.
-        :return: The corresponding CrystalResult object.
-        """
-        return RequestResult(
-            run_id=dict_['requestId'],
-            status=RequestLifeCycleStage(dict_['status']),
-            result_uri=dict_['resultUri'],
-            run_error_message=dict_['runErrorMessage'],
-        )
 
 
 @dataclass
@@ -67,3 +58,61 @@ class CrystalEntrypointArguments:
     request_id: str
     results_receiver: str
     sign_result: Optional[bool] = None
+
+
+class AlgorithmConfigurationValueType(Enum):
+    """
+      Value type for algorithm config maps and secrets.
+
+      PLAIN - plain text value
+      RELATIVE_REFERENCE - reference to a file deployed alongside algorithm config.
+    """
+    PLAIN = "PLAIN"
+    RELATIVE_REFERENCE = "RELATIVE_REFERENCE"
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class AlgorithmConfigurationEntry(DataClassJsonMixin):
+    """
+      Crystal algorithm configuration entry.
+    """
+    name: str
+    value: str
+    value_type: Optional[AlgorithmConfigurationValueType] = field(
+        metadata=config(
+            encoder=lambda v: v.value if v else None,
+            decoder=AlgorithmConfigurationValueType
+        ), default=None)
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class AlgorithmConfiguration(DataClassJsonMixin):
+    """
+     Crystal algorithm configuration. Used for overriding defaults.
+    """
+    image_repository: Optional[str] = None
+    image_tag: Optional[str] = None
+    deadline_seconds: Optional[int] = None
+    maximum_retries: Optional[int] = None
+    env: Optional[List[AlgorithmConfigurationEntry]] = None
+    secrets: Optional[List[str]] = None
+    args: Optional[List[AlgorithmConfigurationEntry]] = None
+    cpu_limit: Optional[str] = None
+    memory_limit: Optional[str] = None
+    workgroup: Optional[str] = None
+    version: Optional[str] = None
+    monitoring_parameters: Optional[List[str]] = None
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class AlgorithmRequest(DataClassJsonMixin):
+    """
+      Crystal algorthm request.
+    """
+    algorithm_name: str
+    algorithm_parameters: Dict
+    custom_configuration: Optional[AlgorithmConfiguration] = None
+    tag: Optional[str] = None

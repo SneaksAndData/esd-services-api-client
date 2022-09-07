@@ -3,13 +3,14 @@
 """
 import os
 from argparse import Namespace, ArgumentParser
-from typing import Dict, Optional, Type, TypeVar
+from typing import Dict, Optional, Type, TypeVar, List
 
 from requests.auth import HTTPBasicAuth
 
 from proteus.utils import session_with_retries
 from proteus.storage.models.format import SerializationFormat
-from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments
+from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments, \
+    AlgorithmRequest, AlgorithmConfiguration
 
 T = TypeVar('T')  # pylint: disable=C0103
 
@@ -87,19 +88,24 @@ class CrystalConnector:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.dispose()
 
-    def create_run(self, algorithm: str, payload: Dict, api_version: str = "v1.1") -> str:
+    def create_run(self, algorithm: str, payload: Dict, api_version: str = "v1.1",
+                   custom_config: Optional[AlgorithmConfiguration] = None, tag: Optional[str] = None) -> str:
         """
           Creates a Crystal job run against the latest API version.
 
         :param algorithm: Name of a connected algorithm.
         :param payload: Algorithm payload.
         :param api_version: Crystal API version.
+        :param custom_config: Customized config for this run.
+        :param tag: Client-side submission identifier.
         :return: Request identifier assigned to the job by Crystal.
         """
-        run_body = {
-            "AlgorithmName": algorithm,
-            "AlgorithmParameters": payload
-        }
+        run_body = AlgorithmRequest(
+            algorithm_name=algorithm,
+            algorithm_parameters=payload,
+            custom_configuration=custom_config,
+            tag=tag
+        ).to_dict()
 
         print(f"Sending the following configuration for algorithm {algorithm}: {run_body}")
 
@@ -132,6 +138,22 @@ class CrystalConnector:
         crystal_result = RequestResult.from_dict(response.json())
 
         return crystal_result
+
+    def retrieve_runs(self, tag: str, api_version: str = "v1.1") -> List[RequestResult]:
+        """
+          Retrieves all submitted Crystal jobs with matching tags.
+
+          :param tag: A request tag assigned by a client.
+          :param api_version: Crystal API version.
+        """
+        url = f'{self.base_url}/algorithm/{api_version}/tag/{tag}/results'
+
+        response = self.http.get(url=url)
+
+        # raise if not successful
+        response.raise_for_status()
+
+        return [RequestResult.from_dict(run_result) for run_result in response.json()]
 
     def submit_result(self, result: AlgorithmRunResult, url: str) -> None:
         """
