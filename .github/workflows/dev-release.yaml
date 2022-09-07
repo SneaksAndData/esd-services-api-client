@@ -14,6 +14,7 @@ jobs:
           python-version: '3.9.x'
           architecture: 'x64'
       - uses: actions/checkout@v2
+        ref: refs/pull/${{github.event.issue.number}}/merge
         with:
           fetch-depth: 0
       - name: Install Poetry and dependencies
