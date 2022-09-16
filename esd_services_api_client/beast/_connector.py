@@ -63,8 +63,9 @@ class BeastConnector:
 
         running_submissions = []
         for submission_request_id in existing_submissions:
-            submission_lifecycle = self.http.get(
-                f"{self.base_url}/job/requests/{submission_request_id}").json()['lifeCycleStage']
+            response = self.http.get(f"{self.base_url}/job/requests/{submission_request_id}")
+            response.raise_for_status()
+            submission_lifecycle = response.json()['lifeCycleStage']
             if submission_lifecycle not in self.success_stages and submission_lifecycle not in self.failed_stages:
                 print(f"Found a running submission of {submitted_tag}: {submission_request_id}.")
                 running_submissions.append((submission_request_id, submission_lifecycle))
