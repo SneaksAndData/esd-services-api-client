@@ -55,7 +55,9 @@ class BeastConnector:
     def _existing_submission(self, submitted_tag: str, project: str) -> (Optional[str], Optional[str]):
         print(f"Looking for existing submissions of {submitted_tag}")
 
-        existing_submissions = self.http.get(f"{self.base_url}/job/requests/{project}/tags/{submitted_tag}").json()
+        response = self.http.get(f"{self.base_url}/job/requests/{project}/tags/{submitted_tag}")
+        response.raise_for_status()
+        existing_submissions = response.json()
 
         if len(existing_submissions) == 0:
             print(f"No previous submissions found for {submitted_tag}")
@@ -63,8 +65,9 @@ class BeastConnector:
 
         running_submissions = []
         for submission_request_id in existing_submissions:
-            submission_lifecycle = self.http.get(
-                f"{self.base_url}/job/requests/{submission_request_id}").json()['lifeCycleStage']
+            response = self.http.get(f"{self.base_url}/job/requests/{submission_request_id}")
+            response.raise_for_status()
+            submission_lifecycle = response.json()['lifeCycleStage']
             if submission_lifecycle not in self.success_stages and submission_lifecycle not in self.failed_stages:
                 print(f"Found a running submission of {submitted_tag}: {submission_request_id}.")
                 running_submissions.append((submission_request_id, submission_lifecycle))
