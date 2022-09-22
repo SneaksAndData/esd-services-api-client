@@ -147,7 +147,7 @@ class ArcaneConnector:
         :return:
         """
 
-        transfer_response = self.http.post(f"{self.base_url}/transfer/{source}/{stream_id}/{new_owner}")
+        transfer_response = self.http.post(f"{self.base_url}/stream/transfer/{source}/{stream_id}/{new_owner}")
 
         transfer_response.raise_for_status()
 
