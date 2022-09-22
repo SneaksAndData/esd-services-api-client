@@ -104,6 +104,7 @@ class AlgorithmConfiguration(DataClassJsonMixin):
     workgroup: Optional[str] = None
     version: Optional[str] = None
     monitoring_parameters: Optional[List[str]] = None
+    custom_resources: Optional[Dict[str, str]] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
