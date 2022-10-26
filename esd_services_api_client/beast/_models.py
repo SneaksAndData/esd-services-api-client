@@ -93,9 +93,11 @@ class SubmissionMode(Enum):
 
      SWARM - submit a job to a shared cluster.
      K8S - submit a job directly to k8s.
+     STREAM - submit a job directly to a shared cluster bypassing application limit constraints.
     """
     SWARM = "SWARM"
     K8S = "K8S"
+    STREAM = "STREAM"
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
