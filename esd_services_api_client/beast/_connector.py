@@ -3,9 +3,13 @@
 """
 import json
 from http.client import HTTPException
-from typing import Optional
+from json import JSONDecodeError
+from typing import Optional, Any
 
+import backoff
 from proteus.utils import doze, session_with_retries
+from urllib3.exceptions import ProtocolError, HTTPError
+
 from esd_services_api_client.beast._auth import BeastAuth
 from esd_services_api_client.beast._models import JobRequest, BeastJobParams
 
@@ -17,8 +21,14 @@ class BeastConnector:
 
     __SUPPORTED_BEAST_RELEASE__ = "2.*.*"
 
-    def __init__(self, *, base_url, code_root="/ecco/dist", lifecycle_check_interval: int = 60,
-                 failure_type: Optional[Exception] = None):
+    def __init__(
+            self,
+            *,
+            base_url,
+            code_root="/ecco/dist",
+            lifecycle_check_interval: int = 60,
+            failure_type: Optional[Exception] = None,
+    ):
         """
           Creates a Beast connector, capable of submitting/status tracking etc.
 
@@ -52,6 +62,21 @@ class BeastConnector:
 
         return submission_json['id'], submission_json['lifeCycleStage']
 
+    @backoff.on_exception(
+        wait_gen=backoff.expo,
+        exception=(
+                HTTPError,
+                KeyError,
+                JSONDecodeError,
+                ProtocolError,
+                ConnectionError,
+                ConnectionRefusedError,
+                ConnectionAbortedError,
+                ConnectionResetError
+        ),
+        max_time=300,
+        raise_on_giveup=True
+    )
     def _existing_submission(self, submitted_tag: str, project: str) -> (Optional[str], Optional[str]):
         print(f"Looking for existing submissions of {submitted_tag}")
 
@@ -124,12 +149,51 @@ class BeastConnector:
 
         while request_lifecycle not in self.success_stages and request_lifecycle not in self.failed_stages:
             doze(self.lifecycle_check_interval)
-            request_lifecycle = self.http.get(f"{self.base_url}/job/requests/{request_id}").json()['lifeCycleStage']
+            request_lifecycle = self.get_request_lifecycle_stage(request_id)
             print(f"Request: {request_id}, current state: {request_lifecycle}")
 
         if request_lifecycle in self.failed_stages:
             raise self._failure_type(
                 f"Execution failed, please find request's log at: {self.base_url}/job/logs/{request_id}")
+
+    @staticmethod
+    def _report_backoff_failure(
+            target: Any,
+            args: Any,
+            kwargs: Any,
+            tries: int,
+            elapsed: int,
+            wait: int,
+            **_
+    ) -> None:
+        print(
+            f"Retry with back off {wait:0.1f} seconds after {elapsed} seconds ({tries} tries), calling function {target} with args {args} and kwargs {kwargs}")
+
+    @backoff.on_exception(
+        wait_gen=backoff.expo,
+        exception=(
+                HTTPError,
+                KeyError,
+                JSONDecodeError,
+                ProtocolError,
+                ConnectionError,
+                ConnectionRefusedError,
+                ConnectionAbortedError,
+                ConnectionResetError
+        ),
+        max_time=300,
+        raise_on_giveup=False,
+        on_giveup=_report_backoff_failure
+    )
+    def get_request_lifecycle_stage(self, request_id: str) -> Optional[str]:
+        """
+          Returns a lifecycle stage for the given request. Returns None in case error retry fails to resolve within given timeout.
+        :param request_id: A request identifier to read lifecycle stage for.
+        """
+        response = self.http.get(f"{self.base_url}/job/requests/{request_id}")
+        response.raise_for_status()
+
+        return response.json()['lifeCycleStage']
 
     def start_job(self, job_params: BeastJobParams) -> Optional[str]:
         """
