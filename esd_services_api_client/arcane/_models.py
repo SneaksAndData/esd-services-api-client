@@ -189,3 +189,15 @@ class StreamState(Enum):
     TERMINATING = 'TERMINATING'
     RESTARTING = 'RESTARTING'
     FAILED = 'FAILED'
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class UpdateMetadataRequest(DataClassJsonMixin):
+    """
+      Arcane stream update request.
+    """
+    stream_state: str
+    error: StreamError
+
+
