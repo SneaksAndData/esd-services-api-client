@@ -199,4 +199,3 @@ class UpdateMetadataRequest(DataClassJsonMixin):
     """
     stream_state: str
     error: StreamError
-
