@@ -166,5 +166,5 @@ class ArcaneConnector:
         :param request:
         :return:
         """
-        response = self.http.patch(f"{self.base_url}/stream/metadata/{source}/{stream_id}", json=request.to_json())
+        response = self.http.patch(f"{self.base_url}/stream/metadata/{source}/{stream_id}", json=request.to_dict())
         response.raise_for_status()
