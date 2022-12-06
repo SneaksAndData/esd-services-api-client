@@ -157,7 +157,7 @@ class ArcaneConnector:
             print(ex)
             return None
 
-    def update_stream_metadata(self, source: str, stream_id: str, request: UpdateMetadataRequest):
+    def update_stream_metadata(self, source: str, stream_id: str, request: StreamInfo):
         """
         Update stream metadata
 

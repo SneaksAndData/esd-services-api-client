@@ -179,6 +179,12 @@ class StreamInfo(DataClassJsonMixin):
     error: StreamError
     stopped_at: Optional[str] = None
 
+    @staticmethod
+    def update(*, target: 'StreamInfo', source: 'StreamInfo') -> 'StreamInfo':
+        left_dict = target.to_dict()
+        left_dict.update(source.to_dict())
+        return StreamInfo.from_dict(left_dict)
+
 
 class StreamState(Enum):
     """
@@ -191,11 +197,3 @@ class StreamState(Enum):
     FAILED = 'FAILED'
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class UpdateMetadataRequest(DataClassJsonMixin):
-    """
-      Arcane stream update request.
-    """
-    stream_state: str
-    error: StreamError
