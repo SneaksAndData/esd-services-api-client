@@ -3,7 +3,7 @@
 """
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from dataclasses import dataclass
 
 from dataclasses_json import DataClassJsonMixin, dataclass_json, LetterCase
@@ -180,9 +180,15 @@ class StreamInfo(DataClassJsonMixin):
     stopped_at: Optional[str] = None
 
     @staticmethod
-    def update(*, target: 'StreamInfo', source: 'StreamInfo') -> 'StreamInfo':
+    def update(*, target: 'StreamInfo', source: Dict[str, Any]) -> 'StreamInfo':
+        """
+        Create new stream info from `target` object and updates values from `target` object
+        :param target: Stream info object to update
+        :param source: New values for fields
+        :return:
+        """
         left_dict = target.to_dict()
-        left_dict.update(source.to_dict())
+        left_dict.update(source)
         return StreamInfo.from_dict(left_dict)
 
 
@@ -195,5 +201,3 @@ class StreamState(Enum):
     TERMINATING = 'TERMINATING'
     RESTARTING = 'RESTARTING'
     FAILED = 'FAILED'
-
-
