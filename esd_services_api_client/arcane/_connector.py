@@ -156,3 +156,15 @@ class ArcaneConnector:
         except ValueError as ex:
             print(ex)
             return None
+
+    def update_stream(self, source: str, stream_id: str, request: StreamInfo):
+        """
+        Update stream metadata
+
+        :param source:
+        :param stream_id:
+        :param request:
+        :return:
+        """
+        response = self.http.patch(f"{self.base_url}/stream/metadata/{source}/{stream_id}", json=request.to_dict())
+        response.raise_for_status()
