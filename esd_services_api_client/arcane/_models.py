@@ -179,18 +179,6 @@ class StreamInfo(DataClassJsonMixin):
     error: StreamError
     stopped_at: Optional[str] = None
 
-    @staticmethod
-    def update(*, target: 'StreamInfo', source: Dict[str, Any]) -> 'StreamInfo':
-        """
-        Create new stream info from `target` object and updates values from `target` object
-        :param target: Stream info object to update
-        :param source: New values for fields
-        :return:
-        """
-        left_dict = target.to_dict()
-        left_dict.update(source)
-        return StreamInfo.from_dict(left_dict)
-
 
 class StreamState(Enum):
     """
