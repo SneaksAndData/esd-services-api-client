@@ -5,10 +5,11 @@ import os
 from http.client import HTTPException
 from typing import Optional, List, Dict, Iterable
 
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, AuthBase
 
 from proteus.utils import session_with_retries, doze
 from esd_services_api_client.arcane._models import StreamInfo, StreamState, StreamConfiguration
+from esd_services_api_client.boxer import BoxerTokenAuth
 
 
 class ArcaneConnector:
@@ -16,7 +17,7 @@ class ArcaneConnector:
       Arcane Streaming API connector
     """
 
-    def __init__(self, *, base_url, retry_attempts=10):
+    def __init__(self, *, base_url, retry_attempts=10, auth: Optional[BoxerTokenAuth] = None):
         """
           Creates Arcane Streaming connector, capable of managing Akka streams launched via Arcane.
 
@@ -25,7 +26,7 @@ class ArcaneConnector:
         """
         self.base_url = base_url
         self.http = session_with_retries()
-        self.http.auth = HTTPBasicAuth(os.environ.get('ARCANE_USER'), os.environ.get('ARCANE_PASSWORD'))
+        self.http.auth = auth or HTTPBasicAuth(os.environ.get('ARCANE_USER'), os.environ.get('ARCANE_PASSWORD'))
         self.retry_attempts = retry_attempts
 
     def start_stream(self, conf: StreamConfiguration) -> StreamInfo:

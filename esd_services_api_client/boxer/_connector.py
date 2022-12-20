@@ -6,9 +6,9 @@ from typing import Iterator
 
 import jwt
 from proteus.utils import session_with_retries
-from esd_services_api_client.boxer._auth import BoxerAuth
+from esd_services_api_client.boxer._auth import BoxerAuth, ExternalTokenAuth
 from esd_services_api_client.boxer._helpers import _iterate_user_claims_response, _iterate_boxer_claims_response
-from esd_services_api_client.boxer._models import BoxerClaim, UserClaim
+from esd_services_api_client.boxer._models import BoxerClaim, UserClaim, BoxerToken
 
 
 class BoxerConnector:
@@ -16,17 +16,15 @@ class BoxerConnector:
       Boxer Auth API connector
     """
 
-    def __init__(self, *, base_url, retry_attempts=10):
+    def __init__(self, *, base_url, retry_attempts=10, auth: ExternalTokenAuth):
         """ Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
         :param retry_attempts: Number of retries for Boxer-specific error messages
         """
         self.base_url = base_url
         self.http = session_with_retries()
-        assert os.environ.get('BOXER_CONSUMER_ID'), "Environment BOXER_CONSUMER_ID not set"
-        assert os.environ.get('BOXER_PRIVATE_KEY'), "Environment BOXER_PRIVATE_KEY not set"
-        self.http.auth = BoxerAuth(private_key_base64=os.environ.get('BOXER_PRIVATE_KEY'),
-                                   consumer_id=os.environ.get('BOXER_CONSUMER_ID'))
+        self.http.auth = auth or self._create_boxer_auth()
+        self.auth_policy = auth.policy or 'basic'
         self.retry_attempts = retry_attempts
 
     def push_user_claim(self, claim: BoxerClaim, user_id: str):
@@ -114,3 +112,16 @@ class BoxerConnector:
         response = self.http.get(target_url, json={})
         response.raise_for_status()
         return response.text
+
+    def get_token(self) -> BoxerToken:
+        target_url = f"{self.base_url}/token/{self.auth_policy}"
+        response = self.http.get(target_url)
+        response.raise_for_status()
+        return BoxerToken(response.text)
+
+    def _create_boxer_auth(self):
+        assert os.environ.get('BOXER_CONSUMER_ID'), "Environment BOXER_CONSUMER_ID not set"
+        assert os.environ.get('BOXER_PRIVATE_KEY'), "Environment BOXER_PRIVATE_KEY not set"
+        return BoxerAuth(private_key_base64=os.environ.get('BOXER_PRIVATE_KEY'),
+                         consumer_id=os.environ.get('BOXER_CONSUMER_ID'))
+

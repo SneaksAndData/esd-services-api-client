@@ -99,3 +99,11 @@ class GroupClaim:
             group_claim_id=json_data['groupClaimId'],
             claim=BoxerClaim.from_dict(json_data['claim'])
         )
+
+
+class BoxerToken:
+    def __init__(self, token: str):
+        self._token = token
+
+    def __str__(self):
+        return self._token

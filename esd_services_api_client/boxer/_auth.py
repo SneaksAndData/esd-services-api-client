@@ -9,6 +9,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature.PKCS1_v1_5 import new as signature_factory
 from Crypto.Hash.SHA256 import new as sha256_get_instance
 
+from esd_services_api_client.boxer import BoxerToken
+
 
 class BoxerAuth(AuthBase):
     """Attaches HTTP Bearer Authentication to the given Request object sent to Boxer"""
@@ -49,4 +51,41 @@ class BoxerAuth(AuthBase):
         r.headers['X-Boxer-ConsumerId'] = self._consumer_id
         r.headers['X-Boxer-Payload'] = payload
 
+        return r
+
+
+class ExternalTokenAuth(AuthBase):
+
+    def __int__(self, token: str, policy: str):
+        self._token = token
+        self._policy = policy
+
+    def __call__(self, r):
+        """
+          Auth entrypoint
+
+        :param r: Request to authorize
+        :return: Request with Auth header set
+        """
+        r.headers['Authorization'] = f"Bearer {self._token}"
+        return r
+
+    @property
+    def policy(self):
+        return self._policy
+
+
+class BoxerTokenAuth(AuthBase):
+
+    def __int__(self, token: BoxerToken):
+        self._token = token
+
+    def __call__(self, r):
+        """
+          Auth entrypoint
+
+        :param r: Request to authorize
+        :return: Request with Auth header set
+        """
+        r.headers['Authorization'] = f"Bearer {self._token}"
         return r
