@@ -3,13 +3,16 @@
  Based on https://docs.python-requests.org/en/master/user/advanced/#custom-authentication
 """
 import base64
+from functools import partial
 
+import requests
+from requests import Session
 from requests.auth import AuthBase
 from Crypto.PublicKey import RSA
 from Crypto.Signature.PKCS1_v1_5 import new as signature_factory
 from Crypto.Hash.SHA256 import new as sha256_get_instance
 
-from esd_services_api_client.boxer import BoxerToken
+from esd_services_api_client.boxer._base import BoxerTokenProvider
 
 
 class BoxerAuth(AuthBase):
@@ -56,7 +59,7 @@ class BoxerAuth(AuthBase):
 
 class ExternalTokenAuth(AuthBase):
 
-    def __int__(self, token: str, policy: str):
+    def __init__(self, token: str, policy: str):
         self._token = token
         self._policy = policy
 
@@ -77,8 +80,9 @@ class ExternalTokenAuth(AuthBase):
 
 class BoxerTokenAuth(AuthBase):
 
-    def __int__(self, token: BoxerToken):
-        self._token = token
+    def __init__(self, connector: BoxerTokenProvider):
+        self._connector = connector
+        self._token = None
 
     def __call__(self, r):
         """
@@ -87,5 +91,19 @@ class BoxerTokenAuth(AuthBase):
         :param r: Request to authorize
         :return: Request with Auth header set
         """
-        r.headers['Authorization'] = f"Bearer {self._token}"
+        r.headers['Authorization'] = f"Bearer {self._get_token()}"
         return r
+
+    def refresh_token(self, res, session, *_, **__):
+        if res.status_code == requests.codes.unauthorized or res.status_code == requests.codes.forbidden:
+            self._get_token(refresh=True)
+            return session.send(self(res.request))
+        return res
+
+    def get_refresh_hook(self, session: Session):
+        return partial(self.refresh_token, session=session)
+
+    def _get_token(self, refresh=False):
+        if not self._token or refresh:
+            self._token = self._connector.get_token()
+        return self._token

@@ -2,27 +2,30 @@
   Connector for Boxer Auth API.
 """
 import os
-from typing import Iterator
+from typing import Iterator, Optional
 
 import jwt
 from proteus.utils import session_with_retries
+from requests import Session
+
+from esd_services_api_client.boxer._base import BoxerTokenProvider
 from esd_services_api_client.boxer._auth import BoxerAuth, ExternalTokenAuth
 from esd_services_api_client.boxer._helpers import _iterate_user_claims_response, _iterate_boxer_claims_response
 from esd_services_api_client.boxer._models import BoxerClaim, UserClaim, BoxerToken
 
 
-class BoxerConnector:
+class BoxerConnector(BoxerTokenProvider):
     """
       Boxer Auth API connector
     """
 
-    def __init__(self, *, base_url, retry_attempts=10, auth: ExternalTokenAuth):
+    def __init__(self, *, base_url, auth: ExternalTokenAuth, retry_attempts=10, session: Optional[Session]=None):
         """ Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
         :param retry_attempts: Number of retries for Boxer-specific error messages
         """
         self.base_url = base_url
-        self.http = session_with_retries()
+        self.http = session or session_with_retries()
         self.http.auth = auth or self._create_boxer_auth()
         self.auth_policy = auth.policy or 'basic'
         self.retry_attempts = retry_attempts
