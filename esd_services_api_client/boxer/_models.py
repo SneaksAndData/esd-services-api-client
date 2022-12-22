@@ -102,6 +102,9 @@ class GroupClaim:
 
 
 class BoxerToken:
+    """
+    Represents token created by BoxerConnector.get_token
+    """
     def __init__(self, token: str):
         self._token = token
 

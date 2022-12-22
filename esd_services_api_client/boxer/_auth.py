@@ -4,15 +4,18 @@
 """
 import base64
 from functools import partial
+from typing import Callable, Any
 
 import requests
-from requests import Session
-from requests.auth import AuthBase
+from Crypto.Hash.SHA256 import new as sha256_get_instance
 from Crypto.PublicKey import RSA
 from Crypto.Signature.PKCS1_v1_5 import new as signature_factory
-from Crypto.Hash.SHA256 import new as sha256_get_instance
+from requests import Session, Response, PreparedRequest
+from requests.auth import AuthBase
+from typing_extensions import Unpack
 
 from esd_services_api_client.boxer._base import BoxerTokenProvider
+from esd_services_api_client.boxer._models import BoxerToken
 
 
 class BoxerAuth(AuthBase):
@@ -58,12 +61,13 @@ class BoxerAuth(AuthBase):
 
 
 class ExternalTokenAuth(AuthBase):
+    """Create authentication for external token e.g. for azuread or kubernetes auth policies"""
 
     def __init__(self, token: str, policy: str):
         self._token = token
         self._policy = policy
 
-    def __call__(self, r):
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
         """
           Auth entrypoint
 
@@ -74,7 +78,11 @@ class ExternalTokenAuth(AuthBase):
         return r
 
     @property
-    def policy(self):
+    def policy(self) -> str:
+        """
+        Returns policy name which should be used with the token
+        :return policy name that matches auth endpoint name
+        """
         return self._policy
 
 
@@ -84,7 +92,7 @@ class BoxerTokenAuth(AuthBase):
         self._connector = connector
         self._token = None
 
-    def __call__(self, r):
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
         """
           Auth entrypoint
 
@@ -94,16 +102,34 @@ class BoxerTokenAuth(AuthBase):
         r.headers['Authorization'] = f"Bearer {self._get_token()}"
         return r
 
-    def refresh_token(self, res, session, *_, **__):
-        if res.status_code == requests.codes.unauthorized or res.status_code == requests.codes.forbidden:
+    def refresh_token(self, res: Response, session: Session, *_, **__):
+        """
+        Refresh token hook if request fails with unauthorized or forbidden status code and retries the request.
+        :param res:  Response received from API server
+        :param session: Session used for original API interaction
+        :param _: Positional arguments
+        :param __: Keyword arguments
+        :return:
+        """
+        if res.status_code in (requests.codes.unauthorized, requests.codes.forbidden):
             self._get_token(refresh=True)
             return session.send(self(res.request))
         return res
 
-    def get_refresh_hook(self, session: Session):
+    def get_refresh_hook(self, session: Session) -> Callable[[Response, Unpack[Any]], Response]:
+        """
+        Generate request hook
+        :param session: Session used for original API interaction
+        :returns
+        """
         return partial(self.refresh_token, session=session)
 
-    def _get_token(self, refresh=False):
+    def _get_token(self, refresh=False) -> BoxerToken:
+        """
+        Retrieves token and stores it for future use
+        :param refresh: True if we need to refresh token
+        :return: token for Boxer API
+        """
         if not self._token or refresh:
             self._token = self._connector.get_token()
         return self._token

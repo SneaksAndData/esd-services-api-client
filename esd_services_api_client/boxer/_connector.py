@@ -127,4 +127,3 @@ class BoxerConnector(BoxerTokenProvider):
         assert os.environ.get('BOXER_PRIVATE_KEY'), "Environment BOXER_PRIVATE_KEY not set"
         return BoxerAuth(private_key_base64=os.environ.get('BOXER_PRIVATE_KEY'),
                          consumer_id=os.environ.get('BOXER_CONSUMER_ID'))
-
