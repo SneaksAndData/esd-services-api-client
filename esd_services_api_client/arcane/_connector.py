@@ -5,10 +5,10 @@ import os
 from http.client import HTTPException
 from typing import Optional, List, Dict, Iterable
 
-from requests import Session
-from requests.auth import HTTPBasicAuth, AuthBase
-
 from proteus.utils import session_with_retries, doze
+from requests import Session
+from requests.auth import HTTPBasicAuth
+
 from esd_services_api_client.arcane._models import StreamInfo, StreamState, StreamConfiguration
 from esd_services_api_client.boxer import BoxerTokenAuth
 

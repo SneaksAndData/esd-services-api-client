@@ -87,6 +87,9 @@ class ExternalTokenAuth(AuthBase):
 
 
 class BoxerTokenAuth(AuthBase):
+    """
+    Implements Boxer auth token retrieving and renewing
+    """
 
     def __init__(self, connector: BoxerTokenProvider):
         self._connector = connector
@@ -111,7 +114,7 @@ class BoxerTokenAuth(AuthBase):
         :param __: Keyword arguments
         :return:
         """
-        if res.status_code in (requests.codes.unauthorized, requests.codes.forbidden):
+        if res.status_code in (requests.codes['unauthorized'], requests.codes['forbidden']):
             self._get_token(refresh=True)
             return session.send(self(res.request))
         return res

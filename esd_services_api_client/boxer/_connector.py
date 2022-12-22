@@ -19,7 +19,7 @@ class BoxerConnector(BoxerTokenProvider):
       Boxer Auth API connector
     """
 
-    def __init__(self, *, base_url, auth: ExternalTokenAuth, retry_attempts=10, session: Optional[Session]=None):
+    def __init__(self, *, base_url, auth: ExternalTokenAuth, retry_attempts=10, session: Optional[Session] = None):
         """ Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
         :param retry_attempts: Number of retries for Boxer-specific error messages
@@ -122,7 +122,8 @@ class BoxerConnector(BoxerTokenProvider):
         response.raise_for_status()
         return BoxerToken(response.text)
 
-    def _create_boxer_auth(self):
+    @staticmethod
+    def _create_boxer_auth():
         assert os.environ.get('BOXER_CONSUMER_ID'), "Environment BOXER_CONSUMER_ID not set"
         assert os.environ.get('BOXER_PRIVATE_KEY'), "Environment BOXER_PRIVATE_KEY not set"
         return BoxerAuth(private_key_base64=os.environ.get('BOXER_PRIVATE_KEY'),
