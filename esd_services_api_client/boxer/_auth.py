@@ -14,7 +14,7 @@ from requests import Session, Response, PreparedRequest
 from requests.auth import AuthBase
 from typing_extensions import Unpack
 
-from esd_services_api_client.boxer._base import BoxerTokenProvider
+from esd_services_api_client.boxer._connector import BoxerConnector
 from esd_services_api_client.boxer._models import BoxerToken
 
 
@@ -91,7 +91,7 @@ class BoxerTokenAuth(AuthBase):
     Implements Boxer auth token retrieving and renewing
     """
 
-    def __init__(self, connector: BoxerTokenProvider):
+    def __init__(self, connector: BoxerConnector):
         self._connector = connector
         self._token = None
 
