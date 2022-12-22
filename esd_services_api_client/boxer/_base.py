@@ -16,4 +16,3 @@ class BoxerTokenProvider(ABC):
         :return: Boxer token
         :raises HTTPError
         """
-        pass
