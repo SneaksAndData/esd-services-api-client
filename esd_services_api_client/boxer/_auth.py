@@ -1,5 +1,5 @@
 """
- Boxer Auth class
+ Boxer Auth classes
  Based on https://docs.python-requests.org/en/master/user/advanced/#custom-authentication
 """
 import base64
@@ -44,28 +44,28 @@ class BoxerAuth(AuthBase):
         signed = signer.sign(digest)
         return base64.b64encode(signed).decode('utf-8')
 
-    def __call__(self, r):
+    def __call__(self, request: PreparedRequest):
         """
           Auth entrypoint
 
-        :param r: Request to authorize
+        :param request: Request to authorize
         :return: Request with Auth header set
         """
-        payload = r.url.replace('https://', '').split('?')[0]
+        payload = request.url.replace('https://', '').split('?')[0]
         signature_base64 = self._sign_string(payload)
-        r.headers['Authorization'] = f"Signature {signature_base64}"
-        r.headers['X-Boxer-ConsumerId'] = self._consumer_id
-        r.headers['X-Boxer-Payload'] = payload
+        request.headers['Authorization'] = f"Signature {signature_base64}"
+        request.headers['X-Boxer-ConsumerId'] = self._consumer_id
+        request.headers['X-Boxer-Payload'] = payload
 
-        return r
+        return request
 
 
 class ExternalTokenAuth(AuthBase):
     """Create authentication for external token e.g. for azuread or kubernetes auth policies"""
 
-    def __init__(self, token: str, policy: str):
+    def __init__(self, token: str, authentication_provider: str):
         self._token = token
-        self._policy = policy
+        self._authentication_provider = authentication_provider
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
         """
@@ -78,12 +78,11 @@ class ExternalTokenAuth(AuthBase):
         return r
 
     @property
-    def policy(self) -> str:
+    def authentication_provider(self) -> str:
         """
-        Returns policy name which should be used with the token
-        :return policy name that matches auth endpoint name
+        :return authentication provider name
         """
-        return self._policy
+        return self._authentication_provider
 
 
 class BoxerTokenAuth(AuthBase):
@@ -95,29 +94,29 @@ class BoxerTokenAuth(AuthBase):
         self._connector = connector
         self._token = None
 
-    def __call__(self, r: PreparedRequest) -> PreparedRequest:
+    def __call__(self, request: PreparedRequest) -> PreparedRequest:
         """
           Auth entrypoint
 
-        :param r: Request to authorize
+        :param request: Request to authorize
         :return: Request with Auth header set
         """
-        r.headers['Authorization'] = f"Bearer {self._get_token()}"
-        return r
+        request.headers['Authorization'] = f"Bearer {self._get_token()}"
+        return request
 
-    def refresh_token(self, res: Response, session: Session, *_, **__):
+    def refresh_token(self, response: Response, session: Session, *_, **__):
         """
         Refresh token hook if request fails with unauthorized or forbidden status code and retries the request.
-        :param res:  Response received from API server
+        :param response:  Response received from API server
         :param session: Session used for original API interaction
         :param _: Positional arguments
         :param __: Keyword arguments
         :return:
         """
-        if res.status_code in (requests.codes['unauthorized'], requests.codes['forbidden']):
+        if response.status_code == requests.codes['unauthorized']:
             self._get_token(refresh=True)
-            return session.send(self(res.request))
-        return res
+            return session.send(self(response.request))
+        return response
 
     def get_refresh_hook(self, session: Session) -> Callable[[Response, Unpack[Any]], Response]:
         """

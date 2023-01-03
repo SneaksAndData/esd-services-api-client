@@ -8,7 +8,7 @@ import requests_mock
 
 
 def test_retries():
-    external_token_auth = ExternalTokenAuth(token="token", policy="test")
+    external_token_auth = ExternalTokenAuth(token="token", authentication_provider="test")
     boxer_adapter, boxer_session = generate_boxer_mock_session(external_token_auth)
 
     boxer_connector = BoxerConnector(

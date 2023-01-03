@@ -27,7 +27,8 @@ class BoxerConnector(BoxerTokenProvider):
         self.base_url = base_url
         self.http = session or session_with_retries()
         self.http.auth = auth or self._create_boxer_auth()
-        self.auth_policy = auth.policy or 'basic'
+        if auth:
+            self.authentication_provider = auth.authentication_provider
         self.retry_attempts = retry_attempts
 
     def push_user_claim(self, claim: BoxerClaim, user_id: str):
@@ -117,7 +118,13 @@ class BoxerConnector(BoxerTokenProvider):
         return response.text
 
     def get_token(self) -> BoxerToken:
-        target_url = f"{self.base_url}/token/{self.auth_policy}"
+        """
+        Authorize with external token and return BoxerToken
+        :return: BoxerToken
+        """
+        if not self.authentication_provider:
+            raise Exception("If boxer token is used, ExternalTokenAuth should be provided")
+        target_url = f"{self.base_url}/token/{self.authentication_provider}"
         response = self.http.get(target_url)
         response.raise_for_status()
         return BoxerToken(response.text)
