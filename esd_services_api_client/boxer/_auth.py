@@ -90,8 +90,8 @@ class BoxerTokenAuth(AuthBase):
     Implements Boxer auth token retrieving and renewing
     """
 
-    def __init__(self, connector: BoxerTokenProvider):
-        self._connector = connector
+    def __init__(self, token_provider: BoxerTokenProvider):
+        self._token_provider = token_provider
         self._token = None
 
     def __call__(self, request: PreparedRequest) -> PreparedRequest:
@@ -133,5 +133,5 @@ class BoxerTokenAuth(AuthBase):
         :return: token for Boxer API
         """
         if not self._token or refresh:
-            self._token = self._connector.get_token()
+            self._token = self._token_provider.get_token()
         return self._token
