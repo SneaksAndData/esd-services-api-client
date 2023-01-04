@@ -23,6 +23,7 @@ pytest-mock = "^3.6.1"
 pytest-cov = "^2.12"
 requests = "~2.27"
 cryptography = "~36.0"
+requests-mock = "~1.10"
 
 [[tool.poetry.source]]
 name = "azops"
