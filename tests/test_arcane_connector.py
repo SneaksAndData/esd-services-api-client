@@ -53,7 +53,7 @@ def generate_arcane_mock_session():
             {"json": mock_stream, "status_code": 200},
             {"text": "", "status_code": 401},
             {"json": mock_stream, "status_code": 200},
-            {"text": "", "status_code": 403},
+            {"text": "", "status_code": 401},
             {"json": mock_stream, "status_code": 200},
             {"json": mock_stream, "status_code": 200},
         ]
