@@ -9,7 +9,7 @@ from proteus.utils import session_with_retries, doze
 from requests import Session
 from requests.auth import HTTPBasicAuth
 
-from esd_services_api_client.arcane._api_versions import ApiVersion, add_api_version
+from esd_services_api_client.arcane._api_versions import ApiVersion, rewrite_url
 from esd_services_api_client.arcane._models import StreamInfo, StreamState, StreamConfiguration
 from esd_services_api_client.boxer import BoxerTokenAuth
 
@@ -25,14 +25,14 @@ class ArcaneConnector:
                  retry_attempts=10,
                  auth: Optional[BoxerTokenAuth] = None,
                  session: Optional[Session] = None,
-                 api_version: ApiVersion.V1):
+                 api_version: ApiVersion = ApiVersion.V1):
         """
           Creates Arcane Streaming connector, capable of managing Akka streams launched via Arcane.
 
         :param base_url: Base URL for Arcane Streaming endpoint.
         :param retry_attempts: Number of retries for Arcane-specific error messages.
         """
-        self.base_url = add_api_version(base_url, api_version)
+        self.base_url = rewrite_url(base_url, api_version)
         self.http = session or session_with_retries()
         if auth:
             self.http.hooks['response'].append(auth.get_refresh_hook(self.http))

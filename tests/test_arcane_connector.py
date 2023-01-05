@@ -1,8 +1,9 @@
 from unittest.mock import Mock, MagicMock
 
+import pytest
 import requests
 
-from esd_services_api_client.arcane import ArcaneConnector, StreamInfo, StreamError
+from esd_services_api_client.arcane import ArcaneConnector, StreamInfo, StreamError, ApiVersion
 from esd_services_api_client.boxer import BoxerConnector, BoxerTokenAuth, ExternalTokenAuth
 import requests_mock
 
@@ -28,6 +29,30 @@ def test_retries():
 
     assert len(streams) == 5
     assert len(boxer_adapter.request_history) == 3
+
+
+@pytest.mark.parametrize("api_version, expected_url", [
+    (ApiVersion.V1, "https://arcane.example.com//stream/info/STREAM_SOURCE/stream_id"),
+    (ApiVersion.V2, "https://arcane.example.com/v2/stream/info/STREAM_SOURCE/stream_id")
+])
+def test_http_adapter(api_version, expected_url):
+    mock_stream = StreamInfo('id', 'STREAM_SOURCE', "", "test", "test", "{}", "", "RUNNING",
+                             StreamError("", "", "")).to_dict()
+    arcane_adapter = requests_mock.Adapter()
+    arcane_adapter.register_uri(
+        requests_mock.ANY,
+        requests_mock.ANY,
+        response_list=[
+            {"json": mock_stream, "status_code": 200},
+        ]
+    )
+    arcane_session = requests.Session()
+    arcane_session.mount("https://", arcane_adapter)
+    arcane_connector = ArcaneConnector(base_url="https://arcane.example.com",
+                                       api_version=api_version,
+                                       session=arcane_session)
+    arcane_connector.get_stream("STREAM_SOURCE", "stream_id")
+    assert arcane_adapter.request_history[0].url == expected_url
 
 
 def generate_boxer_mock_session(external_token_auth):

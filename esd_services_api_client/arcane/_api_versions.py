@@ -1,5 +1,7 @@
 from enum import Enum
 
+from requests.adapters import HTTPAdapter
+
 
 class ApiVersion(Enum):
     """
@@ -11,5 +13,5 @@ class ApiVersion(Enum):
     V2 = "v2"
 
 
-def add_api_version(base_url: str, version: ApiVersion) -> str:
-    return "/".join([base_url, version])
+def rewrite_url(base_url: str, version: ApiVersion) -> str:
+    return "/".join([base_url.strip("/"), version.value])
