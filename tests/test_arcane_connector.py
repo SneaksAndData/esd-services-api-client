@@ -22,7 +22,7 @@ def test_retries():
     arcane_connector = ArcaneConnector(
         base_url="https://arcane.example.com",
         auth=boxer_auth,
-        session=generate_arcane_mock_session())
+        session=generate_arcane_mock_session(), api_version=ApiVersion.V2)
     streams = []
     for _ in range(0, 5):
         streams.append(arcane_connector.get_stream("STREAM_SOURCE", "streamId"))
