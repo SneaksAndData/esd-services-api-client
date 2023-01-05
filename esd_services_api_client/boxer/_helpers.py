@@ -1,7 +1,11 @@
 """ Helper functions to parse responses
 """
+from typing import Optional
+
+from proteus.security.clients import AzureClient
 from requests import Response
 
+from esd_services_api_client.boxer import BoxerTokenAuth, ExternalTokenAuth, BoxerConnector
 from esd_services_api_client.boxer._models import UserClaim, BoxerClaim
 
 
@@ -29,3 +33,21 @@ def _iterate_boxer_claims_response(boxer_claim_response: Response):
             yield BoxerClaim.from_dict(api_response_item)
     else:
         raise ValueError('Expected response body of type application/json')
+
+
+def select_authentication(auth_provider: str, env: str, subscription_id: str) -> Optional[BoxerTokenAuth]:
+    """
+    Select authentication provider for console clients in backward-compatible way
+    This method will be removed after migration of console clients to boxer authentication
+    :param auth_provider: Name of authorization provider
+    :param env: Name of deploy environment
+    :param subscription_id: Subscription id for 'azuread' authorization provider
+    :return:
+    """
+    auth = None
+    if auth_provider == "azuread":
+        proteus_client = AzureClient(subscription_id=subscription_id)
+        external_auth = ExternalTokenAuth(proteus_client.get_access_token(), auth_provider)
+        boxer_connector = BoxerConnector(base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth)
+        auth = BoxerTokenAuth(boxer_connector)
+    return auth
