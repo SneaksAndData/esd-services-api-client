@@ -73,7 +73,7 @@ def generate_arcane_mock_session():
     arcane_adapter = requests_mock.Adapter()
     arcane_adapter.register_uri(
         requests_mock.ANY,
-        "https://arcane.example.com/stream/info/STREAM_SOURCE/streamId",
+        "https://arcane.example.com/v2/stream/info/STREAM_SOURCE/streamId",
         response_list=[
             {"json": mock_stream, "status_code": 200},
             {"text": "", "status_code": 401},
