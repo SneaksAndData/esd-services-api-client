@@ -1,6 +1,5 @@
 """ Helper functions to parse responses
 """
-
 from requests import Response
 
 from esd_services_api_client.boxer._models import UserClaim, BoxerClaim
