@@ -42,7 +42,7 @@ def select_authentication(auth_provider: str, env: str, subscription_id: str) ->
     :param auth_provider: Name of authorization provider
     :param env: Name of deploy environment
     :param subscription_id: Subscription id for 'azuread' authorization provider
-    :return:
+    :return: BoxerAuthentication or None
     """
     auth = None
     if auth_provider == "azuread":
