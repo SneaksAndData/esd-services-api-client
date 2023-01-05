@@ -9,12 +9,11 @@ license = 'Proprietary'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
-proteus = { version = "~1.2.0" }
+proteus = "^1.2.0,<1.8.0" # range due to issues with similarly named pypi package
 dataclasses-json = "~0.5.7"
 pycryptodome = { version = "~3.15", optional = true }
 azure-identity = { version = "~1.7", optional = true }
 pyjwt = { version = "~2.4.0", optional = true }
-numpy = "!=1.23.4" # Version 1.23.4 is not compatible
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^6.2"
