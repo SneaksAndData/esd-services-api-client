@@ -1,6 +1,7 @@
+"""
+API versioning for arcane connector
+"""
 from enum import Enum
-
-from requests.adapters import HTTPAdapter
 
 
 class ApiVersion(Enum):
@@ -14,4 +15,10 @@ class ApiVersion(Enum):
 
 
 def rewrite_url(base_url: str, version: ApiVersion) -> str:
+    """
+    Appends version segment to arcane URL
+    :param base_url: base URL passed to connector
+    :param version: API version number
+    :return: Modified base URL
+    """
     return "/".join([base_url.strip("/"), version.value])
