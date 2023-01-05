@@ -30,4 +30,3 @@ def _iterate_boxer_claims_response(boxer_claim_response: Response):
             yield BoxerClaim.from_dict(api_response_item)
     else:
         raise ValueError('Expected response body of type application/json')
-
