@@ -9,6 +9,8 @@ from requests.auth import HTTPBasicAuth
 
 from proteus.utils import session_with_retries
 from proteus.storage.models.format import SerializationFormat
+
+from esd_services_api_client.boxer import BoxerTokenAuth, select_authentication
 from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments, \
     AlgorithmRequest, AlgorithmConfiguration
 
@@ -60,11 +62,18 @@ class CrystalConnector:
       Crystal API connector
     """
 
-    def __init__(self, *, base_url: str, user: Optional[str] = None, password: Optional[str] = None):
+    def __init__(self, *,
+                 base_url: str,
+                 user: Optional[str] = None,
+                 password: Optional[str] = None,
+                 auth: Optional[BoxerTokenAuth] = None):
         self.base_url = base_url
         self.http = session_with_retries()
-        if user is not None and password is not None:
-            self.http.auth = HTTPBasicAuth(user, password)
+        if auth is not None:
+            self.http.auth = auth
+        else:
+            if user is not None and password is not None:
+                self.http.auth = HTTPBasicAuth(user, password)
 
     @staticmethod
     def create_authenticated(*, base_url: str, user: Optional[str] = None, password: Optional[str] = None):
@@ -75,6 +84,15 @@ class CrystalConnector:
         return CrystalConnector(base_url=base_url,
                                 user=user or os.environ.get('CRYSTAL_USER'),
                                 password=password or os.environ.get('CRYSTAL_PASSWORD'))
+
+    @staticmethod
+    def create_boxer_auth(*, base_url: str, env: str, subscription_id: str):
+        """Creates Crystal connector with basic authentication.
+        For connecting to Crystal outside the Crystal kubernetes cluster, e.g.
+        from other cluster or Airflow environment.
+        """
+        return CrystalConnector(base_url=base_url,
+                                auth=select_authentication("azuread", env, subscription_id))
 
     @staticmethod
     def create_anonymous(*, base_url: str):
