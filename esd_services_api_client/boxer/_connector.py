@@ -147,10 +147,9 @@ def select_authentication(auth_provider: str, env: str, subscription_id: str) ->
     :param subscription_id: Subscription id for 'azuread' authorization provider
     :return: BoxerAuthentication or None
     """
-    auth = None
     if auth_provider == "azuread":
         proteus_client = AzureClient(subscription_id=subscription_id)
         external_auth = ExternalTokenAuth(proteus_client.get_access_token(), auth_provider)
         boxer_connector = BoxerConnector(base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth)
-        auth = BoxerTokenAuth(boxer_connector)
-    return auth
+        return BoxerTokenAuth(boxer_connector)
+    return None
