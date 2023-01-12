@@ -66,21 +66,21 @@ class CrystalConnector:
         if user is not None and password is not None:
             self.http.auth = HTTPBasicAuth(user, password)
 
-    @staticmethod
-    def create_authenticated(*, base_url: str, user: Optional[str] = None, password: Optional[str] = None):
+    @classmethod
+    def create_authenticated(cls, base_url: str, user: Optional[str] = None, password: Optional[str] = None) -> 'CrystalConnector':
         """Creates Crystal connector with basic authentication.
         For connecting to Crystal outside the Crystal kubernetes cluster, e.g.
         from other cluster or Airflow environment.
         """
-        return CrystalConnector(base_url=base_url,
-                                user=user or os.environ.get('CRYSTAL_USER'),
-                                password=password or os.environ.get('CRYSTAL_PASSWORD'))
+        return cls(base_url=base_url,
+                   user=user or os.environ.get('CRYSTAL_USER'),
+                   password=password or os.environ.get('CRYSTAL_PASSWORD'))
 
-    @staticmethod
-    def create_anonymous(*, base_url: str):
+    @classmethod
+    def create_anonymous(cls, base_url: str) -> 'CrystalConnector':
         """Creates Crystal connector with no authentication.
          This should be use for accessing Crystal from inside a hosting cluster."""
-        return CrystalConnector(base_url=base_url, user=None, password=None)
+        return cls(base_url=base_url, user=None, password=None)
 
     def __enter__(self):
         return self
@@ -107,7 +107,7 @@ class CrystalConnector:
             tag=tag
         ).to_dict()
 
-        print(f"Sending the following configuration for algorithm {algorithm}: {run_body}")
+        #print(f"Sending the following configuration for algorithm {algorithm}: {run_body}")
 
         run_response = self.http.post(f"{self.base_url}/algorithm/{api_version}/run", json=run_body)
 
@@ -116,8 +116,8 @@ class CrystalConnector:
 
         run_id = run_response.json()['requestId']
 
-        print(
-            f"Algorithm run initiated: {run_id}. Check status at {self.base_url}/algorithm/{api_version}/run/{run_id}/result")
+        #print(
+         #   f"Algorithm run initiated: {run_id}. Check status at {self.base_url}/algorithm/{api_version}/run/{run_id}/result")
 
         return run_id
 
