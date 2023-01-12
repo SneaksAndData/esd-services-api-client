@@ -86,15 +86,6 @@ class CrystalConnector:
                                 password=password or os.environ.get('CRYSTAL_PASSWORD'))
 
     @staticmethod
-    def create_boxer_auth(*, base_url: str, env: str, subscription_id: str):
-        """Creates Crystal connector with basic authentication.
-        For connecting to Crystal outside the Crystal kubernetes cluster, e.g.
-        from other cluster or Airflow environment.
-        """
-        return CrystalConnector(base_url=base_url,
-                                auth=select_authentication("azuread", env, subscription_id))
-
-    @staticmethod
     def create_anonymous(*, base_url: str):
         """Creates Crystal connector with no authentication.
          This should be use for accessing Crystal from inside a hosting cluster."""

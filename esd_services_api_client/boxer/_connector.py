@@ -138,17 +138,16 @@ class BoxerConnector(BoxerTokenProvider):
                          consumer_id=os.environ.get('BOXER_CONSUMER_ID'))
 
 
-def select_authentication(auth_provider: str, env: str, subscription_id: str) -> Optional[BoxerTokenAuth]:
+def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAuth]:
     """
     Select authentication provider for console clients in backward-compatible way
     This method will be removed after migration of console clients to boxer authentication
     :param auth_provider: Name of authorization provider
     :param env: Name of deploy environment
-    :param subscription_id: Subscription id for 'azuread' authorization provider
     :return: BoxerAuthentication or None
     """
     if auth_provider == "azuread":
-        proteus_client = AzureClient(subscription_id=subscription_id)
+        proteus_client = AzureClient(subscription_id="")
         external_auth = ExternalTokenAuth(proteus_client.get_access_token(), auth_provider)
         boxer_connector = BoxerConnector(base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth)
         return BoxerTokenAuth(boxer_connector)
