@@ -5,10 +5,11 @@ import os
 from argparse import Namespace, ArgumentParser
 from typing import Dict, Optional, Type, TypeVar, List
 
+from proteus.storage.models.format import SerializationFormat
+from proteus.utils import session_with_retries
 from requests.auth import HTTPBasicAuth
 
-from proteus.utils import session_with_retries
-from proteus.storage.models.format import SerializationFormat
+from esd_services_api_client.boxer import BoxerTokenAuth
 from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments, \
     AlgorithmRequest, AlgorithmConfiguration
 
@@ -60,11 +61,18 @@ class CrystalConnector:
       Crystal API connector
     """
 
-    def __init__(self, *, base_url: str, user: Optional[str] = None, password: Optional[str] = None):
+    def __init__(self, *,
+                 base_url: str,
+                 user: Optional[str] = None,
+                 password: Optional[str] = None,
+                 auth: Optional[BoxerTokenAuth] = None):
         self.base_url = base_url
         self.http = session_with_retries()
-        if user is not None and password is not None:
-            self.http.auth = HTTPBasicAuth(user, password)
+        if auth is not None:
+            self.http.auth = auth
+        else:
+            if user is not None and password is not None:
+                self.http.auth = HTTPBasicAuth(user, password)
 
     @classmethod
     def create_authenticated(cls, base_url: str, user: Optional[str] = None, password: Optional[str] = None) -> 'CrystalConnector':
