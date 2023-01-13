@@ -7,9 +7,10 @@ from typing import Dict, Optional, Type, TypeVar, List
 
 from proteus.storage.models.format import SerializationFormat
 from proteus.utils import session_with_retries
-from requests.auth import HTTPBasicAuth
+from requests.auth import HTTPBasicAuth, AuthBase
 
 from esd_services_api_client.boxer import BoxerTokenAuth
+from esd_services_api_client.crystal._api_versions import ApiVersion
 from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments, \
     AlgorithmRequest, AlgorithmConfiguration
 
@@ -61,18 +62,23 @@ class CrystalConnector:
       Crystal API connector
     """
 
-    def __init__(self, *,
-                 base_url: str,
-                 user: Optional[str] = None,
-                 password: Optional[str] = None,
-                 auth: Optional[BoxerTokenAuth] = None):
+    def __init__(
+            self, *,
+            base_url: str,
+            auth: Optional[AuthBase] = None,
+            api_version: ApiVersion = ApiVersion.V1_1
+    ):
         self.base_url = base_url
         self.http = session_with_retries()
-        if auth is not None:
-            self.http.auth = auth
-        else:
-            if user is not None and password is not None:
-                self.http.auth = HTTPBasicAuth(user, password)
+        self._api_version = api_version
+
+        if isinstance(auth, BoxerTokenAuth):
+            assert api_version == ApiVersion.V1_2, 'Cannot use BoxerTokenAuth with version prior to 1.2.'
+
+        if isinstance(auth, HTTPBasicAuth):
+            assert api_version == ApiVersion.V1_1, 'Basic auth can only be used with versions prior to 1.2.'
+
+        self.http.auth = auth
 
     @classmethod
     def create_authenticated(cls, base_url: str, user: Optional[str] = None, password: Optional[str] = None) -> 'CrystalConnector':
@@ -80,15 +86,16 @@ class CrystalConnector:
         For connecting to Crystal outside the Crystal kubernetes cluster, e.g.
         from other cluster or Airflow environment.
         """
-        return cls(base_url=base_url,
-                   user=user or os.environ.get('CRYSTAL_USER'),
-                   password=password or os.environ.get('CRYSTAL_PASSWORD'))
+        return cls(
+            base_url=base_url,
+            auth=HTTPBasicAuth(user or os.environ.get('CRYSTAL_USER'), password or os.environ.get('CRYSTAL_PASSWORD'))
+        )
 
     @classmethod
     def create_anonymous(cls, base_url: str) -> 'CrystalConnector':
         """Creates Crystal connector with no authentication.
          This should be use for accessing Crystal from inside a hosting cluster."""
-        return cls(base_url=base_url, user=None, password=None)
+        return cls(base_url=base_url)
 
     def __enter__(self):
         return self
@@ -96,18 +103,30 @@ class CrystalConnector:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.dispose()
 
-    def create_run(self, algorithm: str, payload: Dict, api_version: str = "v1.1",
-                   custom_config: Optional[AlgorithmConfiguration] = None, tag: Optional[str] = None) -> str:
+    def create_run(
+            self,
+            algorithm: str,
+            payload: Dict,
+            custom_config: Optional[AlgorithmConfiguration] = None,
+            tag: Optional[str] = None
+    ) -> str:
         """
           Creates a Crystal job run against the latest API version.
 
         :param algorithm: Name of a connected algorithm.
         :param payload: Algorithm payload.
-        :param api_version: Crystal API version.
         :param custom_config: Customized config for this run.
         :param tag: Client-side submission identifier.
         :return: Request identifier assigned to the job by Crystal.
         """
+        def get_api_path() -> str:
+            if self._api_version == ApiVersion.V1_1:
+                return f"{self.base_url}/algorithm/{self._api_version.value}/run"
+            if self._api_version == ApiVersion.V1_2:
+                return f"{self.base_url}/algorithm/{self._api_version.value}/run/{algorithm}"
+
+            raise ValueError(f'Unsupported API version {self._api_version}')
+
         run_body = AlgorithmRequest(
             algorithm_name=algorithm,
             algorithm_parameters=payload,
@@ -117,7 +136,7 @@ class CrystalConnector:
 
         #print(f"Sending the following configuration for algorithm {algorithm}: {run_body}")
 
-        run_response = self.http.post(f"{self.base_url}/algorithm/{api_version}/run", json=run_body)
+        run_response = self.http.post(get_api_path(), json=run_body)
 
         # raise if not successful
         run_response.raise_for_status()
@@ -129,16 +148,22 @@ class CrystalConnector:
 
         return run_id
 
-    def retrieve_run(self, run_id: str, api_version: str = "v1.1") -> RequestResult:
+    def retrieve_run(self, run_id: str, algorithm: Optional[str] = None) -> RequestResult:
         """
         Retrieves a submitted Crystal job.
 
         :param run_id: Request identifier assigned to the job by Crystal.
-        :param api_version: Crystal API version.
+        :param algorithm: Name of a connected algorithm.
         """
-        url = f'{self.base_url}/algorithm/{api_version}/run/{run_id}/result'
+        def get_api_path() -> str:
+            if self._api_version == ApiVersion.V1_1:
+                return f'{self.base_url}/algorithm/{self._api_version.value}/run/{run_id}/result'
+            if self._api_version == ApiVersion.V1_2:
+                return f'{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}'
 
-        response = self.http.get(url=url)
+            raise ValueError(f'Unsupported API version {self._api_version}')
+
+        response = self.http.get(url=get_api_path())
 
         # raise if not successful
         response.raise_for_status()
@@ -147,39 +172,57 @@ class CrystalConnector:
 
         return crystal_result
 
-    def retrieve_runs(self, tag: str, api_version: str = "v1.1") -> List[RequestResult]:
+    def retrieve_runs(self, tag: str, algorithm: Optional[str] = None) -> List[RequestResult]:
         """
           Retrieves all submitted Crystal jobs with matching tags.
 
           :param tag: A request tag assigned by a client.
-          :param api_version: Crystal API version.
+          :param algorithm: Name of a connected algorithm.
         """
-        url = f'{self.base_url}/algorithm/{api_version}/tag/{tag}/results'
+        def get_api_path() -> str:
+            if self._api_version == ApiVersion.V1_1:
+                return f'{self.base_url}/algorithm/{self._api_version.value}/tag/{tag}/results'
+            if self._api_version == ApiVersion.V1_2:
+                return f'{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}'
 
-        response = self.http.get(url=url)
+            raise ValueError(f'Unsupported API version {self._api_version}')
+
+        response = self.http.get(url=get_api_path())
 
         # raise if not successful
         response.raise_for_status()
 
         return [RequestResult.from_dict(run_result) for run_result in response.json()]
 
-    def submit_result(self, result: AlgorithmRunResult, url: str) -> None:
+    def submit_result(self, result: AlgorithmRunResult, run_id: str, algorithm: Optional[str] = None, submit_base_url: Optional[str] = None) -> None:
         """
         Submit a result of an algorithm back to Crystal.
-        Notice, this method is only intended to be used within Crystal.
+        Notice, this method is only intended to be used within Crystal, as it doesn't use authentication.
 
         :param result: The result of the algorithm.
-        :param url: URL of the results receiver.
+        :param algorithm: Name of a connected algorithm.
+        :param run_id: Request identifier assigned to the job by Crystal.
+        :param: submit_base_url: Internal Crystal url to submit results to.
         """
+        def get_api_path() -> str:
+            if self._api_version == ApiVersion.V1_1:
+                return f'{submit_base_url or self.base_url}/algorithm/{self._api_version.value}/run/complete'
+            if self._api_version == ApiVersion.V1_2:
+                return f'{submit_base_url or self.base_url}/algorithm/{self._api_version.value}/complete/{algorithm}/requests/{run_id}'
+
+            raise ValueError(f'Unsupported API version {self._api_version}')
+
         payload = {
             'cause': result.cause,
             'message': result.message,
-            'requestId': result.run_id,
             'sasUri': result.sas_uri,
         }
 
+        if self._api_version == ApiVersion.V1_1:
+            payload['requestId'] = result.run_id
+
         run_response = self.http.post(
-            url=url,
+            url=get_api_path(),
             json=payload
         )
 
@@ -187,8 +230,11 @@ class CrystalConnector:
         run_response.raise_for_status()
 
     @staticmethod
-    def read_input(*, crystal_arguments: CrystalEntrypointArguments,
-                   serialization_format: Type[SerializationFormat[T]]) -> T:
+    def read_input(
+            *,
+            crystal_arguments: CrystalEntrypointArguments,
+            serialization_format: Type[SerializationFormat[T]]
+    ) -> T:
         """
         Read Crystal input given in the SAS URI provided in the CrystalEntrypointArguments
         :param crystal_arguments: The arguments given to the Crystal job.
