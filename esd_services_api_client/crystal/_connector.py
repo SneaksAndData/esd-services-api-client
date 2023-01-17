@@ -1,6 +1,7 @@
 """
   Connector for Crystal Job Runtime (AKS)
 """
+import json
 import os
 from argparse import Namespace, ArgumentParser
 from typing import Dict, Optional, Type, TypeVar, List
@@ -158,7 +159,7 @@ class CrystalConnector:
 
         run_id = run_response.json()['requestId']
 
-        self._logger.info("Run initiated for algorithm {algorithm}: {run_id}", algorithm=algorithm, run_id=run_id)
+        self._logger.debug("Run initiated for algorithm {algorithm}: {run_id}", algorithm=algorithm, run_id=run_id)
 
         return run_id
 
@@ -243,6 +244,13 @@ class CrystalConnector:
 
         if self._api_version == ApiVersion.V1_1:
             payload['requestId'] = result.run_id
+
+        if debug:
+            self._logger.debug(
+                'Submitting result to {submission_url}, payload {payload}',
+                submission_url=get_api_path(),
+                payload=json.dumps(payload)
+            )
 
         run_response = self.http.post(
             url=get_api_path(),
