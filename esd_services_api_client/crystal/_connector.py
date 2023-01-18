@@ -67,7 +67,7 @@ class CrystalConnector:
     def __init__(
             self, *,
             base_url: str,
-            logger: ProteusLogger,
+            logger: Optional[ProteusLogger] = None,
             auth: Optional[AuthBase] = None,
             api_version: ApiVersion = ApiVersion.V1_2
     ):
@@ -87,7 +87,7 @@ class CrystalConnector:
     @classmethod
     def create_authenticated(
             cls, base_url: str,
-            logger: ProteusLogger,
+            logger: Optional[ProteusLogger] = None,
             user: Optional[str] = None,
             password: Optional[str] = None,
             api_version: ApiVersion = ApiVersion.V1_2
@@ -107,7 +107,7 @@ class CrystalConnector:
     def create_anonymous(
             cls,
             base_url: str,
-            logger: ProteusLogger,
+            logger: Optional[ProteusLogger] = None,
             api_version: ApiVersion = ApiVersion.V1_2
     ) -> 'CrystalConnector':
         """Creates Crystal connector with no authentication.
@@ -159,7 +159,8 @@ class CrystalConnector:
 
         run_id = run_response.json()['requestId']
 
-        self._logger.debug("Run initiated for algorithm {algorithm}: {run_id}", algorithm=algorithm, run_id=run_id)
+        if self._logger:
+            self._logger.debug("Run initiated for algorithm {algorithm}: {run_id}", algorithm=algorithm, run_id=run_id)
 
         return run_id
 
@@ -245,20 +246,21 @@ class CrystalConnector:
         if self._api_version == ApiVersion.V1_1:
             payload['requestId'] = result.run_id
 
-        if debug:
+        if debug and self._logger is not None:
             self._logger.debug(
                 'Submitting result to {submission_url}, payload {payload}',
                 submission_url=get_api_path(),
                 payload=json.dumps(payload)
             )
 
-        run_response = self.http.post(
-            url=get_api_path(),
-            json=payload
-        )
+        else:
+            run_response = self.http.post(
+                url=get_api_path(),
+                json=payload
+            )
 
-        # raise if not successful
-        run_response.raise_for_status()
+            # raise if not successful
+            run_response.raise_for_status()
 
     @staticmethod
     def read_input(
