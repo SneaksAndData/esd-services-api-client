@@ -43,7 +43,7 @@ class AlgorithmRunResult:
     """
     The result of an algorithm to be submitted to Crystal.
     """
-    run_id: str
+    run_id: Optional[str] = None
     cause: Optional[str] = None
     message: Optional[str] = None
     sas_uri: Optional[str] = None
@@ -113,7 +113,7 @@ class AlgorithmRequest(DataClassJsonMixin):
     """
       Crystal algorthm request.
     """
-    algorithm_name: str
     algorithm_parameters: Dict
+    algorithm_name: Optional[str] = None
     custom_configuration: Optional[AlgorithmConfiguration] = None
     tag: Optional[str] = None
