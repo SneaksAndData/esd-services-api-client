@@ -77,10 +77,10 @@ class CrystalConnector:
         self._logger = logger
 
         if isinstance(auth, BoxerTokenAuth):
-            assert api_version == ApiVersion.V1_2, 'Cannot use BoxerTokenAuth with version prior to 1.2.'
+            assert api_version == ApiVersion.V1_2, 'Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2.'
 
         if isinstance(auth, HTTPBasicAuth):
-            assert api_version == ApiVersion.V1_1, 'Basic auth can only be used with versions prior to 1.2.'
+            assert api_version == ApiVersion.V1_1, 'Basic auth can only be used with Crystal API versions prior to 1.2.'
 
         self.http.auth = auth
 
@@ -169,7 +169,7 @@ class CrystalConnector:
         Retrieves a submitted Crystal job.
 
         :param run_id: Request identifier assigned to the job by Crystal.
-        :param algorithm: Name of a connected algorithm.
+        :param algorithm: Name of an algorithm.
         """
 
         def get_api_path() -> str:
@@ -194,7 +194,7 @@ class CrystalConnector:
           Retrieves all submitted Crystal jobs with matching tags.
 
           :param tag: A request tag assigned by a client.
-          :param algorithm: Name of a connected algorithm.
+          :param algorithm: Name of an algorithm.
         """
 
         def get_api_path() -> str:
