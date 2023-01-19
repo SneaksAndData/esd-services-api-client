@@ -21,4 +21,4 @@ def rewrite_url(base_url: str, version: ApiVersion) -> str:
     :param version: API version number
     :return: Modified base URL
     """
-    return "/".join([base_url.strip("/"), version.value])
+    return "/".join([base_url.strip("/"), version.value]).removesuffix("/")

@@ -32,7 +32,7 @@ def test_retries():
 
 
 @pytest.mark.parametrize("api_version, expected_url", [
-    (ApiVersion.V1, "https://arcane.example.com//stream/info/STREAM_SOURCE/stream_id"),
+    (ApiVersion.V1, "https://arcane.example.com/stream/info/STREAM_SOURCE/stream_id"),
     (ApiVersion.V2, "https://arcane.example.com/v2/stream/info/STREAM_SOURCE/stream_id")
 ])
 def test_http_adapter(api_version, expected_url):
