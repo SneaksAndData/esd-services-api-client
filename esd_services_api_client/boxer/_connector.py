@@ -154,14 +154,14 @@ def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAu
     return None
 
 
-def get_kubernetes_token(cluster_name: str, env: str):
+def get_kubernetes_token(cluster_name: str, boxer_base_url: str):
     """
     Create Boxer auth based on kubernetes cluster token for ExternalTokenAuth.
     :param cluster_name: Name of the cluster (should match name of Identity provider in boxer configuration)
-    :param env: Boxer environment name
+    :param boxer_base_url: Boxer base url
     :return: BoxerTokenAuth configured fot particular identity provider and kubernetes auth token
     """
     with open("/var/run/secrets/kubernetes.io/serviceaccount/token", 'r', encoding='utf-8') as token_file:
         external_auth = ExternalTokenAuth(token_file.readline(), cluster_name)
-        boxer_connector = BoxerConnector(base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth)
+        boxer_connector = BoxerConnector(base_url=boxer_base_url, auth=external_auth)
         return BoxerTokenAuth(boxer_connector)
