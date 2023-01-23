@@ -154,7 +154,7 @@ def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAu
     return None
 
 
-def get_kubernetes_token(cluster_name: str, boxer_base_url: str):
+def get_kubernetes_token(cluster_name: str, boxer_base_url: str) -> BoxerTokenAuth:
     """
     Create Boxer auth based on kubernetes cluster token for ExternalTokenAuth.
     :param cluster_name: Name of the cluster (should match name of Identity provider in boxer configuration)
