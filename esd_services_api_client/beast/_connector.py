@@ -10,8 +10,8 @@ import backoff
 from proteus.utils import doze, session_with_retries
 from urllib3.exceptions import ProtocolError, HTTPError
 
-from esd_services_api_client.beast._auth import BeastAuth
 from esd_services_api_client.beast._models import JobRequest, BeastJobParams
+from esd_services_api_client.boxer import BoxerTokenAuth
 
 
 class BeastConnector:
@@ -19,21 +19,21 @@ class BeastConnector:
       Beast API connector
     """
 
-    __SUPPORTED_BEAST_RELEASE__ = "2.*.*"
-
     def __init__(
             self,
             *,
             base_url,
             code_root="/ecco/dist",
+            auth: BoxerTokenAuth,
             lifecycle_check_interval: int = 60,
-            failure_type: Optional[Exception] = None,
+            failure_type: Optional[Exception] = None
     ):
         """
           Creates a Beast connector, capable of submitting/status tracking etc.
 
         :param base_url: Base URL for Beast Workload Manager.
         :param code_root: Root folder for code deployments.
+        :param auth: Boxer-based authentication
         :param lifecycle_check_interval: Time to wait between lifecycle checks for submissions/cancellations etc.
         """
         self.base_url = base_url
@@ -42,7 +42,8 @@ class BeastConnector:
         self.failed_stages = ["FAILED", "SCHEDULING_FAILED", "RETRIES_EXCEEDED", "SUBMISSION_FAILED", "STALE"]
         self.success_stages = ["COMPLETED"]
         self.http = session_with_retries()
-        self.http.auth = BeastAuth()
+        self.http.hooks['response'].append(auth.get_refresh_hook(self.http))
+        self.http.auth = auth
         self._failure_type = failure_type or Exception
 
     def _submit(self, request: JobRequest) -> (str, str):
