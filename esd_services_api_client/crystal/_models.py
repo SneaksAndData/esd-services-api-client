@@ -102,9 +102,11 @@ class AlgorithmConfiguration(DataClassJsonMixin):
     cpu_limit: Optional[str] = None
     memory_limit: Optional[str] = None
     workgroup: Optional[str] = None
+    additional_workgroups: Optional[Dict[str, str]] = None
     version: Optional[str] = None
     monitoring_parameters: Optional[List[str]] = None
     custom_resources: Optional[Dict[str, str]] = None
+    speculative_attempts: Optional[int] = None
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
