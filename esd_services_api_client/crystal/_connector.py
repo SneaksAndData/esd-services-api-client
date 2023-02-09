@@ -33,12 +33,6 @@ def add_crystal_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
 
     parser.add_argument('--sas-uri', required=True, type=str, help='SAS URI for input data')
     parser.add_argument('--request-id', required=True, type=str, help='ID of the task')
-    parser.add_argument('--results-receiver', required=True, type=str,
-                        help='HTTP(s) endpoint to which output SAS URI is passed')
-    parser.add_argument('--results-receiver-user', required=False, type=str,
-                        help='User for results receiver (authentication)')
-    parser.add_argument('--results-receiver-password', required=False, type=str,
-                        help='Password for results receiver (authentication)')
     parser.add_argument('--sign-result', dest='sign_result', required=False, action='store_true')
     parser.set_defaults(sign_result=False)
 
@@ -72,36 +66,13 @@ class CrystalConnector:
             api_version: ApiVersion = ApiVersion.V1_2
     ):
         self.base_url = base_url
-        self.http = session_with_retries()
+        self.http = session_with_retries(status_list=(400, 429, 500, 502, 503, 504, 404))
         self._api_version = api_version
         self._logger = logger
-
         if isinstance(auth, BoxerTokenAuth):
             assert api_version == ApiVersion.V1_2, 'Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2.'
 
-        if isinstance(auth, HTTPBasicAuth):
-            assert api_version == ApiVersion.V1_1, 'Basic auth can only be used with Crystal API versions prior to 1.2.'
-
         self.http.auth = auth
-
-    @classmethod
-    def create_authenticated(
-            cls, base_url: str,
-            logger: Optional[ProteusLogger] = None,
-            user: Optional[str] = None,
-            password: Optional[str] = None,
-            api_version: ApiVersion = ApiVersion.V1_2
-    ) -> 'CrystalConnector':
-        """Creates Crystal connector with basic authentication.
-        For connecting to Crystal outside the Crystal kubernetes cluster, e.g.
-        from other cluster or Airflow environment.
-        """
-        return cls(
-            base_url=base_url,
-            auth=HTTPBasicAuth(user or os.environ.get('CRYSTAL_USER'), password or os.environ.get('CRYSTAL_PASSWORD')),
-            api_version=api_version,
-            logger=logger
-        )
 
     @classmethod
     def create_anonymous(
@@ -138,8 +109,6 @@ class CrystalConnector:
         """
 
         def get_api_path() -> str:
-            if self._api_version == ApiVersion.V1_1:
-                return f"{self.base_url}/algorithm/{self._api_version.value}/run"
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/run/{algorithm}"
 
@@ -173,8 +142,6 @@ class CrystalConnector:
         """
 
         def get_api_path() -> str:
-            if self._api_version == ApiVersion.V1_1:
-                return f'{self.base_url}/algorithm/{self._api_version.value}/run/{run_id}/result'
             if self._api_version == ApiVersion.V1_2:
                 return f'{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}'
 
@@ -198,8 +165,6 @@ class CrystalConnector:
         """
 
         def get_api_path() -> str:
-            if self._api_version == ApiVersion.V1_1:
-                return f'{self.base_url}/algorithm/{self._api_version.value}/tag/{tag}/results'
             if self._api_version == ApiVersion.V1_2:
                 return f'{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}'
 
@@ -230,8 +195,6 @@ class CrystalConnector:
         """
 
         def get_api_path() -> str:
-            if self._api_version == ApiVersion.V1_1:
-                return f'{self.base_url}/algorithm/{self._api_version.value}/run/complete'
             if self._api_version == ApiVersion.V1_2:
                 return f'{self.base_url}/algorithm/{self._api_version.value}/complete/{algorithm}/requests/{run_id}'
 
@@ -242,9 +205,6 @@ class CrystalConnector:
             'message': result.message,
             'sasUri': result.sas_uri,
         }
-
-        if self._api_version == ApiVersion.V1_1:
-            payload['requestId'] = result.run_id
 
         if debug and self._logger is not None:
             self._logger.debug(
