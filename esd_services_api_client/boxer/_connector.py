@@ -124,7 +124,7 @@ class BoxerConnector(BoxerTokenProvider):
         :return: BoxerToken
         """
         if not self.authentication_provider:
-            raise Exception("If boxer token is used, ExternalTokenAuth should be provided")
+            raise ValueError("If boxer token is used, ExternalTokenAuth should be provided")
         target_url = f"{self.base_url}/token/{self.authentication_provider}"
         response = self.http.get(target_url)
         response.raise_for_status()

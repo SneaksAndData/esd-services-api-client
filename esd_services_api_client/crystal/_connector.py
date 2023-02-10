@@ -2,14 +2,13 @@
   Connector for Crystal Job Runtime (AKS)
 """
 import json
-import os
 from argparse import Namespace, ArgumentParser
 from typing import Dict, Optional, Type, TypeVar, List
 
 from proteus.logs import ProteusLogger
 from proteus.storage.models.format import SerializationFormat
 from proteus.utils import session_with_retries
-from requests.auth import HTTPBasicAuth, AuthBase
+from requests.auth import AuthBase
 
 from esd_services_api_client.boxer import BoxerTokenAuth
 from esd_services_api_client.crystal._api_versions import ApiVersion
