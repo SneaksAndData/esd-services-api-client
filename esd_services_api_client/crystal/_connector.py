@@ -47,7 +47,6 @@ def extract_crystal_args(args: Namespace) -> CrystalEntrypointArguments:
     return CrystalEntrypointArguments(
         sas_uri=args.sas_uri,
         request_id=args.request_id,
-        results_receiver=args.results_receiver,
         sign_result=args.sign_result
     )
 

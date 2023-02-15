@@ -44,8 +44,7 @@ def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data:
 
     args = CrystalEntrypointArguments(
         sas_uri='https://some.sas.url.com',
-        request_id='test-id',
-        results_receiver='https://some.url.com'
+        request_id='test-id'
     )
 
     read_data = CrystalConnector.read_input(crystal_arguments=args, serialization_format=serializer)
