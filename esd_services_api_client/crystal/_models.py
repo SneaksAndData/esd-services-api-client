@@ -56,7 +56,6 @@ class CrystalEntrypointArguments:
     """
     sas_uri: str
     request_id: str
-    results_receiver: str
     sign_result: Optional[bool] = None
 
 
