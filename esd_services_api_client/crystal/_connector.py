@@ -3,6 +3,7 @@
 """
 import json
 from argparse import Namespace, ArgumentParser
+from datetime import timedelta
 from typing import Dict, Optional, Type, TypeVar, List
 
 from proteus.logs import ProteusLogger
@@ -61,10 +62,16 @@ class CrystalConnector:
             base_url: str,
             logger: Optional[ProteusLogger] = None,
             auth: Optional[AuthBase] = None,
-            api_version: ApiVersion = ApiVersion.V1_2
+            api_version: ApiVersion = ApiVersion.V1_2,
+            default_timeout: timedelta = timedelta(seconds=300),
+            default_retry_count: int = 10
     ):
         self.base_url = base_url
-        self.http = session_with_retries(status_list=(400, 429, 500, 502, 503, 504, 404))
+        self.http = session_with_retries(
+            status_list=(400, 429, 500, 502, 503, 504, 404),
+            retry_count=default_retry_count,
+            request_timeout=default_timeout.total_seconds()
+        )
         self._api_version = api_version
         self._logger = logger
         if isinstance(auth, BoxerTokenAuth):
