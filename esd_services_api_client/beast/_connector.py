@@ -224,7 +224,7 @@ class BeastConnector:
                 job_size=job_params.size_hint,
                 flexible_driver=job_params.flexible_driver,
                 max_runtime_hours=job_params.max_runtime_hours,
-                runtime_tags=job_params.runtime_tags,
+                additional_driver_node_tolerations=job_params.additional_driver_node_tolerations,
                 execution_group=job_params.execution_group,
                 debug_mode=job_params.debug_mode,
                 expected_parallelism=job_params.expected_parallelism,
