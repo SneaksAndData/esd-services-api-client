@@ -115,7 +115,6 @@ class JobRequest(DataClassJsonMixin):
     overwrite: bool
     extra_args: Dict[str, str]
     client_tag: str
-    cost_optimized: Optional[bool]
     job_size: Optional[JobSize] = field(
         metadata=config(
             encoder=lambda v: v.value if v else None,
@@ -225,8 +224,6 @@ class BeastJobParams:
         'description': 'Job size hint for Beast.'}, default=JobSize.SMALL)
     execution_group: Optional[str] = field(metadata={
         'description': 'Spark scheduler pool that should be used for this request'}, default=None)
-    cost_optimized: Optional[bool] = field(metadata={
-        'description': 'Job will run on a discounted workload (spot capacity).'}, default=True)
     flexible_driver: Optional[bool] = field(metadata={
         'description': 'Whether to use fixed-size driver or derive driver memory from master node max memory.'},
         default=False)
