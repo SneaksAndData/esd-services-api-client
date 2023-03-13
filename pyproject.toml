@@ -24,6 +24,7 @@ pytest-cov = "^2.12"
 requests = "~2.27"
 cryptography = "~36.0"
 requests-mock = "~1.10"
+locust = "~2.14.2"
 
 [build-system]
 requires = ["poetry-core"]
