@@ -30,7 +30,7 @@ def test_request_ser():
         execution_group=None,
         flexible_driver=True,
         max_runtime_hours=None,
-        runtime_tags=None,
+        additional_driver_node_tolerations=None,
         debug_mode=None,
         expected_parallelism=None,
         submission_mode=SubmissionMode.SWARM
@@ -50,7 +50,7 @@ def test_request_ser():
         execution_group=None,
         flexible_driver=True,
         max_runtime_hours=None,
-        runtime_tags=None,
+        additional_driver_node_tolerations=None,
         debug_mode=None,
         expected_parallelism=None,
         submission_mode=SubmissionMode.SWARM
@@ -70,7 +70,7 @@ def test_request_ser():
         execution_group=None,
         flexible_driver=True,
         max_runtime_hours=None,
-        runtime_tags=None,
+        additional_driver_node_tolerations=None,
         debug_mode=None,
         expected_parallelism=None,
         submission_mode=None
