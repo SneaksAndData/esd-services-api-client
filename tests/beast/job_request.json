@@ -27,7 +27,6 @@
         "write-mode": "overwrite"
     },
     "clientTag": "theobaldCopy__8ZRTSL_C06__20220822",
-    "costOptimized": true,
     "jobSize": "SMALL",
     "flexibleDriver": true,
     "submissionMode": "K8S"
