@@ -1,6 +1,21 @@
 """
  Models for Arcane
 """
+#  Copyright (c) 2023. ECCO Sneaks & Data
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Dict, Optional
@@ -11,7 +26,7 @@ from dataclasses_json import DataClassJsonMixin, dataclass_json, LetterCase
 
 class StreamConfiguration(ABC):
     """
-     Base configuration for all streams.
+    Base configuration for all streams.
     """
 
     @abstractmethod
@@ -33,8 +48,9 @@ class StreamConfiguration(ABC):
 @dataclass
 class SqlServerStreamConfiguration(StreamConfiguration):
     """
-     Stream configuration for Sql Server Change Tracking Source.
+    Stream configuration for Sql Server Change Tracking Source.
     """
+
     connection_string: str
     schema: str
     table: str
@@ -67,15 +83,16 @@ class SqlServerStreamConfiguration(StreamConfiguration):
             "ClientTag": self.client_tag,
             "LookbackInterval": self.lookback_interval,
             "ChangeCaptureInterval": self.change_capture_interval,
-            "CommandTimeout": self.command_timeout
+            "CommandTimeout": self.command_timeout,
         }
 
 
 @dataclass
 class CdmChangeFeedStreamConfiguration(StreamConfiguration):
     """
-     Stream configuration for Sql Server Change Tracking Source.
+    Stream configuration for Sql Server Change Tracking Source.
     """
+
     storage_account_connection_string: str
     base_location: str
     entity_name: str
@@ -108,15 +125,16 @@ class CdmChangeFeedStreamConfiguration(StreamConfiguration):
             "GroupsPerFile": self.groups_per_file,
             "SinkLocation": self.sink_location,
             "SinkFileName": self.sink_filename,
-            "ClientTag": self.client_tag
+            "ClientTag": self.client_tag,
         }
 
 
 @dataclass
 class BigQueryStreamConfiguration(StreamConfiguration):
     """
-     Stream configuration for Sql Server Change Tracking Source.
+    Stream configuration for Sql Server Change Tracking Source.
     """
+
     project: str
     dataset: str
     table: str
@@ -147,7 +165,7 @@ class BigQueryStreamConfiguration(StreamConfiguration):
             "FullLoadOnStart": self.full_load_on_start,
             "SinkLocation": self.sink_location,
             "PartitionColumnNameFormat": self.partition_column_name_format,
-            "ClientTag": self.client_tag
+            "ClientTag": self.client_tag,
         }
 
 
@@ -155,8 +173,9 @@ class BigQueryStreamConfiguration(StreamConfiguration):
 @dataclass
 class StreamError(DataClassJsonMixin):
     """
-     Arcane stream failure information.
+    Arcane stream failure information.
     """
+
     error_type: str
     error_message: str
     error_stack: str
@@ -166,8 +185,9 @@ class StreamError(DataClassJsonMixin):
 @dataclass
 class StreamInfo(DataClassJsonMixin):
     """
-      Arcane stream information.
+    Arcane stream information.
     """
+
     id: str  # pylint: disable=C0103
     stream_source: str
     started_at: str
@@ -182,10 +202,11 @@ class StreamInfo(DataClassJsonMixin):
 
 class StreamState(Enum):
     """
-     Stream states in Arcane.
+    Stream states in Arcane.
     """
-    RUNNING = 'RUNNING'
-    STOPPED = 'STOPPED'
-    TERMINATING = 'TERMINATING'
-    RESTARTING = 'RESTARTING'
-    FAILED = 'FAILED'
+
+    RUNNING = "RUNNING"
+    STOPPED = "STOPPED"
+    TERMINATING = "TERMINATING"
+    RESTARTING = "RESTARTING"
+    FAILED = "FAILED"

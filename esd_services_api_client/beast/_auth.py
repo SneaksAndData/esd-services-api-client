@@ -2,6 +2,21 @@
  Beast Auth class
  Based on https://docs.python-requests.org/en/master/user/advanced/#custom-authentication
 """
+#  Copyright (c) 2023. ECCO Sneaks & Data
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+
 from datetime import datetime
 from typing import Optional
 
@@ -27,9 +42,11 @@ class BeastAuth(AuthBase):
         credential = DefaultAzureCredential(
             exclude_shared_token_cache_credential=True,
             exclude_visual_studio_code_credential=True,
-            exclude_powershell_credential=True
+            exclude_powershell_credential=True,
         )
-        token: str = credential.get_token("https://management.core.windows.net/.default").token
+        token: str = credential.get_token(
+            "https://management.core.windows.net/.default"
+        ).token
         self.cache.append((token, datetime.utcnow()))
 
         return token
@@ -41,8 +58,11 @@ class BeastAuth(AuthBase):
         :return:
         """
         if self.cache:
-            valid_tokens = [(token, created_at) for token, created_at in self.cache if
-                            (datetime.utcnow() - created_at).seconds < self.token_lifetime]
+            valid_tokens = [
+                (token, created_at)
+                for token, created_at in self.cache
+                if (datetime.utcnow() - created_at).seconds < self.token_lifetime
+            ]
             if valid_tokens:
                 return valid_tokens[0][0]
 
@@ -60,8 +80,8 @@ class BeastAuth(AuthBase):
         """
         cached_token = self._fetch_cached_token()
         if cached_token:
-            r.headers['Authorization'] = f"Bearer {cached_token}"
+            r.headers["Authorization"] = f"Bearer {cached_token}"
         else:
-            r.headers['Authorization'] = f"Bearer {self._fetch_token()}"
+            r.headers["Authorization"] = f"Bearer {self._fetch_token()}"
 
         return r
