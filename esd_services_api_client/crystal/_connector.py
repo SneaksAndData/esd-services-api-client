@@ -28,10 +28,15 @@ from requests.auth import AuthBase
 
 from esd_services_api_client.boxer import BoxerTokenAuth
 from esd_services_api_client.crystal._api_versions import ApiVersion
-from esd_services_api_client.crystal._models import RequestResult, AlgorithmRunResult, CrystalEntrypointArguments, \
-    AlgorithmRequest, AlgorithmConfiguration
+from esd_services_api_client.crystal._models import (
+    RequestResult,
+    AlgorithmRunResult,
+    CrystalEntrypointArguments,
+    AlgorithmRequest,
+    AlgorithmConfiguration,
+)
 
-T = TypeVar('T')  # pylint: disable=C0103
+T = TypeVar("T")  # pylint: disable=C0103
 
 
 def add_crystal_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
@@ -46,9 +51,13 @@ def add_crystal_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     if parser is None:
         parser = ArgumentParser()
 
-    parser.add_argument('--sas-uri', required=True, type=str, help='SAS URI for input data')
-    parser.add_argument('--request-id', required=True, type=str, help='ID of the task')
-    parser.add_argument('--sign-result', dest='sign_result', required=False, action='store_true')
+    parser.add_argument(
+        "--sas-uri", required=True, type=str, help="SAS URI for input data"
+    )
+    parser.add_argument("--request-id", required=True, type=str, help="ID of the task")
+    parser.add_argument(
+        "--sign-result", dest="sign_result", required=False, action="store_true"
+    )
     parser.set_defaults(sign_result=False)
 
     return parser
@@ -61,48 +70,49 @@ def extract_crystal_args(args: Namespace) -> CrystalEntrypointArguments:
     :return: CrystalArguments object
     """
     return CrystalEntrypointArguments(
-        sas_uri=args.sas_uri,
-        request_id=args.request_id,
-        sign_result=args.sign_result
+        sas_uri=args.sas_uri, request_id=args.request_id, sign_result=args.sign_result
     )
 
 
 class CrystalConnector:
     """
-      Crystal API connector
+    Crystal API connector
     """
 
     def __init__(
-            self, *,
-            base_url: str,
-            logger: Optional[SemanticLogger] = None,
-            auth: Optional[AuthBase] = None,
-            api_version: ApiVersion = ApiVersion.V1_2,
-            default_timeout: timedelta = timedelta(seconds=300),
-            default_retry_count: int = 10
+        self,
+        *,
+        base_url: str,
+        logger: Optional[SemanticLogger] = None,
+        auth: Optional[AuthBase] = None,
+        api_version: ApiVersion = ApiVersion.V1_2,
+        default_timeout: timedelta = timedelta(seconds=300),
+        default_retry_count: int = 10,
     ):
         self.base_url = base_url
         self.http = session_with_retries(
             status_list=(400, 429, 500, 502, 503, 504, 404),
             retry_count=default_retry_count,
-            request_timeout=default_timeout.total_seconds()
+            request_timeout=default_timeout.total_seconds(),
         )
         self._api_version = api_version
         self._logger = logger
         if isinstance(auth, BoxerTokenAuth):
-            assert api_version == ApiVersion.V1_2, 'Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2.'
+            assert (
+                api_version == ApiVersion.V1_2
+            ), "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
 
         self.http.auth = auth
 
     @classmethod
     def create_anonymous(
-            cls,
-            base_url: str,
-            logger: Optional[SemanticLogger] = None,
-            api_version: ApiVersion = ApiVersion.V1_2
-    ) -> 'CrystalConnector':
+        cls,
+        base_url: str,
+        logger: Optional[SemanticLogger] = None,
+        api_version: ApiVersion = ApiVersion.V1_2,
+    ) -> "CrystalConnector":
         """Creates Crystal connector with no authentication.
-         This should be use for accessing Crystal from inside a hosting cluster."""
+        This should be use for accessing Crystal from inside a hosting cluster."""
         return cls(base_url=base_url, logger=logger, api_version=api_version)
 
     def __enter__(self):
@@ -112,11 +122,11 @@ class CrystalConnector:
         self.dispose()
 
     def create_run(
-            self,
-            algorithm: str,
-            payload: Dict,
-            custom_config: Optional[AlgorithmConfiguration] = None,
-            tag: Optional[str] = None
+        self,
+        algorithm: str,
+        payload: Dict,
+        custom_config: Optional[AlgorithmConfiguration] = None,
+        tag: Optional[str] = None,
     ) -> str:
         """
           Creates a Crystal job run against the latest API version.
@@ -132,13 +142,13 @@ class CrystalConnector:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/run/{algorithm}"
 
-            raise ValueError(f'Unsupported API version {self._api_version}')
+            raise ValueError(f"Unsupported API version {self._api_version}")
 
         run_body = AlgorithmRequest(
             algorithm_name=algorithm,
             algorithm_parameters=payload,
             custom_configuration=custom_config,
-            tag=tag
+            tag=tag,
         ).to_dict()
 
         run_response = self.http.post(get_api_path(), json=run_body)
@@ -146,14 +156,20 @@ class CrystalConnector:
         # raise if not successful
         run_response.raise_for_status()
 
-        run_id = run_response.json()['requestId']
+        run_id = run_response.json()["requestId"]
 
         if self._logger:
-            self._logger.debug("Run initiated for algorithm {algorithm}: {run_id}", algorithm=algorithm, run_id=run_id)
+            self._logger.debug(
+                "Run initiated for algorithm {algorithm}: {run_id}",
+                algorithm=algorithm,
+                run_id=run_id,
+            )
 
         return run_id
 
-    def retrieve_run(self, run_id: str, algorithm: Optional[str] = None) -> RequestResult:
+    def retrieve_run(
+        self, run_id: str, algorithm: Optional[str] = None
+    ) -> RequestResult:
         """
         Retrieves a submitted Crystal job.
 
@@ -163,9 +179,9 @@ class CrystalConnector:
 
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f'{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}'
+                return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}"
 
-            raise ValueError(f'Unsupported API version {self._api_version}')
+            raise ValueError(f"Unsupported API version {self._api_version}")
 
         response = self.http.get(url=get_api_path())
 
@@ -176,19 +192,21 @@ class CrystalConnector:
 
         return crystal_result
 
-    def retrieve_runs(self, tag: str, algorithm: Optional[str] = None) -> List[RequestResult]:
+    def retrieve_runs(
+        self, tag: str, algorithm: Optional[str] = None
+    ) -> List[RequestResult]:
         """
-          Retrieves all submitted Crystal jobs with matching tags.
+        Retrieves all submitted Crystal jobs with matching tags.
 
-          :param tag: A request tag assigned by a client.
-          :param algorithm: Name of an algorithm.
+        :param tag: A request tag assigned by a client.
+        :param algorithm: Name of an algorithm.
         """
 
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f'{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}'
+                return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}"
 
-            raise ValueError(f'Unsupported API version {self._api_version}')
+            raise ValueError(f"Unsupported API version {self._api_version}")
 
         response = self.http.get(url=get_api_path())
 
@@ -198,11 +216,11 @@ class CrystalConnector:
         return [RequestResult.from_dict(run_result) for run_result in response.json()]
 
     def submit_result(
-            self,
-            result: AlgorithmRunResult,
-            run_id: str,
-            algorithm: Optional[str] = None,
-            debug: bool = False
+        self,
+        result: AlgorithmRunResult,
+        run_id: str,
+        algorithm: Optional[str] = None,
+        debug: bool = False,
     ) -> None:
         """
         Submit a result of an algorithm back to Crystal.
@@ -216,37 +234,34 @@ class CrystalConnector:
 
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f'{self.base_url}/algorithm/{self._api_version.value}/complete/{algorithm}/requests/{run_id}'
+                return f"{self.base_url}/algorithm/{self._api_version.value}/complete/{algorithm}/requests/{run_id}"
 
-            raise ValueError(f'Unsupported API version {self._api_version}')
+            raise ValueError(f"Unsupported API version {self._api_version}")
 
         payload = {
-            'cause': result.cause,
-            'message': result.message,
-            'sasUri': result.sas_uri,
+            "cause": result.cause,
+            "message": result.message,
+            "sasUri": result.sas_uri,
         }
 
         if debug and self._logger is not None:
             self._logger.debug(
-                'Submitting result to {submission_url}, payload {payload}',
+                "Submitting result to {submission_url}, payload {payload}",
                 submission_url=get_api_path(),
-                payload=json.dumps(payload)
+                payload=json.dumps(payload),
             )
 
         else:
-            run_response = self.http.post(
-                url=get_api_path(),
-                json=payload
-            )
+            run_response = self.http.post(url=get_api_path(), json=payload)
 
             # raise if not successful
             run_response.raise_for_status()
 
     @staticmethod
     def read_input(
-            *,
-            crystal_arguments: CrystalEntrypointArguments,
-            serialization_format: Type[SerializationFormat[T]]
+        *,
+        crystal_arguments: CrystalEntrypointArguments,
+        serialization_format: Type[SerializationFormat[T]],
     ) -> T:
         """
         Read Crystal input given in the SAS URI provided in the CrystalEntrypointArguments

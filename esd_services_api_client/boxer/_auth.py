@@ -48,16 +48,16 @@ class BoxerAuth(AuthBase):
         :param input_string: input to generate signature for
         :return:
         """
-        msg_bytes = input_string.encode('utf-8')
+        msg_bytes = input_string.encode("utf-8")
         digest = sha256_get_instance()
 
         private_key_bytes = base64.b64decode(self._sign_key)
-        rsa_key = RSA.importKey(private_key_bytes, '')
+        rsa_key = RSA.importKey(private_key_bytes, "")
         signer = signature_factory(rsa_key)
 
         digest.update(msg_bytes)
         signed = signer.sign(digest)
-        return base64.b64encode(signed).decode('utf-8')
+        return base64.b64encode(signed).decode("utf-8")
 
     def __call__(self, request: PreparedRequest):
         """
@@ -66,11 +66,11 @@ class BoxerAuth(AuthBase):
         :param request: Request to authorize
         :return: Request with Auth header set
         """
-        payload = request.url.replace('https://', '').split('?')[0]
+        payload = request.url.replace("https://", "").split("?")[0]
         signature_base64 = self._sign_string(payload)
-        request.headers['Authorization'] = f"Signature {signature_base64}"
-        request.headers['X-Boxer-ConsumerId'] = self._consumer_id
-        request.headers['X-Boxer-Payload'] = payload
+        request.headers["Authorization"] = f"Signature {signature_base64}"
+        request.headers["X-Boxer-ConsumerId"] = self._consumer_id
+        request.headers["X-Boxer-Payload"] = payload
 
         return request
 
@@ -89,7 +89,7 @@ class ExternalTokenAuth(AuthBase):
         :param r: Request to authorize
         :return: Request with Auth header set
         """
-        r.headers['Authorization'] = f"Bearer {self._token}"
+        r.headers["Authorization"] = f"Bearer {self._token}"
         return r
 
     @property
@@ -116,7 +116,7 @@ class BoxerTokenAuth(AuthBase):
         :param request: Request to authorize
         :return: Request with Auth header set
         """
-        request.headers['Authorization'] = f"Bearer {self._get_token()}"
+        request.headers["Authorization"] = f"Bearer {self._get_token()}"
         return request
 
     def refresh_token(self, response: Response, session: Session, *_, **__):
@@ -128,12 +128,14 @@ class BoxerTokenAuth(AuthBase):
         :param __: Keyword arguments
         :return:
         """
-        if response.status_code == requests.codes['unauthorized']:
+        if response.status_code == requests.codes["unauthorized"]:
             self._get_token(refresh=True)
             return session.send(self(response.request))
         return response
 
-    def get_refresh_hook(self, session: Session) -> Callable[[Response, Unpack[Any]], Response]:
+    def get_refresh_hook(
+        self, session: Session
+    ) -> Callable[[Response, Unpack[Any]], Response]:
         """
         Generate request hook
         :param session: Session used for original API interaction

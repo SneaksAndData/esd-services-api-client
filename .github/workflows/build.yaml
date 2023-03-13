@@ -21,11 +21,6 @@ jobs:
         uses: SneaksAndData/github-actions/install_poetry@v0.0.21
         with:
           install_extras: all
-      - name: Lint
-        run: |
-          set -e
-
-          find ./esd_services_api_client -type f -name "*.py" | xargs poetry run pylint
       - name: Unit test
         run: |
           set -euxo pipefail

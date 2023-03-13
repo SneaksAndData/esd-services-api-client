@@ -42,9 +42,11 @@ class BeastAuth(AuthBase):
         credential = DefaultAzureCredential(
             exclude_shared_token_cache_credential=True,
             exclude_visual_studio_code_credential=True,
-            exclude_powershell_credential=True
+            exclude_powershell_credential=True,
         )
-        token: str = credential.get_token("https://management.core.windows.net/.default").token
+        token: str = credential.get_token(
+            "https://management.core.windows.net/.default"
+        ).token
         self.cache.append((token, datetime.utcnow()))
 
         return token
@@ -56,8 +58,11 @@ class BeastAuth(AuthBase):
         :return:
         """
         if self.cache:
-            valid_tokens = [(token, created_at) for token, created_at in self.cache if
-                            (datetime.utcnow() - created_at).seconds < self.token_lifetime]
+            valid_tokens = [
+                (token, created_at)
+                for token, created_at in self.cache
+                if (datetime.utcnow() - created_at).seconds < self.token_lifetime
+            ]
             if valid_tokens:
                 return valid_tokens[0][0]
 
@@ -75,8 +80,8 @@ class BeastAuth(AuthBase):
         """
         cached_token = self._fetch_cached_token()
         if cached_token:
-            r.headers['Authorization'] = f"Bearer {cached_token}"
+            r.headers["Authorization"] = f"Bearer {cached_token}"
         else:
-            r.headers['Authorization'] = f"Bearer {self._fetch_token()}"
+            r.headers["Authorization"] = f"Bearer {self._fetch_token()}"
 
         return r

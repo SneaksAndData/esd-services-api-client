@@ -25,18 +25,32 @@ from adapta.utils import session_with_retries
 from requests import Session
 
 from esd_services_api_client.boxer._base import BoxerTokenProvider
-from esd_services_api_client.boxer._auth import BoxerAuth, ExternalTokenAuth, BoxerTokenAuth
-from esd_services_api_client.boxer._helpers import _iterate_user_claims_response, _iterate_boxer_claims_response
+from esd_services_api_client.boxer._auth import (
+    BoxerAuth,
+    ExternalTokenAuth,
+    BoxerTokenAuth,
+)
+from esd_services_api_client.boxer._helpers import (
+    _iterate_user_claims_response,
+    _iterate_boxer_claims_response,
+)
 from esd_services_api_client.boxer._models import BoxerClaim, UserClaim, BoxerToken
 
 
 class BoxerConnector(BoxerTokenProvider):
     """
-      Boxer Auth API connector
+    Boxer Auth API connector
     """
 
-    def __init__(self, *, base_url, auth: ExternalTokenAuth, retry_attempts=10, session: Optional[Session] = None):
-        """ Creates Boxer Auth connector, capable of managing claims/consumers
+    def __init__(
+        self,
+        *,
+        base_url,
+        auth: ExternalTokenAuth,
+        retry_attempts=10,
+        session: Optional[Session] = None,
+    ):
+        """Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
         :param retry_attempts: Number of retries for Boxer-specific error messages
         """
@@ -48,7 +62,7 @@ class BoxerConnector(BoxerTokenProvider):
         self.retry_attempts = retry_attempts
 
     def push_user_claim(self, claim: BoxerClaim, user_id: str):
-        """ Adds/Overwrites a new Boxer Claim to a user
+        """Adds/Overwrites a new Boxer Claim to a user
         :param claim: Boxer Claim
         :param user_id: User's UPN
         :return:
@@ -60,7 +74,7 @@ class BoxerConnector(BoxerTokenProvider):
         print(f"Successfully pushed user claim for user {user_id}")
 
     def push_group_claim(self, claim: BoxerClaim, group_name: str):
-        """ Adds/Overwrites a new Boxer Claim to a user
+        """Adds/Overwrites a new Boxer Claim to a user
         :param claim: Boxer Claim
         :param group_name: Group Name
         :return:
@@ -82,7 +96,7 @@ class BoxerConnector(BoxerTokenProvider):
         return _iterate_user_claims_response(response)
 
     def get_claims_by_user(self, user_id: str) -> Iterator[BoxerClaim]:
-        """ Reads user claims from Boxer
+        """Reads user claims from Boxer
         :param user_id: user upn to load claims for
         :return: Iterator[UserClaim]
         """
@@ -93,7 +107,7 @@ class BoxerConnector(BoxerTokenProvider):
         return _iterate_boxer_claims_response(response)
 
     def get_claims_by_group(self, group_name: str) -> Iterator[BoxerClaim]:
-        """ Reads group claims from Boxer
+        """Reads group claims from Boxer
         :param group_name: group name to load claims for
         :return: Iterator[UserClaim]
         """
@@ -103,7 +117,7 @@ class BoxerConnector(BoxerTokenProvider):
         return _iterate_boxer_claims_response(response)
 
     def get_claims_for_token(self, jwt_token: str) -> Iterator[BoxerClaim]:
-        """ Reads user claims from Boxer based on jwt token
+        """Reads user claims from Boxer based on jwt token
         :param jwt_token: jwt token with UPN set
         :return: Iterator[UserClaim]
         """
@@ -113,7 +127,7 @@ class BoxerConnector(BoxerTokenProvider):
         return _iterate_boxer_claims_response(response)
 
     def create_consumer(self, consumer_id: str, overwrite: bool = False) -> str:
-        """ Adds/Overwrites a new Boxer Claim to a user
+        """Adds/Overwrites a new Boxer Claim to a user
         :param consumer_id: Consumer ID of new consumer
         :param overwrite: Flag to overwrite if consumer with given consumer_id already exists
         :return: New consumer's private key (Base64 Encoded)
@@ -124,7 +138,7 @@ class BoxerConnector(BoxerTokenProvider):
         return response.text
 
     def get_consumer_public_key(self, consumer_id: str) -> str:
-        """ Reads Consumer's public key
+        """Reads Consumer's public key
         :param consumer_id: Boxer Claim
         :return: public key (Base64 Encoded)
         """
@@ -139,7 +153,9 @@ class BoxerConnector(BoxerTokenProvider):
         :return: BoxerToken
         """
         if not self.authentication_provider:
-            raise ValueError("If boxer token is used, ExternalTokenAuth should be provided")
+            raise ValueError(
+                "If boxer token is used, ExternalTokenAuth should be provided"
+            )
         target_url = f"{self.base_url}/token/{self.authentication_provider}"
         response = self.http.get(target_url)
         response.raise_for_status()
@@ -147,10 +163,16 @@ class BoxerConnector(BoxerTokenProvider):
 
     @staticmethod
     def _create_boxer_auth():
-        assert os.environ.get('BOXER_CONSUMER_ID'), "Environment BOXER_CONSUMER_ID not set"
-        assert os.environ.get('BOXER_PRIVATE_KEY'), "Environment BOXER_PRIVATE_KEY not set"
-        return BoxerAuth(private_key_base64=os.environ.get('BOXER_PRIVATE_KEY'),
-                         consumer_id=os.environ.get('BOXER_CONSUMER_ID'))
+        assert os.environ.get(
+            "BOXER_CONSUMER_ID"
+        ), "Environment BOXER_CONSUMER_ID not set"
+        assert os.environ.get(
+            "BOXER_PRIVATE_KEY"
+        ), "Environment BOXER_PRIVATE_KEY not set"
+        return BoxerAuth(
+            private_key_base64=os.environ.get("BOXER_PRIVATE_KEY"),
+            consumer_id=os.environ.get("BOXER_CONSUMER_ID"),
+        )
 
 
 def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAuth]:
@@ -163,8 +185,12 @@ def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAu
     """
     if auth_provider == "azuread":
         proteus_client = AzureClient(subscription_id="")
-        external_auth = ExternalTokenAuth(proteus_client.get_access_token(), auth_provider)
-        boxer_connector = BoxerConnector(base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth)
+        external_auth = ExternalTokenAuth(
+            proteus_client.get_access_token(), auth_provider
+        )
+        boxer_connector = BoxerConnector(
+            base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth
+        )
         return BoxerTokenAuth(boxer_connector)
     return None
 
@@ -176,7 +202,9 @@ def get_kubernetes_token(cluster_name: str, boxer_base_url: str) -> BoxerTokenAu
     :param boxer_base_url: Boxer base url
     :return: BoxerTokenAuth configured fot particular identity provider and kubernetes auth token
     """
-    with open("/var/run/secrets/kubernetes.io/serviceaccount/token", 'r', encoding='utf-8') as token_file:
+    with open(
+        "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
+    ) as token_file:
         external_auth = ExternalTokenAuth(token_file.readline(), cluster_name)
         boxer_connector = BoxerConnector(base_url=boxer_base_url, auth=external_auth)
         return BoxerTokenAuth(boxer_connector)
