@@ -124,7 +124,7 @@ class JobRequest(DataClassJsonMixin):
     execution_group: Optional[str]
     flexible_driver: Optional[bool]
     max_runtime_hours: Optional[int]
-    runtime_tags: Optional[Dict[str, str]]
+    additional_driver_node_tolerations: Optional[Dict[str, str]]
     debug_mode: Optional[RequestDebugMode]
     expected_parallelism: Optional[int]
     submission_mode: Optional[SubmissionMode] = field(
@@ -232,9 +232,6 @@ class BeastJobParams:
         default=False)
     max_runtime_hours: Optional[int] = field(metadata={
         'description': 'Sets maximum allowed job run duration. Server-side default is 12 hours'}, default=None)
-    runtime_tags: Optional[Dict[str, str]] = field(metadata={
-        'description': 'Limits available runtimes to provided tags'
-    }, default=None)
     debug_mode: Optional[RequestDebugMode] = field(metadata={
         'description': 'Enables saving Spark event log for later viewing through History Server'
     }, default=None)
@@ -243,4 +240,7 @@ class BeastJobParams:
     }, default=None)
     submission_mode: Optional[SubmissionMode] = field(metadata={
         'description': 'Mode to submit a request in: shared cluster or direct k8s.'
+    }, default=None)
+    additional_driver_node_tolerations: Optional[Dict[str, str]] = field(metadata={
+        'description': 'Additional taints allowed for application driver nodes.'
     }, default=None)
