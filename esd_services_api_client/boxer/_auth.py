@@ -133,9 +133,7 @@ class BoxerTokenAuth(AuthBase):
             return session.send(self(response.request))
         return response
 
-    def get_refresh_hook(
-        self, session: Session
-    ) -> Callable[[Response, Unpack[Any]], Response]:
+    def get_refresh_hook(self, session: Session) -> Callable[[Response, Unpack[Any]], Response]:
         """
         Generate request hook
         :param session: Session used for original API interaction

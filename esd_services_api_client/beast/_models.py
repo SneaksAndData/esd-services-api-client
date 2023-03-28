@@ -96,16 +96,12 @@ class JobSize(Enum):
     SMALL - small workloads, one or 30% pod cores, 30% pod memory per executor
     MEDIUM - medium workloads, one or 30% pod cores, 50% pod memory per executor
     LARGE - large workloads, one or 30% pod cores, all available executor memory
-    XLARGE - extra large workload, two or 60% pod cores, all available executor memory
-    XXLARGE - x-extra large workloads, all available cores, all available memory
     """
 
     TINY = "TINY"
     SMALL = "SMALL"
     MEDIUM = "MEDIUM"
     LARGE = "LARGE"
-    XLARGE = "XLARGE"
-    XXLARGE = "XXLARGE"
 
 
 class SubmissionMode(Enum):
@@ -138,9 +134,7 @@ class JobRequest(DataClassJsonMixin):
     overwrite: bool
     extra_args: Dict[str, str]
     client_tag: str
-    job_size: Optional[JobSize] = field(
-        metadata=config(encoder=lambda v: v.value if v else None, decoder=JobSize)
-    )
+    job_size: Optional[JobSize] = field(metadata=config(encoder=lambda v: v.value if v else None, decoder=JobSize))
     execution_group: Optional[str]
     flexible_driver: Optional[bool]
     max_runtime_hours: Optional[int]
@@ -148,9 +142,7 @@ class JobRequest(DataClassJsonMixin):
     debug_mode: Optional[RequestDebugMode]
     expected_parallelism: Optional[int]
     submission_mode: Optional[SubmissionMode] = field(
-        metadata=config(
-            encoder=lambda v: v.value if v else None, decoder=SubmissionMode
-        )
+        metadata=config(encoder=lambda v: v.value if v else None, decoder=SubmissionMode)
     )
 
 
@@ -231,40 +223,18 @@ class BeastJobParams:
             "description": "Repository name that contains a runnable. Must be deployed to a Beast-managed cluster beforehand."
         }
     )
-    project_version: str = field(
-        metadata={"description": "Semantic version of a runnable."}
-    )
-    project_runnable: str = field(
-        metadata={
-            "description": "Path to a runnable, for example src/folder1/my_script.py."
-        }
-    )
-    project_inputs: List[JobSocket] = field(
-        metadata={"description": "List of job inputs."}
-    )
-    project_outputs: List[JobSocket] = field(
-        metadata={"description": "List of job outputs."}
-    )
-    overwrite_outputs: bool = field(
-        metadata={
-            "description": "Whether to wipe existing data before writing new out."
-        }
-    )
+    project_version: str = field(metadata={"description": "Semantic version of a runnable."})
+    project_runnable: str = field(metadata={"description": "Path to a runnable, for example src/folder1/my_script.py."})
+    project_inputs: List[JobSocket] = field(metadata={"description": "List of job inputs."})
+    project_outputs: List[JobSocket] = field(metadata={"description": "List of job outputs."})
+    overwrite_outputs: bool = field(metadata={"description": "Whether to wipe existing data before writing new out."})
     extra_arguments: Dict[str, Union[ArgumentValue, str]] = field(
-        metadata={
-            "description": "Extra arguments for a submission, defined by an author."
-        }
+        metadata={"description": "Extra arguments for a submission, defined by an author."}
     )
-    client_tag: str = field(
-        metadata={"description": "Client-assigned identifier for this request"}
-    )
-    size_hint: Optional[JobSize] = field(
-        metadata={"description": "Job size hint for Beast."}, default=JobSize.SMALL
-    )
+    client_tag: str = field(metadata={"description": "Client-assigned identifier for this request"})
+    size_hint: Optional[JobSize] = field(metadata={"description": "Job size hint for Beast."}, default=JobSize.SMALL)
     execution_group: Optional[str] = field(
-        metadata={
-            "description": "Spark scheduler pool that should be used for this request"
-        },
+        metadata={"description": "Spark scheduler pool that should be used for this request"},
         default=None,
     )
     flexible_driver: Optional[bool] = field(
@@ -274,15 +244,11 @@ class BeastJobParams:
         default=False,
     )
     max_runtime_hours: Optional[int] = field(
-        metadata={
-            "description": "Sets maximum allowed job run duration. Server-side default is 12 hours"
-        },
+        metadata={"description": "Sets maximum allowed job run duration. Server-side default is 12 hours"},
         default=None,
     )
     debug_mode: Optional[RequestDebugMode] = field(
-        metadata={
-            "description": "Enables saving Spark event log for later viewing through History Server"
-        },
+        metadata={"description": "Enables saving Spark event log for later viewing through History Server"},
         default=None,
     )
     expected_parallelism: Optional[int] = field(
@@ -292,14 +258,10 @@ class BeastJobParams:
         default=None,
     )
     submission_mode: Optional[SubmissionMode] = field(
-        metadata={
-            "description": "Mode to submit a request in: shared cluster or direct k8s."
-        },
+        metadata={"description": "Mode to submit a request in: shared cluster or direct k8s."},
         default=None,
     )
     additional_driver_node_tolerations: Optional[Dict[str, str]] = field(
-        metadata={
-            "description": "Additional taints allowed for application driver nodes."
-        },
+        metadata={"description": "Additional taints allowed for application driver nodes."},
         default=None,
     )

@@ -51,13 +51,9 @@ def add_crystal_args(parser: Optional[ArgumentParser] = None) -> ArgumentParser:
     if parser is None:
         parser = ArgumentParser()
 
-    parser.add_argument(
-        "--sas-uri", required=True, type=str, help="SAS URI for input data"
-    )
+    parser.add_argument("--sas-uri", required=True, type=str, help="SAS URI for input data")
     parser.add_argument("--request-id", required=True, type=str, help="ID of the task")
-    parser.add_argument(
-        "--sign-result", dest="sign_result", required=False, action="store_true"
-    )
+    parser.add_argument("--sign-result", dest="sign_result", required=False, action="store_true")
     parser.set_defaults(sign_result=False)
 
     return parser
@@ -69,9 +65,7 @@ def extract_crystal_args(args: Namespace) -> CrystalEntrypointArguments:
     :param args: Parsed arguments.
     :return: CrystalArguments object
     """
-    return CrystalEntrypointArguments(
-        sas_uri=args.sas_uri, request_id=args.request_id, sign_result=args.sign_result
-    )
+    return CrystalEntrypointArguments(sas_uri=args.sas_uri, request_id=args.request_id, sign_result=args.sign_result)
 
 
 class CrystalConnector:
@@ -98,9 +92,7 @@ class CrystalConnector:
         self._api_version = api_version
         self._logger = logger
         if isinstance(auth, BoxerTokenAuth):
-            assert (
-                api_version == ApiVersion.V1_2
-            ), "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
+            assert api_version == ApiVersion.V1_2, "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
 
         self.http.auth = auth
 
@@ -167,9 +159,7 @@ class CrystalConnector:
 
         return run_id
 
-    def retrieve_run(
-        self, run_id: str, algorithm: Optional[str] = None
-    ) -> RequestResult:
+    def retrieve_run(self, run_id: str, algorithm: Optional[str] = None) -> RequestResult:
         """
         Retrieves a submitted Crystal job.
 
@@ -192,9 +182,7 @@ class CrystalConnector:
 
         return crystal_result
 
-    def retrieve_runs(
-        self, tag: str, algorithm: Optional[str] = None
-    ) -> List[RequestResult]:
+    def retrieve_runs(self, tag: str, algorithm: Optional[str] = None) -> List[RequestResult]:
         """
         Retrieves all submitted Crystal jobs with matching tags.
 

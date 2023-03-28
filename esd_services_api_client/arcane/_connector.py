@@ -59,9 +59,7 @@ class ArcaneConnector:
             self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
             self.http.auth = auth
         else:
-            self.http.auth = HTTPBasicAuth(
-                os.environ.get("ARCANE_USER"), os.environ.get("ARCANE_PASSWORD")
-            )
+            self.http.auth = HTTPBasicAuth(os.environ.get("ARCANE_USER"), os.environ.get("ARCANE_PASSWORD"))
         self.retry_attempts = retry_attempts
 
     def start_stream(self, conf: StreamConfiguration) -> StreamInfo:
@@ -74,9 +72,7 @@ class ArcaneConnector:
         attempts = 0
         while attempts < self.retry_attempts:
             request_json = conf.to_dict()
-            submission_result = self.http.post(
-                f"{self.base_url}/stream/{conf.url_path}", json=request_json
-            )
+            submission_result = self.http.post(f"{self.base_url}/stream/{conf.url_path}", json=request_json)
             submission_json = submission_result.json()
 
             if submission_result.status_code == 200 and submission_json:
@@ -98,9 +94,7 @@ class ArcaneConnector:
                 f"Error {submission_result.status_code} when submitting a request: {submission_result.text}"
             )
 
-        raise TimeoutError(
-            "Timed out waiting for Arcane to accept the stream start request"
-        )
+        raise TimeoutError("Timed out waiting for Arcane to accept the stream start request")
 
     def get_stream(self, source: str, stream_id: str) -> Optional[StreamInfo]:
         """
@@ -128,9 +122,7 @@ class ArcaneConnector:
 
         return [StreamInfo.from_dict(stream_info) for stream_info in info.json()]
 
-    def restart_stream(
-        self, conf: Dict, source: str, stream_id: str
-    ) -> Optional[StreamInfo]:
+    def restart_stream(self, conf: Dict, source: str, stream_id: str) -> Optional[StreamInfo]:
         """
           Requests a stream restart with a new configuration.
 
@@ -139,9 +131,7 @@ class ArcaneConnector:
         :param stream_id: Stream identifier.
         :return:
         """
-        info = self.http.post(
-            f"{self.base_url}/stream/restart/{source}/{stream_id}", json=conf
-        )
+        info = self.http.post(f"{self.base_url}/stream/restart/{source}/{stream_id}", json=conf)
         info.raise_for_status()
 
         return StreamInfo.from_dict(info.json())
@@ -175,15 +165,11 @@ class ArcaneConnector:
         ]
 
         for active_stream in active_streams:
-            info = self.http.post(
-                f"{self.base_url}/stream/stop/{source}/{active_stream.id}"
-            )
+            info = self.http.post(f"{self.base_url}/stream/stop/{source}/{active_stream.id}")
             if info.status_code == 202:
                 yield info.json()
 
-    def transfer_stream(
-        self, source: str, stream_id: str, new_owner: str
-    ) -> Optional[StreamInfo]:
+    def transfer_stream(self, source: str, stream_id: str, new_owner: str) -> Optional[StreamInfo]:
         """
           Requests a stream transfer to another host.
 
@@ -193,9 +179,7 @@ class ArcaneConnector:
         :return:
         """
 
-        transfer_response = self.http.post(
-            f"{self.base_url}/stream/transfer/{source}/{stream_id}/{new_owner}"
-        )
+        transfer_response = self.http.post(f"{self.base_url}/stream/transfer/{source}/{stream_id}/{new_owner}")
 
         transfer_response.raise_for_status()
 

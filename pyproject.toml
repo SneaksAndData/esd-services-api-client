@@ -27,6 +27,9 @@ requests-mock = "~1.10"
 locust = "~2.14.2"
 black = "^22"
 
+[tool.black]
+line-length = 120
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

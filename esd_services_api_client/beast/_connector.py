@@ -72,9 +72,7 @@ class BeastConnector:
 
         print(f"Submitting request: {json.dumps(request_json)}")
 
-        submission_result = self.http.post(
-            f"{self.base_url}/job/submit", json=request_json
-        )
+        submission_result = self.http.post(f"{self.base_url}/job/submit", json=request_json)
         submission_json = submission_result.json()
 
         if submission_result.status_code == 202 and submission_json:
@@ -103,14 +101,10 @@ class BeastConnector:
         max_time=300,
         raise_on_giveup=True,
     )
-    def _existing_submission(
-        self, submitted_tag: str, project: str
-    ) -> (Optional[str], Optional[str]):
+    def _existing_submission(self, submitted_tag: str, project: str) -> (Optional[str], Optional[str]):
         print(f"Looking for existing submissions of {submitted_tag}")
 
-        response = self.http.get(
-            f"{self.base_url}/job/requests/{project}/tags/{submitted_tag}"
-        )
+        response = self.http.get(f"{self.base_url}/job/requests/{project}/tags/{submitted_tag}")
         response.raise_for_status()
         existing_submissions = response.json()
 
@@ -120,21 +114,12 @@ class BeastConnector:
 
         running_submissions = []
         for submission_request_id in existing_submissions:
-            response = self.http.get(
-                f"{self.base_url}/job/requests/{submission_request_id}"
-            )
+            response = self.http.get(f"{self.base_url}/job/requests/{submission_request_id}")
             response.raise_for_status()
             submission_lifecycle = response.json()["lifeCycleStage"]
-            if (
-                submission_lifecycle not in self.success_stages
-                and submission_lifecycle not in self.failed_stages
-            ):
-                print(
-                    f"Found a running submission of {submitted_tag}: {submission_request_id}."
-                )
-                running_submissions.append(
-                    (submission_request_id, submission_lifecycle)
-                )
+            if submission_lifecycle not in self.success_stages and submission_lifecycle not in self.failed_stages:
+                print(f"Found a running submission of {submitted_tag}: {submission_request_id}.")
+                running_submissions.append((submission_request_id, submission_lifecycle))
 
         if len(running_submissions) == 0:
             print("None of found submissions are active")
@@ -163,9 +148,7 @@ class BeastConnector:
             print(f"Resuming watch for {request_id}")
 
         if not request_id:
-            prepared_arguments = {
-                key: str(value) for (key, value) in job_params.extra_arguments.items()
-            }
+            prepared_arguments = {key: str(value) for (key, value) in job_params.extra_arguments.items()}
 
             submit_request = JobRequest(
                 root_path=self.code_root,
@@ -189,10 +172,7 @@ class BeastConnector:
 
             (request_id, request_lifecycle) = self._submit(submit_request)
 
-        while (
-            request_lifecycle not in self.success_stages
-            and request_lifecycle not in self.failed_stages
-        ):
+        while request_lifecycle not in self.success_stages and request_lifecycle not in self.failed_stages:
             doze(self.lifecycle_check_interval)
             request_lifecycle = self.get_request_lifecycle_stage(request_id)
             print(f"Request: {request_id}, current state: {request_lifecycle}")
@@ -203,9 +183,7 @@ class BeastConnector:
             )
 
     @staticmethod
-    def _report_backoff_failure(
-        target: Any, args: Any, kwargs: Any, tries: int, elapsed: int, wait: int, **_
-    ) -> None:
+    def _report_backoff_failure(target: Any, args: Any, kwargs: Any, tries: int, elapsed: int, wait: int, **_) -> None:
         print(
             f"Retry with back off {wait:0.1f} seconds after {elapsed} seconds ({tries} tries), calling function {target} with args {args} and kwargs {kwargs}"
         )
@@ -249,9 +227,7 @@ class BeastConnector:
         )
 
         if not request_id:
-            prepared_arguments = {
-                key: str(value) for (key, value) in job_params.extra_arguments.items()
-            }
+            prepared_arguments = {key: str(value) for (key, value) in job_params.extra_arguments.items()}
 
             submit_request = JobRequest(
                 root_path=self.code_root,

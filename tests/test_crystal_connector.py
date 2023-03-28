@@ -64,13 +64,9 @@ def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data:
         return_value=MockHttpConnection(MockHttpResponse(serializer().serialize(data))),
     )
 
-    args = CrystalEntrypointArguments(
-        sas_uri="https://some.sas.url.com", request_id="test-id"
-    )
+    args = CrystalEntrypointArguments(sas_uri="https://some.sas.url.com", request_id="test-id")
 
-    read_data = CrystalConnector.read_input(
-        crystal_arguments=args, serialization_format=serializer
-    )
+    read_data = CrystalConnector.read_input(crystal_arguments=args, serialization_format=serializer)
 
     if isinstance(data, pandas.DataFrame):
         assert data.equals(read_data)

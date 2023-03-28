@@ -33,9 +33,7 @@ import requests_mock
 
 
 def test_retries():
-    external_token_auth = ExternalTokenAuth(
-        token="token", authentication_provider="test"
-    )
+    external_token_auth = ExternalTokenAuth(token="token", authentication_provider="test")
     boxer_adapter, boxer_session = generate_boxer_mock_session(external_token_auth)
 
     boxer_connector = BoxerConnector(
@@ -105,9 +103,7 @@ def test_http_adapter(api_version, expected_url):
 
 def generate_boxer_mock_session(external_token_auth):
     boxer_adapter = requests_mock.Adapter()
-    boxer_adapter.register_uri(
-        requests_mock.ANY, "https://boxer.example.com/token/test", json={}
-    )
+    boxer_adapter.register_uri(requests_mock.ANY, "https://boxer.example.com/token/test", json={})
     boxer_session = requests.Session()
     boxer_session.mount("https://", boxer_adapter)
     return boxer_adapter, boxer_session

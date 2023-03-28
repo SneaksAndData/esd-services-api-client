@@ -153,9 +153,7 @@ class BoxerConnector(BoxerTokenProvider):
         :return: BoxerToken
         """
         if not self.authentication_provider:
-            raise ValueError(
-                "If boxer token is used, ExternalTokenAuth should be provided"
-            )
+            raise ValueError("If boxer token is used, ExternalTokenAuth should be provided")
         target_url = f"{self.base_url}/token/{self.authentication_provider}"
         response = self.http.get(target_url)
         response.raise_for_status()
@@ -163,12 +161,8 @@ class BoxerConnector(BoxerTokenProvider):
 
     @staticmethod
     def _create_boxer_auth():
-        assert os.environ.get(
-            "BOXER_CONSUMER_ID"
-        ), "Environment BOXER_CONSUMER_ID not set"
-        assert os.environ.get(
-            "BOXER_PRIVATE_KEY"
-        ), "Environment BOXER_PRIVATE_KEY not set"
+        assert os.environ.get("BOXER_CONSUMER_ID"), "Environment BOXER_CONSUMER_ID not set"
+        assert os.environ.get("BOXER_PRIVATE_KEY"), "Environment BOXER_PRIVATE_KEY not set"
         return BoxerAuth(
             private_key_base64=os.environ.get("BOXER_PRIVATE_KEY"),
             consumer_id=os.environ.get("BOXER_CONSUMER_ID"),
@@ -185,12 +179,8 @@ def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAu
     """
     if auth_provider == "azuread":
         proteus_client = AzureClient(subscription_id="")
-        external_auth = ExternalTokenAuth(
-            proteus_client.get_access_token(), auth_provider
-        )
-        boxer_connector = BoxerConnector(
-            base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth
-        )
+        external_auth = ExternalTokenAuth(proteus_client.get_access_token(), auth_provider)
+        boxer_connector = BoxerConnector(base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth)
         return BoxerTokenAuth(boxer_connector)
     return None
 
@@ -202,9 +192,7 @@ def get_kubernetes_token(cluster_name: str, boxer_base_url: str) -> BoxerTokenAu
     :param boxer_base_url: Boxer base url
     :return: BoxerTokenAuth configured fot particular identity provider and kubernetes auth token
     """
-    with open(
-        "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
-    ) as token_file:
+    with open("/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8") as token_file:
         external_auth = ExternalTokenAuth(token_file.readline(), cluster_name)
         boxer_connector = BoxerConnector(base_url=boxer_base_url, auth=external_auth)
         return BoxerTokenAuth(boxer_connector)

@@ -44,9 +44,7 @@ class BeastAuth(AuthBase):
             exclude_visual_studio_code_credential=True,
             exclude_powershell_credential=True,
         )
-        token: str = credential.get_token(
-            "https://management.core.windows.net/.default"
-        ).token
+        token: str = credential.get_token("https://management.core.windows.net/.default").token
         self.cache.append((token, datetime.utcnow()))
 
         return token
