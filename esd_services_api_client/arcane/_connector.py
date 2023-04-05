@@ -146,6 +146,19 @@ class ArcaneConnector:
 
         return StreamInfo.from_dict(info.json())
 
+    def request_reload(self, source: str, stream_id: str) -> Optional[StreamInfo]:
+        """
+          Requests a stream restart with a new configuration.
+
+        :param source: Source for this stream.
+        :param stream_id: Stream identifier.
+        :return:
+        """
+        info = self.http.post(f"{self.base_url}/stream/reload/{source}/{stream_id}")
+        info.raise_for_status()
+
+        return StreamInfo.from_dict(info.json())
+
     def stop_stream(self, source: str, stream_id: str) -> Optional[StreamInfo]:
         """
           Requests a stream stop.
