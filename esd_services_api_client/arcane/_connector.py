@@ -146,7 +146,7 @@ class ArcaneConnector:
 
         return StreamInfo.from_dict(info.json())
 
-    def request_reload(self, source: str, stream_id: str) -> Optional[StreamInfo]:
+    def reload_stream(self, source: str, stream_id: str) -> Optional[StreamInfo]:
         """
           Requests a stream restart with a new configuration.
 
