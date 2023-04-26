@@ -24,6 +24,13 @@ jobs:
         with:
           install_extras: all
 
+      - name: Run mypy
+        uses: sasanquaneuf/mypy-github-action@releases/v1
+        with:
+          checkName: 'codestyle'   # NOTE: this needs to be the same as the job name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Lint
         env:
           PROJECT_NAME: esd_services_api_client

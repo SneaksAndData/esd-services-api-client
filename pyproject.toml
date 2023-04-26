@@ -26,6 +26,7 @@ cryptography = "~36.0"
 requests-mock = "~1.10"
 locust = "~2.14.2"
 black = "^22"
+mypy = "^1.2.0"
 
 [build-system]
 requires = ["poetry-core"]
