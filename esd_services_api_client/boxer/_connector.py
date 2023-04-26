@@ -159,7 +159,8 @@ class BoxerConnector(BoxerTokenProvider):
         target_url = f"{self.base_url}/token/{self.authentication_provider}"
         response = self.http.get(target_url)
         response.raise_for_status()
-        return BoxerToken(response.text)
+        # return BoxerToken(response.text)
+        return None
 
     @staticmethod
     def _create_boxer_auth():
