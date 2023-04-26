@@ -179,7 +179,6 @@ class StreamInfo(DataClassJsonMixin):
     id: str  # pylint: disable=C0103
     stream_source: str
     started_at: str
-    owner: str
     tag: str
     stream_configuration: str
     stream_metadata: str
