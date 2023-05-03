@@ -171,18 +171,6 @@ class BigQueryStreamConfiguration(StreamConfiguration):
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class StreamError(DataClassJsonMixin):
-    """
-    Arcane stream failure information.
-    """
-
-    error_type: str
-    error_message: str
-    error_stack: str
-
-
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
 class StreamInfo(DataClassJsonMixin):
     """
     Arcane stream information.
@@ -191,12 +179,10 @@ class StreamInfo(DataClassJsonMixin):
     id: str  # pylint: disable=C0103
     stream_source: str
     started_at: str
-    owner: str
     tag: str
     stream_configuration: str
     stream_metadata: str
     stream_state: str
-    error: StreamError
     stopped_at: Optional[str] = None
 
 
@@ -210,3 +196,4 @@ class StreamState(Enum):
     TERMINATING = "TERMINATING"
     RESTARTING = "RESTARTING"
     FAILED = "FAILED"
+    SCHEMA_MISMATCH = "SCHEMA_MISMATCH"

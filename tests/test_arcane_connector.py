@@ -13,15 +13,12 @@
 #  limitations under the License.
 #
 
-from unittest.mock import Mock, MagicMock
-
 import pytest
 import requests
 
 from esd_services_api_client.arcane import (
     ArcaneConnector,
     StreamInfo,
-    StreamError,
     ApiVersion,
 )
 from esd_services_api_client.boxer import (
@@ -82,7 +79,6 @@ def test_http_adapter(api_version, expected_url):
         "{}",
         "",
         "RUNNING",
-        StreamError("", "", ""),
     ).to_dict()
     arcane_adapter = requests_mock.Adapter()
     arcane_adapter.register_uri(
@@ -123,7 +119,6 @@ def generate_arcane_mock_session():
         "{}",
         "",
         "RUNNING",
-        StreamError("", "", ""),
     ).to_dict()
     arcane_adapter = requests_mock.Adapter()
     arcane_adapter.register_uri(
