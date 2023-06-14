@@ -19,11 +19,11 @@
 import json
 from argparse import Namespace, ArgumentParser
 from datetime import timedelta
-from typing import Dict, Optional, Type, TypeVar, List
+from typing import Dict, Optional, Type, TypeVar, List, Iterator
 
 from adapta.logs import SemanticLogger
 from adapta.storage.models.format import SerializationFormat
-from adapta.utils import session_with_retries
+from adapta.utils import session_with_retries, doze
 from requests.auth import AuthBase
 
 from esd_services_api_client.boxer import BoxerTokenAuth
@@ -34,6 +34,7 @@ from esd_services_api_client.crystal._models import (
     CrystalEntrypointArguments,
     AlgorithmRequest,
     AlgorithmConfiguration,
+    RequestLifeCycleStage
 )
 
 T = TypeVar("T")  # pylint: disable=C0103
@@ -177,6 +178,9 @@ class CrystalConnector:
         :param algorithm: Name of an algorithm.
         """
 
+        return self._retrieve_run(run_id=run_id, algorithm=algorithm)
+
+    def _retrieve_run(self, run_id: str, algorithm: Optional[str] = None) -> RequestResult:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}"
@@ -202,6 +206,9 @@ class CrystalConnector:
         :param algorithm: Name of an algorithm.
         """
 
+        return self._retrieve_runs(tag=tag, algorithm=algorithm)
+
+    def _retrieve_runs(self, tag: str, algorithm: Optional[str] = None) -> List[RequestResult]:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}"
@@ -280,3 +287,47 @@ class CrystalConnector:
         Gracefully dispose object.
         """
         self.http.close()
+
+    def await_runs(
+        self, algorithm: str, run_ids: Optional[List[str]] = None, tags: Optional[List[str]] = None
+    ) -> Iterator[RequestResult]:
+        """
+        Await for a list of submitted Crystal jobs to complete.
+
+        :param algorithm: Name of an algorithm.
+        :param run_ids: Request identifiers assigned to the jobs by Crystal.
+        :param tags: Request tags assigned to the jobs by a client.
+        """
+        return self._await_runs(algorithm=algorithm, run_ids=run_ids, tags=tags)
+
+    def _await_runs(self, algorithm: str, run_ids: Optional[List[str]] = None, tags: Optional[List[str]] = None) -> Iterator[RequestResult]:
+        if tags is None:
+            tags = []
+
+        if run_ids is None:
+            run_ids = []
+
+        finished_statuses = [
+            RequestLifeCycleStage.COMPLETED,
+            RequestLifeCycleStage.FAILED,
+            RequestLifeCycleStage.SCHEDULING_TIMEOUT,
+            RequestLifeCycleStage.DEADLINE_EXCEEDED
+        ]
+
+        while len(tags) > 0:
+            for tag in tags[:]:
+                results = self._retrieve_runs(tag=tag, algorithm=algorithm)
+                if all(result.status in finished_statuses for result in results):
+                    tags.remove(tag)
+                    yield from results
+            if len(tags) > 0:
+                doze(1)
+
+        while len(run_ids) > 0:
+            for run_id in run_ids[:]:
+                result = self._retrieve_run(run_id=run_id, algorithm=algorithm)
+                if result.status in finished_statuses:
+                    run_ids.remove(run_id)
+                    yield result
+            if len(run_ids) > 0:
+                doze(1)

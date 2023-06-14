@@ -22,15 +22,19 @@ from adapta.storage.models.format import (
     DataFrameParquetSerializationFormat,
     DataFrameJsonSerializationFormat,
 )
-from esd_services_api_client.crystal import CrystalConnector, CrystalEntrypointArguments
+from esd_services_api_client.crystal import CrystalConnector, CrystalEntrypointArguments, RequestLifeCycleStage, \
+    RequestResult
 
 
 class MockHttpResponse:
-    def __init__(self, data: bytes):
+    def __init__(self, data: any):
         self.content = data
 
     def raise_for_status(self):
         pass
+
+    def json(self):
+        return self.content
 
 
 class MockHttpConnection:
@@ -76,3 +80,47 @@ def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data:
         assert data.equals(read_data)
     else:
         assert data == read_data
+
+
+@pytest.mark.parametrize("request_statuses", [
+    [
+        RequestLifeCycleStage.RUNNING,
+        RequestLifeCycleStage.RUNNING,
+        RequestLifeCycleStage.COMPLETED,
+    ],
+    [
+        RequestLifeCycleStage.COMPLETED,
+    ],
+    [
+        RequestLifeCycleStage.NEW,
+        RequestLifeCycleStage.BUFFERED,
+        RequestLifeCycleStage.THROTTLED,
+        RequestLifeCycleStage.FAILED,
+    ],
+    [
+        RequestLifeCycleStage.FAILED,
+    ],
+    [
+        RequestLifeCycleStage.SCHEDULING_TIMEOUT,
+    ],
+    [
+        RequestLifeCycleStage.DEADLINE_EXCEEDED,
+    ]
+])
+def test_await_runs_request_id(mocker, request_statuses):
+    request_id = "some_request_id"
+
+    mocker.patch(
+        "esd_services_api_client.crystal._connector.session_with_retries",
+        return_value=MockHttpConnection(MockHttpResponse({"run_id": request_id})),
+    )
+    connector = CrystalConnector.create_anonymous(base_url="https://some.url.com")
+
+    request_results = [RequestResult(run_id=request_id, status=status) for status in request_statuses]
+
+    connector._retrieve_run = mocker.Mock(side_effect=request_results)
+
+    result = list(connector.await_runs(run_ids=[request_id], algorithm="some_algorithm"))[0]
+    expected_result = request_results[-1]
+
+    assert result == expected_result
