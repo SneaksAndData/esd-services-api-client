@@ -22,8 +22,12 @@ from adapta.storage.models.format import (
     DataFrameParquetSerializationFormat,
     DataFrameJsonSerializationFormat,
 )
-from esd_services_api_client.crystal import CrystalConnector, CrystalEntrypointArguments, RequestLifeCycleStage, \
-    RequestResult
+from esd_services_api_client.crystal import (
+    CrystalConnector,
+    CrystalEntrypointArguments,
+    RequestLifeCycleStage,
+    RequestResult,
+)
 
 
 class MockHttpResponse:
@@ -82,31 +86,34 @@ def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data:
         assert data == read_data
 
 
-@pytest.mark.parametrize("request_statuses", [
+@pytest.mark.parametrize(
+    "request_statuses",
     [
-        RequestLifeCycleStage.RUNNING,
-        RequestLifeCycleStage.RUNNING,
-        RequestLifeCycleStage.COMPLETED,
+        [
+            RequestLifeCycleStage.RUNNING,
+            RequestLifeCycleStage.RUNNING,
+            RequestLifeCycleStage.COMPLETED,
+        ],
+        [
+            RequestLifeCycleStage.COMPLETED,
+        ],
+        [
+            RequestLifeCycleStage.NEW,
+            RequestLifeCycleStage.BUFFERED,
+            RequestLifeCycleStage.THROTTLED,
+            RequestLifeCycleStage.FAILED,
+        ],
+        [
+            RequestLifeCycleStage.FAILED,
+        ],
+        [
+            RequestLifeCycleStage.SCHEDULING_TIMEOUT,
+        ],
+        [
+            RequestLifeCycleStage.DEADLINE_EXCEEDED,
+        ],
     ],
-    [
-        RequestLifeCycleStage.COMPLETED,
-    ],
-    [
-        RequestLifeCycleStage.NEW,
-        RequestLifeCycleStage.BUFFERED,
-        RequestLifeCycleStage.THROTTLED,
-        RequestLifeCycleStage.FAILED,
-    ],
-    [
-        RequestLifeCycleStage.FAILED,
-    ],
-    [
-        RequestLifeCycleStage.SCHEDULING_TIMEOUT,
-    ],
-    [
-        RequestLifeCycleStage.DEADLINE_EXCEEDED,
-    ]
-])
+)
 def test_await_runs_request_id(mocker, request_statuses):
     request_id = "some_request_id"
 
@@ -116,11 +123,15 @@ def test_await_runs_request_id(mocker, request_statuses):
     )
     connector = CrystalConnector.create_anonymous(base_url="https://some.url.com")
 
-    request_results = [RequestResult(run_id=request_id, status=status) for status in request_statuses]
+    request_results = [
+        RequestResult(run_id=request_id, status=status) for status in request_statuses
+    ]
 
     connector._retrieve_run = mocker.Mock(side_effect=request_results)
 
-    result = connector.await_runs(run_ids=[request_id], algorithm="some_algorithm")[request_id]
+    result = connector.await_runs(run_ids=[request_id], algorithm="some_algorithm")[
+        request_id
+    ]
     expected_result = request_results[-1]
 
     assert result == expected_result

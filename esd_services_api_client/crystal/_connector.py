@@ -19,7 +19,7 @@
 import json
 from argparse import Namespace, ArgumentParser
 from datetime import timedelta
-from typing import Dict, Optional, Type, TypeVar, List, Iterator
+from typing import Dict, Optional, Type, TypeVar, List
 
 from adapta.logs import SemanticLogger
 from adapta.storage.models.format import SerializationFormat
@@ -35,7 +35,7 @@ from esd_services_api_client.crystal._models import (
     CrystalEntrypointArguments,
     AlgorithmRequest,
     AlgorithmConfiguration,
-    RequestLifeCycleStage
+    RequestLifeCycleStage,
 )
 
 T = TypeVar("T")  # pylint: disable=C0103
@@ -109,7 +109,7 @@ class CrystalConnector:
             RequestLifeCycleStage.COMPLETED,
             RequestLifeCycleStage.FAILED,
             RequestLifeCycleStage.SCHEDULING_TIMEOUT,
-            RequestLifeCycleStage.DEADLINE_EXCEEDED
+            RequestLifeCycleStage.DEADLINE_EXCEEDED,
         ]
 
     @classmethod
@@ -187,7 +187,9 @@ class CrystalConnector:
 
         return self._retrieve_run(run_id=run_id, algorithm=algorithm)
 
-    def _retrieve_run(self, run_id: str, algorithm: Optional[str] = None) -> RequestResult:
+    def _retrieve_run(
+        self, run_id: str, algorithm: Optional[str] = None
+    ) -> RequestResult:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}"
@@ -215,7 +217,9 @@ class CrystalConnector:
 
         return self._retrieve_runs(tag=tag, algorithm=algorithm)
 
-    def _retrieve_runs(self, tag: str, algorithm: Optional[str] = None) -> List[RequestResult]:
+    def _retrieve_runs(
+        self, tag: str, algorithm: Optional[str] = None
+    ) -> List[RequestResult]:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}"
@@ -295,7 +299,9 @@ class CrystalConnector:
         """
         self.http.close()
 
-    def await_tagged_runs(self, algorithm: str, tags: List[str]) -> Dict[str, RequestResult]:
+    def await_tagged_runs(
+        self, algorithm: str, tags: List[str]
+    ) -> Dict[str, RequestResult]:
         """
         Await for a list of tagged Crystal jobs to finish.
 
@@ -313,9 +319,14 @@ class CrystalConnector:
                 else:
                     results[run.request_id] = run
 
-        return {**results, **self._await_runs(algorithm=algorithm, run_ids=unfinished_tasks)}
+        return {
+            **results,
+            **self._await_runs(algorithm=algorithm, run_ids=unfinished_tasks),
+        }
 
-    def await_runs(self, algorithm: str, run_ids: List[str]) -> Dict[str, RequestResult]:
+    def await_runs(
+        self, algorithm: str, run_ids: List[str]
+    ) -> Dict[str, RequestResult]:
         """
         Await for a list of submitted Crystal jobs to finish.
 
@@ -324,7 +335,9 @@ class CrystalConnector:
         """
         return self._await_runs(algorithm=algorithm, run_ids=run_ids)
 
-    def _await_runs(self, algorithm: str, run_ids: List[str]) -> Dict[str, RequestResult]:
+    def _await_runs(
+        self, algorithm: str, run_ids: List[str]
+    ) -> Dict[str, RequestResult]:
         def await_run(run_id: str) -> RequestResult:
             while True:
                 result = self._retrieve_run(run_id=run_id, algorithm=algorithm)
@@ -333,7 +346,10 @@ class CrystalConnector:
                 doze(1)
 
         ctr = ConcurrentTaskRunner(
-            func_list=[Executable(func=await_run, alias=run_id, args=[run_id]) for run_id in run_ids]
+            func_list=[
+                Executable(func=await_run, alias=run_id, args=[run_id])
+                for run_id in run_ids
+            ]
         )
 
         return ctr.eager()
