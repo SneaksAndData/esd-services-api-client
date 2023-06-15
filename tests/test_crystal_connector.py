@@ -120,7 +120,7 @@ def test_await_runs_request_id(mocker, request_statuses):
 
     connector._retrieve_run = mocker.Mock(side_effect=request_results)
 
-    result = list(connector.await_runs(run_ids=[request_id], algorithm="some_algorithm"))[0]
+    result = connector.await_runs(run_ids=[request_id], algorithm="some_algorithm")[request_id]
     expected_result = request_results[-1]
 
     assert result == expected_result

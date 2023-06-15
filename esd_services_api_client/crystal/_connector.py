@@ -24,6 +24,7 @@ from typing import Dict, Optional, Type, TypeVar, List, Iterator
 from adapta.logs import SemanticLogger
 from adapta.storage.models.format import SerializationFormat
 from adapta.utils import session_with_retries, doze
+from adapta.utils.concurrent_task_runner import ConcurrentTaskRunner, Executable
 from requests.auth import AuthBase
 
 from esd_services_api_client.boxer import BoxerTokenAuth
@@ -104,6 +105,12 @@ class CrystalConnector:
             ), "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
 
         self.http.auth = auth
+        self._finished_statuses = [
+            RequestLifeCycleStage.COMPLETED,
+            RequestLifeCycleStage.FAILED,
+            RequestLifeCycleStage.SCHEDULING_TIMEOUT,
+            RequestLifeCycleStage.DEADLINE_EXCEEDED
+        ]
 
     @classmethod
     def create_anonymous(
@@ -288,46 +295,45 @@ class CrystalConnector:
         """
         self.http.close()
 
-    def await_runs(
-        self, algorithm: str, run_ids: Optional[List[str]] = None, tags: Optional[List[str]] = None
-    ) -> Iterator[RequestResult]:
+    def await_tagged_runs(self, algorithm: str, tags: List[str]) -> Dict[str, RequestResult]:
         """
-        Await for a list of submitted Crystal jobs to complete.
+        Await for a list of tagged Crystal jobs to finish.
+
+        :param algorithm: Name of an algorithm.
+        :param tags: Request tags assigned to the jobs by a client.
+        """
+
+        results = {}
+        unfinished_tasks = []
+        runs = [self._retrieve_runs(tag=tag, algorithm=algorithm) for tag in tags]
+        for tag_runs in runs:
+            for run in tag_runs:
+                if run.status not in self._finished_statuses:
+                    unfinished_tasks.append(run.request_id)
+                else:
+                    results[run.request_id] = run
+
+        return {**results, **self._await_runs(algorithm=algorithm, run_ids=unfinished_tasks)}
+
+    def await_runs(self, algorithm: str, run_ids: List[str]) -> Dict[str, RequestResult]:
+        """
+        Await for a list of submitted Crystal jobs to finish.
 
         :param algorithm: Name of an algorithm.
         :param run_ids: Request identifiers assigned to the jobs by Crystal.
-        :param tags: Request tags assigned to the jobs by a client.
         """
-        return self._await_runs(algorithm=algorithm, run_ids=run_ids, tags=tags)
+        return self._await_runs(algorithm=algorithm, run_ids=run_ids)
 
-    def _await_runs(self, algorithm: str, run_ids: Optional[List[str]] = None, tags: Optional[List[str]] = None) -> Iterator[RequestResult]:
-        if tags is None:
-            tags = []
-
-        if run_ids is None:
-            run_ids = []
-
-        finished_statuses = [
-            RequestLifeCycleStage.COMPLETED,
-            RequestLifeCycleStage.FAILED,
-            RequestLifeCycleStage.SCHEDULING_TIMEOUT,
-            RequestLifeCycleStage.DEADLINE_EXCEEDED
-        ]
-
-        while len(tags) > 0:
-            for tag in tags[:]:
-                results = self._retrieve_runs(tag=tag, algorithm=algorithm)
-                if all(result.status in finished_statuses for result in results):
-                    tags.remove(tag)
-                    yield from results
-            if len(tags) > 0:
-                doze(1)
-
-        while len(run_ids) > 0:
-            for run_id in run_ids[:]:
+    def _await_runs(self, algorithm: str, run_ids: List[str]) -> Dict[str, RequestResult]:
+        def await_run(run_id: str) -> RequestResult:
+            while True:
                 result = self._retrieve_run(run_id=run_id, algorithm=algorithm)
-                if result.status in finished_statuses:
-                    run_ids.remove(run_id)
-                    yield result
-            if len(run_ids) > 0:
+                if result.status in self._finished_statuses:
+                    return result
                 doze(1)
+
+        ctr = ConcurrentTaskRunner(
+            func_list=[Executable(func=await_run, alias=run_id, args=[run_id]) for run_id in run_ids]
+        )
+
+        return ctr.eager()
