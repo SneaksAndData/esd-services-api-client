@@ -23,7 +23,8 @@ from typing import Dict, Optional, Type, TypeVar, List
 
 from adapta.logs import SemanticLogger
 from adapta.storage.models.format import SerializationFormat
-from adapta.utils import session_with_retries
+from adapta.utils import session_with_retries, doze
+from adapta.utils.concurrent_task_runner import ConcurrentTaskRunner, Executable
 from requests.auth import AuthBase
 
 from esd_services_api_client.boxer import BoxerTokenAuth
@@ -34,6 +35,7 @@ from esd_services_api_client.crystal._models import (
     CrystalEntrypointArguments,
     AlgorithmRequest,
     AlgorithmConfiguration,
+    RequestLifeCycleStage,
 )
 
 T = TypeVar("T")  # pylint: disable=C0103
@@ -103,6 +105,12 @@ class CrystalConnector:
             ), "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
 
         self.http.auth = auth
+        self._finished_statuses = [
+            RequestLifeCycleStage.COMPLETED,
+            RequestLifeCycleStage.FAILED,
+            RequestLifeCycleStage.SCHEDULING_TIMEOUT,
+            RequestLifeCycleStage.DEADLINE_EXCEEDED,
+        ]
 
     @classmethod
     def create_anonymous(
@@ -177,6 +185,11 @@ class CrystalConnector:
         :param algorithm: Name of an algorithm.
         """
 
+        return self._retrieve_run(run_id=run_id, algorithm=algorithm)
+
+    def _retrieve_run(
+        self, run_id: str, algorithm: Optional[str] = None
+    ) -> RequestResult:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}"
@@ -202,6 +215,11 @@ class CrystalConnector:
         :param algorithm: Name of an algorithm.
         """
 
+        return self._retrieve_runs(tag=tag, algorithm=algorithm)
+
+    def _retrieve_runs(
+        self, tag: str, algorithm: Optional[str] = None
+    ) -> List[RequestResult]:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
                 return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}"
@@ -280,3 +298,58 @@ class CrystalConnector:
         Gracefully dispose object.
         """
         self.http.close()
+
+    def await_tagged_runs(
+        self, algorithm: str, tags: List[str]
+    ) -> Dict[str, RequestResult]:
+        """
+        Await for a list of tagged Crystal jobs to finish.
+
+        :param algorithm: Name of an algorithm.
+        :param tags: Request tags assigned to the jobs by a client.
+        """
+
+        results = {}
+        unfinished_tasks = []
+        runs = [self._retrieve_runs(tag=tag, algorithm=algorithm) for tag in tags]
+        for tag_runs in runs:
+            for run in tag_runs:
+                if run.status not in self._finished_statuses:
+                    unfinished_tasks.append(run.run_id)
+                else:
+                    results[run.run_id] = run
+
+        return {
+            **results,
+            **self._await_runs(algorithm=algorithm, run_ids=unfinished_tasks),
+        }
+
+    def await_runs(
+        self, algorithm: str, run_ids: List[str]
+    ) -> Dict[str, RequestResult]:
+        """
+        Await for a list of submitted Crystal jobs to finish.
+
+        :param algorithm: Name of an algorithm.
+        :param run_ids: Request identifiers assigned to the jobs by Crystal.
+        """
+        return self._await_runs(algorithm=algorithm, run_ids=run_ids)
+
+    def _await_runs(
+        self, algorithm: str, run_ids: List[str]
+    ) -> Dict[str, RequestResult]:
+        def await_run(run_id: str) -> RequestResult:
+            while True:
+                result = self._retrieve_run(run_id=run_id, algorithm=algorithm)
+                if result.status in self._finished_statuses:
+                    return result
+                doze(1)
+
+        ctr = ConcurrentTaskRunner(
+            func_list=[
+                Executable(func=await_run, alias=run_id, args=[run_id])
+                for run_id in run_ids
+            ]
+        )
+
+        return ctr.eager()
