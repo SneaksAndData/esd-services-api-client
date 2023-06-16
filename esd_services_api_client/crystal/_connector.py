@@ -315,9 +315,9 @@ class CrystalConnector:
         for tag_runs in runs:
             for run in tag_runs:
                 if run.status not in self._finished_statuses:
-                    unfinished_tasks.append(run.request_id)
+                    unfinished_tasks.append(run.run_id)
                 else:
-                    results[run.request_id] = run
+                    results[run.run_id] = run
 
         return {
             **results,
