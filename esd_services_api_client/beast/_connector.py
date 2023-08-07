@@ -185,6 +185,7 @@ class BeastConnector:
                 debug_mode=job_params.debug_mode,
                 expected_parallelism=job_params.expected_parallelism,
                 submission_mode=job_params.submission_mode,
+                extended_code_mount=job_params.extended_code_mount
             )
 
             (request_id, request_lifecycle) = self._submit(submit_request)
