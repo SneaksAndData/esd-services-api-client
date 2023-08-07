@@ -50,7 +50,8 @@ def test_request_ser():
                 additional_driver_node_tolerations=None,
                 debug_mode=None,
                 expected_parallelism=None,
-                submission_mode=SubmissionMode.SWARM,
+                submission_mode=SubmissionMode.K8S,
+                extended_code_mount=False,
             )
         ),
         (
@@ -71,7 +72,8 @@ def test_request_ser():
                 additional_driver_node_tolerations=None,
                 debug_mode=None,
                 expected_parallelism=None,
-                submission_mode=SubmissionMode.SWARM,
+                submission_mode=SubmissionMode.K8S,
+                extended_code_mount=False,
             )
         ),
         (
@@ -93,6 +95,7 @@ def test_request_ser():
                 debug_mode=None,
                 expected_parallelism=None,
                 submission_mode=None,
+                extended_code_mount=None,
             )
         ),
     ],
