@@ -96,16 +96,12 @@ class JobSize(Enum):
     SMALL - small workloads, one or 30% pod cores, 30% pod memory per executor
     MEDIUM - medium workloads, one or 30% pod cores, 50% pod memory per executor
     LARGE - large workloads, one or 30% pod cores, all available executor memory
-    XLARGE - extra large workload, two or 60% pod cores, all available executor memory
-    XXLARGE - x-extra large workloads, all available cores, all available memory
     """
 
     TINY = "TINY"
     SMALL = "SMALL"
     MEDIUM = "MEDIUM"
     LARGE = "LARGE"
-    XLARGE = "XLARGE"
-    XXLARGE = "XXLARGE"
 
 
 class SubmissionMode(Enum):
@@ -117,7 +113,6 @@ class SubmissionMode(Enum):
     STREAM - submit a job directly to a shared cluster bypassing application limit constraints.
     """
 
-    SWARM = "SWARM"
     K8S = "K8S"
     STREAM = "STREAM"
 
@@ -152,6 +147,7 @@ class JobRequest(DataClassJsonMixin):
             encoder=lambda v: v.value if v else None, decoder=SubmissionMode
         )
     )
+    extended_code_mount: Optional[bool]
 
 
 class ArgumentValue:
@@ -300,6 +296,12 @@ class BeastJobParams:
     additional_driver_node_tolerations: Optional[Dict[str, str]] = field(
         metadata={
             "description": "Additional taints allowed for application driver nodes."
+        },
+        default=None,
+    )
+    extended_code_mount: Optional[bool] = field(
+        metadata={
+            "description": "Whether extended code mounting config should be used."
         },
         default=None,
     )
