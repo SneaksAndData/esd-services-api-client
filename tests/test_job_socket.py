@@ -36,7 +36,6 @@ def test_job_socket_serialization():
 
 
 def test_socket_from_list():
-
     foo_socket = JobSocket(alias="foo", data_path="foo_path", data_format="foo_format")
     bar_socket = JobSocket(alias="bar", data_path="bar_path", data_format="bar_format")
     baz_socket = JobSocket(alias="baz", data_path="baz_path", data_format="baz_format")
