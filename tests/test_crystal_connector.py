@@ -23,7 +23,11 @@ from adapta.storage.models.format import (
     DataFrameJsonSerializationFormat,
 )
 
-from esd_services_api_client.boxer import ExternalTokenAuth, BoxerConnector, BoxerTokenAuth
+from esd_services_api_client.boxer import (
+    ExternalTokenAuth,
+    BoxerConnector,
+    BoxerTokenAuth,
+)
 from esd_services_api_client.crystal import (
     CrystalConnector,
     CrystalEntrypointArguments,
@@ -60,8 +64,8 @@ class MockHttpConnection:
     [
         (DictJsonSerializationFormat, {"test": "test"}),
         (
-                DataFrameParquetSerializationFormat,
-                pandas.DataFrame(data={"test": [1, 2, 3]}),
+            DataFrameParquetSerializationFormat,
+            pandas.DataFrame(data={"test": [1, 2, 3]}),
         ),
         (DataFrameJsonSerializationFormat, pandas.DataFrame(data={"test": [1, 2, 3]})),
     ],
@@ -140,27 +144,31 @@ def test_await_runs_request_id(mocker, request_statuses):
     assert result == expected_result
 
 
-def make_response(status, lifecycle_stage: RequestLifeCycleStage):
-    resp = responses.Response(
-        method="GET",
-        url="https://example.com/algorithm/v1.2/results/algorithm/requests/id",
-        json=RequestResult("id", lifecycle_stage, None, None).to_dict()
-    )
-    resp.status = status
-    return resp
-
-
 @responses.activate
 @pytest.mark.timeout(60)
 def test_boxer_token_refresh():
-    boxer_response = responses.Response(method="GET", url="https://example.com/token/method")
+    boxer_response = responses.Response(
+        method="GET", url="https://example.com/token/method"
+    )
     responses.add(boxer_response)
-    responses.add(make_response(200, RequestLifeCycleStage.RUNNING))
-    responses.add(make_response(401, RequestLifeCycleStage.RUNNING))
-    responses.add(make_response(200, RequestLifeCycleStage.RUNNING))
-    responses.add(make_response(200, RequestLifeCycleStage.COMPLETED))
+    responses.add(__make_response(200, RequestLifeCycleStage.RUNNING))
+    responses.add(__make_response(401, RequestLifeCycleStage.RUNNING))
+    responses.add(__make_response(200, RequestLifeCycleStage.RUNNING))
+    responses.add(__make_response(200, RequestLifeCycleStage.COMPLETED))
 
     external_auth = ExternalTokenAuth("token", "method")
     boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
-    connector = CrystalConnector(base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector))
+    connector = CrystalConnector(
+        base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
+    )
     connector.await_runs("algorithm", ["id"])
+
+
+def __make_response(status: int, lifecycle_stage: RequestLifeCycleStage):
+    resp = responses.Response(
+        method="GET",
+        url="https://example.com/algorithm/v1.2/results/algorithm/requests/id",
+        json=RequestResult("id", lifecycle_stage, None, None).to_dict(),
+    )
+    resp.status = status
+    return resp
