@@ -97,6 +97,8 @@ class CrystalConnector:
             retry_count=default_retry_count,
             request_timeout=default_timeout.total_seconds(),
         )
+        if auth and isinstance(auth, BoxerTokenAuth):
+            self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self._api_version = api_version
         self._logger = logger
         if isinstance(auth, BoxerTokenAuth):
