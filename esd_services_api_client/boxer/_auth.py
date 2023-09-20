@@ -18,6 +18,7 @@
 #
 
 import base64
+from abc import abstractmethod
 from functools import partial
 from typing import Callable, Any
 
@@ -76,8 +77,13 @@ class BoxerAuth(AuthBase):
 
 
 class ExternalAuthBase(AuthBase):
+    """Base class for external authentication methods"""
     def __init__(self, authentication_provider):
         self._authentication_provider = authentication_provider
+
+    @abstractmethod
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
+        pass
 
     @property
     def authentication_provider(self) -> str:
@@ -140,12 +146,11 @@ class RefreshableExternalTokenAuth(ExternalAuthBase):
         """
         if self._retrying:
             return response
-        else:
-            if response.status_code == requests.codes["unauthorized"]:
-                self._retrying = True
-                response = session.send(self(response.request))
-                self._retrying = False
-                return response
+        if response.status_code == requests.codes["unauthorized"]:
+            self._retrying = True
+            response = session.send(self(response.request))
+            self._retrying = False
+            return response
         return response
 
     def get_refresh_hook(
