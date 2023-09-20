@@ -68,3 +68,24 @@ from esd_services_api_client.boxer import BoxerConnector
 conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
 pub_key = conn.get_consumer_public_key("app_consumer")
 ```
+
+### Using as an authentication provider for other connectors
+```python
+from esd_services_api_client.boxer import BoxerConnector, RefreshableExternalTokenAuth, BoxerTokenAuth
+from esd_services_api_client.crystal import CrystalConnector
+
+auth_method = "example"
+
+def get_external_token() -> str:
+    return "example_token"
+
+# Configure authentication with boxer
+external_auth = RefreshableExternalTokenAuth(lambda: get_external_token(), auth_method)
+boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
+
+# Inject boxer auth to Crystal connector
+connector = CrystalConnector(base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector))
+
+# Use Crystal connector with boxer auth
+connector.await_runs("algorithm", ["id"])
+```
