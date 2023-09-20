@@ -189,7 +189,9 @@ def select_authentication(auth_provider: str, env: str) -> Optional[BoxerTokenAu
     """
     if auth_provider == "azuread":
         proteus_client = AzureClient(subscription_id="")
-        external_auth = RefreshableExternalTokenAuth(proteus_client.get_access_token, auth_provider)
+        external_auth = RefreshableExternalTokenAuth(
+            proteus_client.get_access_token, auth_provider
+        )
         boxer_connector = BoxerConnector(
             base_url=f"https://boxer.{env}.sneaksanddata.com", auth=external_auth
         )

@@ -78,6 +78,7 @@ class BoxerAuth(AuthBase):
 
 class ExternalAuthBase(AuthBase):
     """Base class for external authentication methods"""
+
     def __init__(self, authentication_provider):
         self._authentication_provider = authentication_provider
 
