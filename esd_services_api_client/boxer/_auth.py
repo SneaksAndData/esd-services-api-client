@@ -18,7 +18,6 @@
 #
 
 import base64
-from abc import abstractmethod
 from functools import partial
 from typing import Callable, Any
 
@@ -77,9 +76,15 @@ class BoxerAuth(AuthBase):
 
 
 class ExternalAuthBase(AuthBase):
-    @abstractmethod
+    def __init__(self, authentication_provider):
+        self._authentication_provider = authentication_provider
+
+    @property
     def authentication_provider(self) -> str:
-        pass
+        """
+        :return authentication provider name
+        """
+        return self._authentication_provider
 
 
 class ExternalTokenAuth(ExternalAuthBase):
@@ -89,8 +94,8 @@ class ExternalTokenAuth(ExternalAuthBase):
     """
 
     def __init__(self, token: str, authentication_provider: str):
+        super().__init__(authentication_provider)
         self._token = token
-        self._authentication_provider = authentication_provider
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
         """
@@ -102,23 +107,16 @@ class ExternalTokenAuth(ExternalAuthBase):
         r.headers["Authorization"] = f"Bearer {self._token}"
         return r
 
-    @property
-    def authentication_provider(self) -> str:
-        """
-        :return authentication provider name
-        """
-        return self._authentication_provider
-
 
 class RefreshableExternalTokenAuth(ExternalAuthBase):
     """
     Create authentication for external token e.g. for azuread or kubernetes auth policies
-    If will get 401 responce, this auth provider will try to refresh token
+    If the external token is expired, this auth method will try to get new external token and retry the request once
     """
 
     def __init__(self, get_token: Callable[[], str], authentication_provider: str):
+        super().__init__(authentication_provider)
         self._get_token = get_token
-        self._authentication_provider = authentication_provider
         self._retrying = False
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
@@ -130,13 +128,6 @@ class RefreshableExternalTokenAuth(ExternalAuthBase):
         """
         r.headers["Authorization"] = f"Bearer {self._get_token()}"
         return r
-
-    @property
-    def authentication_provider(self) -> str:
-        """
-        :return authentication provider name
-        """
-        return self._authentication_provider
 
     def refresh_token(self, response: Response, session: Session, *_, **__):
         """
