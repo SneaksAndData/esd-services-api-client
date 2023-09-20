@@ -29,6 +29,8 @@ from esd_services_api_client.boxer._auth import (
     BoxerAuth,
     ExternalTokenAuth,
     BoxerTokenAuth,
+    ExternalAuthBase,
+    RefreshableExternalTokenAuth,
 )
 from esd_services_api_client.boxer._helpers import (
     _iterate_user_claims_response,
@@ -46,7 +48,7 @@ class BoxerConnector(BoxerTokenProvider):
         self,
         *,
         base_url,
-        auth: ExternalTokenAuth,
+        auth: ExternalAuthBase,
         retry_attempts=10,
         session: Optional[Session] = None,
     ):
@@ -59,6 +61,8 @@ class BoxerConnector(BoxerTokenProvider):
         self.http.auth = auth or self._create_boxer_auth()
         if auth:
             self.authentication_provider = auth.authentication_provider
+        if isinstance(auth, RefreshableExternalTokenAuth):
+            self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self.retry_attempts = retry_attempts
 
     def push_user_claim(self, claim: BoxerClaim, user_id: str):

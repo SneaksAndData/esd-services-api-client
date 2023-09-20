@@ -18,6 +18,7 @@
 #
 
 import base64
+from abc import abstractmethod
 from functools import partial
 from typing import Callable, Any
 
@@ -75,8 +76,17 @@ class BoxerAuth(AuthBase):
         return request
 
 
-class ExternalTokenAuth(AuthBase):
-    """Create authentication for external token e.g. for azuread or kubernetes auth policies"""
+class ExternalAuthBase(AuthBase):
+    @abstractmethod
+    def authentication_provider(self) -> str:
+        pass
+
+
+class ExternalTokenAuth(ExternalAuthBase):
+    """
+    Create authentication for external token e.g. for azuread or kubernetes auth policies
+    NOTE: this class is deprecated, use RefreshableExternalTokenAuth instead
+    """
 
     def __init__(self, token: str, authentication_provider: str):
         self._token = token
@@ -98,6 +108,64 @@ class ExternalTokenAuth(AuthBase):
         :return authentication provider name
         """
         return self._authentication_provider
+
+
+class RefreshableExternalTokenAuth(ExternalAuthBase):
+    """
+    Create authentication for external token e.g. for azuread or kubernetes auth policies
+    If will get 401 responce, this auth provider will try to refresh token
+    """
+
+    def __init__(self, get_token: Callable[[], str], authentication_provider: str):
+        self._get_token = get_token
+        self._authentication_provider = authentication_provider
+        self._retrying = False
+
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
+        """
+          Auth entrypoint
+
+        :param r: Request to authorize
+        :return: Request with Auth header set
+        """
+        r.headers["Authorization"] = f"Bearer {self._get_token()}"
+        return r
+
+    @property
+    def authentication_provider(self) -> str:
+        """
+        :return authentication provider name
+        """
+        return self._authentication_provider
+
+    def refresh_token(self, response: Response, session: Session, *_, **__):
+        """
+        Refresh token hook if request fails with unauthorized or forbidden status code and retries the request.
+        :param response:  Response received from API server
+        :param session: Session used for original API interaction
+        :param _: Positional arguments
+        :param __: Keyword arguments
+        :return:
+        """
+        if self._retrying:
+            return response
+        else:
+            if response.status_code == requests.codes["unauthorized"]:
+                self._retrying = True
+                response = session.send(self(response.request))
+                self._retrying = False
+                return response
+        return response
+
+    def get_refresh_hook(
+        self, session: Session
+    ) -> Callable[[Response, Unpack[Any]], Response]:
+        """
+        Generate request hook
+        :param session: Session used for original API interaction
+        :returns
+        """
+        return partial(self.refresh_token, session=session)
 
 
 class BoxerTokenAuth(AuthBase):

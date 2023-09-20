@@ -16,6 +16,7 @@
 import pytest
 from typing import Type
 import pandas
+import requests.exceptions
 from adapta.storage.models.format import (
     DictJsonSerializationFormat,
     SerializationFormat,
@@ -27,6 +28,7 @@ from esd_services_api_client.boxer import (
     ExternalTokenAuth,
     BoxerConnector,
     BoxerTokenAuth,
+    RefreshableExternalTokenAuth,
 )
 from esd_services_api_client.crystal import (
     CrystalConnector,
@@ -147,21 +149,92 @@ def test_await_runs_request_id(mocker, request_statuses):
 @responses.activate
 @pytest.mark.timeout(60)
 def test_boxer_token_refresh():
-    boxer_response = responses.Response(
-        method="GET", url="https://example.com/token/method"
+    """
+    Check that BoxerTokenAuth updates the boxer token if it's expired
+    """
+    method = test_external_token_refresh.__name__
+    responses.add(
+        responses.Response(method="GET", url=f"https://example.com/token/{method}")
     )
-    responses.add(boxer_response)
-    responses.add(__make_response(200, RequestLifeCycleStage.RUNNING))
-    responses.add(__make_response(401, RequestLifeCycleStage.RUNNING))
-    responses.add(__make_response(200, RequestLifeCycleStage.RUNNING))
-    responses.add(__make_response(200, RequestLifeCycleStage.COMPLETED))
+    __mock_crystal_responses()
 
-    external_auth = ExternalTokenAuth("token", "method")
+    external_auth = ExternalTokenAuth("external_token", method)
     boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
     connector = CrystalConnector(
         base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
     )
     connector.await_runs("algorithm", ["id"])
+
+
+@responses.activate
+@pytest.mark.timeout(60)
+def test_external_token_refresh():
+    """
+    Check that RefreshableExternalTokenAuth updates the external token if it's expired
+    """
+    method = test_external_token_refresh.__name__
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", body="token1"
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", status=401
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", body="token2"
+        )
+    )
+    __mock_crystal_responses()
+
+    external_auth = RefreshableExternalTokenAuth(lambda: "external_token", method)
+    boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
+    connector = CrystalConnector(
+        base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
+    )
+    connector.await_runs("algorithm", ["id"])
+
+
+@responses.activate
+@pytest.mark.timeout(60)
+def test_external_token_refresh_failed():
+    """
+    Check that RefreshableExternalTokenAuth will not cause infinite loop if got 401 after external token update
+    """
+    method = test_external_token_refresh_failed.__name__
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", body="token1"
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", status=401
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", status=401
+        )
+    )
+    responses.add(
+        responses.Response(
+            method="GET", url=f"https://example.com/token/{method}", status=401
+        )
+    )
+    __mock_crystal_responses()
+
+    external_auth = RefreshableExternalTokenAuth(lambda: "external_token", method)
+    boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
+    connector = CrystalConnector(
+        base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
+    )
+    with pytest.raises(requests.exceptions.HTTPError) as error:
+        connector.await_runs("algorithm", ["id"])
+    assert error.value.response.status_code == requests.codes["unauthorized"]
 
 
 def __make_response(status: int, lifecycle_stage: RequestLifeCycleStage):
@@ -172,3 +245,10 @@ def __make_response(status: int, lifecycle_stage: RequestLifeCycleStage):
     )
     resp.status = status
     return resp
+
+
+def __mock_crystal_responses():
+    responses.add(__make_response(200, RequestLifeCycleStage.RUNNING))
+    responses.add(__make_response(401, RequestLifeCycleStage.RUNNING))
+    responses.add(__make_response(200, RequestLifeCycleStage.RUNNING))
+    responses.add(__make_response(200, RequestLifeCycleStage.COMPLETED))
