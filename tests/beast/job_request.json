@@ -2,25 +2,25 @@
     "inputs": [
         {
             "alias": "source",
-            "dataPath": "abfss://prdtheobaldsa@prdtheobaldsa.dfs.core.windows.net/8ZRTSL_C06/",
+            "dataPath": "abfss://container@account.dfs.core.windows.net/abc/",
             "dataFormat": "csv"
         }
     ],
     "outputs": [
         {
             "alias": "target",
-            "dataPath": "abfss://bronze@eccodatalaketest.dfs.core.windows.net/SAP/Theobald/8ZRTSL_C06",
+            "dataPath": "abfss://container@account.dfs.core.windows.net/cde",
             "dataFormat": "delta"
         }
     ],
     "overwrite": false,
     "extraArgs": {
         "include-source-filename": "",
-        "entity-name": "'8ZRTSL_C06'",
+        "entity-name": "'cde'",
         "reader-options": "'{\"delimiter\": \";\", \"header\": true, \"escape\": \"\\u0000\"}'",
         "clean-column-names": "",
         "fail-on-empty-src": "",
         "write-mode": "overwrite"
     },
-    "clientTag": "theobaldCopy__8ZRTSL_C06__20220822"
+    "clientTag": "test_tag"
 }
