@@ -18,7 +18,7 @@ import pathlib
 
 import pytest
 
-from esd_services_api_client.beast import JobRequest, JobSize, SubmissionMode
+from esd_services_api_client.beast import JobRequest
 
 
 def test_request_ser():
@@ -34,68 +34,29 @@ def test_request_ser():
     [
         (
             JobRequest(
-                root_path="121",
-                project_name="123",
-                version="123213",
-                runnable="1231",
-                job_size=JobSize.SMALL,
                 inputs=[],
                 outputs=[],
                 client_tag="12312",
                 overwrite=False,
                 extra_args={},
-                execution_group=None,
-                flexible_driver=True,
-                max_runtime_hours=None,
-                additional_driver_node_tolerations=None,
-                debug_mode=None,
-                expected_parallelism=None,
-                submission_mode=SubmissionMode.K8S,
-                extended_code_mount=False,
             )
         ),
         (
             JobRequest(
-                root_path="121",
-                project_name="123",
-                version="123213",
-                runnable="1231",
-                job_size=None,
                 inputs=[],
                 outputs=[],
                 client_tag="12312",
                 overwrite=False,
                 extra_args={},
-                execution_group=None,
-                flexible_driver=True,
-                max_runtime_hours=None,
-                additional_driver_node_tolerations=None,
-                debug_mode=None,
-                expected_parallelism=None,
-                submission_mode=SubmissionMode.K8S,
-                extended_code_mount=False,
             )
         ),
         (
             JobRequest(
-                root_path="121",
-                project_name="123",
-                version="123213",
-                runnable="1231",
-                job_size=None,
                 inputs=[],
                 outputs=[],
                 client_tag="12312",
                 overwrite=False,
                 extra_args={},
-                execution_group=None,
-                flexible_driver=True,
-                max_runtime_hours=None,
-                additional_driver_node_tolerations=None,
-                debug_mode=None,
-                expected_parallelism=None,
-                submission_mode=None,
-                extended_code_mount=None,
             )
         ),
     ],

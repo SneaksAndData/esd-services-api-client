@@ -1,8 +1,4 @@
 {
-    "rootPath": "/ecco/dist",
-    "projectName": "shrek",
-    "version": "v2.2.11-7-g7dac8fa",
-    "runnable": "shrek/kits/generalized/extract_data.py",
     "inputs": [
         {
             "alias": "source",
@@ -26,8 +22,5 @@
         "fail-on-empty-src": "",
         "write-mode": "overwrite"
     },
-    "clientTag": "theobaldCopy__8ZRTSL_C06__20220822",
-    "jobSize": "SMALL",
-    "flexibleDriver": true,
-    "submissionMode": "K8S"
+    "clientTag": "theobaldCopy__8ZRTSL_C06__20220822"
 }
