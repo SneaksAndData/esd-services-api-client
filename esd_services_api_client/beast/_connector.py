@@ -67,13 +67,13 @@ class BeastConnector:
         self.http.auth = auth
         self._failure_type = failure_type or Exception
 
-    def _submit(self, request: JobRequest) -> (str, str):
+    def _submit(self, request: JobRequest, spark_job_name: str) -> (str, str):
         request_json = request.to_dict()
 
         print(f"Submitting request: {json.dumps(request_json)}")
 
         submission_result = self.http.post(
-            f"{self.base_url}/job/submit", json=request_json
+            f"{self.base_url}/job/submit/{spark_job_name}", json=request_json
         )
         submission_json = submission_result.json()
 
@@ -104,13 +104,11 @@ class BeastConnector:
         raise_on_giveup=True,
     )
     def _existing_submission(
-        self, submitted_tag: str, project: str
+        self, submitted_tag: str
     ) -> (Optional[str], Optional[str]):
         print(f"Looking for existing submissions of {submitted_tag}")
 
-        response = self.http.get(
-            f"{self.base_url}/job/requests/{project}/tags/{submitted_tag}"
-        )
+        response = self.http.get(f"{self.base_url}/job/requests/tags/{submitted_tag}")
         response.raise_for_status()
         existing_submissions = response.json()
 
@@ -147,16 +145,17 @@ class BeastConnector:
             f"Fatal: more than one submission of {submitted_tag} is running: {running_submissions}. Please review their status restart/terminate the task accordingly"
         )
 
-    def run_job(self, job_params: BeastJobParams):
+    def run_job(self, job_params: BeastJobParams, job_name: str):
         """
           Runs a job through Beast
 
         :param job_params: Parameters for Beast Job body.
+        :param job_name: Name of the SparkJob to invoke.
         :return: A JobRequest for Beast.
         """
 
         (request_id, request_lifecycle) = self._existing_submission(
-            submitted_tag=job_params.client_tag, project=job_params.project_name
+            submitted_tag=job_params.client_tag
         )
 
         if request_id:
@@ -168,27 +167,14 @@ class BeastConnector:
             }
 
             submit_request = JobRequest(
-                root_path=self.code_root,
-                project_name=job_params.project_name,
-                runnable=job_params.project_runnable,
-                version=job_params.project_version,
                 inputs=job_params.project_inputs,
                 outputs=job_params.project_outputs,
                 overwrite=job_params.overwrite_outputs,
                 extra_args=prepared_arguments,
                 client_tag=job_params.client_tag,
-                job_size=job_params.size_hint,
-                flexible_driver=job_params.flexible_driver,
-                max_runtime_hours=job_params.max_runtime_hours,
-                additional_driver_node_tolerations=job_params.additional_driver_node_tolerations,
-                execution_group=job_params.execution_group,
-                debug_mode=job_params.debug_mode,
-                expected_parallelism=job_params.expected_parallelism,
-                submission_mode=job_params.submission_mode,
-                extended_code_mount=job_params.extended_code_mount,
             )
 
-            (request_id, request_lifecycle) = self._submit(submit_request)
+            (request_id, request_lifecycle) = self._submit(submit_request, job_name)
 
         while (
             request_lifecycle not in self.success_stages
@@ -237,17 +223,16 @@ class BeastConnector:
 
         return response.json()["lifeCycleStage"]
 
-    def start_job(self, job_params: BeastJobParams) -> Optional[str]:
+    def start_job(self, job_params: BeastJobParams, job_name: str) -> Optional[str]:
         """
           Starts a job through Beast.
 
         :param job_params: Parameters for Beast Job body.
+        :param job_name: Name of the SparkJob to invoke.
         :return: A JobRequest for Beast.
         """
 
-        (request_id, _) = self._existing_submission(
-            submitted_tag=job_params.client_tag, project=job_params.project_name
-        )
+        (request_id, _) = self._existing_submission(submitted_tag=job_params.client_tag)
 
         if not request_id:
             prepared_arguments = {
@@ -255,26 +240,13 @@ class BeastConnector:
             }
 
             submit_request = JobRequest(
-                root_path=self.code_root,
-                project_name=job_params.project_name,
-                runnable=job_params.project_runnable,
-                version=job_params.project_version,
                 inputs=job_params.project_inputs,
                 outputs=job_params.project_outputs,
                 overwrite=job_params.overwrite_outputs,
                 extra_args=prepared_arguments,
                 client_tag=job_params.client_tag,
-                job_size=job_params.size_hint,
-                flexible_driver=job_params.flexible_driver,
-                max_runtime_hours=job_params.max_runtime_hours,
-                additional_driver_node_tolerations=job_params.additional_driver_node_tolerations,
-                execution_group=job_params.execution_group,
-                debug_mode=job_params.debug_mode,
-                expected_parallelism=job_params.expected_parallelism,
-                submission_mode=job_params.submission_mode,
-                extended_code_mount=job_params.extended_code_mount,
             )
 
-            request_id, _ = self._submit(submit_request)
+            request_id, _ = self._submit(submit_request, job_name)
 
         return request_id
