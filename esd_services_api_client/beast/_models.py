@@ -18,7 +18,7 @@
 
 import os
 from dataclasses import dataclass, field
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 from warnings import warn
 
 from cryptography.fernet import Fernet
@@ -182,3 +182,55 @@ class BeastJobParams:
         },
         default=False,
     )
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class RequestDebugMode(DataClassJsonMixin):
+    """
+    Debug mode config.
+    """
+
+    event_log_location: str
+    max_size_per_file: str
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class V1TypedLocalObjectReference(DataClassJsonMixin):
+    """
+    Reference to another SparkJob.
+    """
+
+    api_group: str
+    kind: str
+    name: str
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class SparkSubmissionConfiguration(DataClassJsonMixin):
+    """
+    Configuration CRD used by Beast to run Spark apps.
+    """
+
+    root_path: str
+    project_name: str
+    version: str
+    runnable: str
+    execution_group: str
+    expected_parallelism: Optional[int]
+    flexible_driver: Optional[bool]
+    additional_driver_node_tolerations: Dict[str, str]
+    max_runtime_hours: Optional[int]
+    debug_mode: RequestDebugMode
+    submission_mode: Optional[str]
+    extended_code_mount: Optional[bool]
+    submission_job_template: str
+    executor_spec_template: str
+    driver_job_retries: Optional[int]
+    default_arguments: Dict[str, str]
+    inputs: List[JobSocket]
+    outputs: List[JobSocket]
+    overwrite: bool
+    base_submission_configuration_ref: V1TypedLocalObjectReference
