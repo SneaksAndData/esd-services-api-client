@@ -255,7 +255,7 @@ class BeastConnector:
 
         return request_id
 
-    def read_configuration(
+    def get_configuration(
         self, configuration_name: str
     ) -> Optional[SparkSubmissionConfiguration]:
         """
@@ -264,7 +264,9 @@ class BeastConnector:
         :return: A SparkSubmissionConfiguration object, if found, or None
         """
         response = self.http.get(f"{self.base_url}/job/deployed/{configuration_name}")
-        if not response.ok:
+        if response.status_code == 404:
             return None
+        elif not response.ok:
+            response.raise_for_status()
 
         return SparkSubmissionConfiguration.from_dict(response.json())
