@@ -25,7 +25,11 @@ import backoff
 from adapta.utils import doze, session_with_retries
 from urllib3.exceptions import ProtocolError, HTTPError
 
-from esd_services_api_client.beast._models import JobRequest, BeastJobParams
+from esd_services_api_client.beast._models import (
+    JobRequest,
+    BeastJobParams,
+    SparkSubmissionConfiguration,
+)
 from esd_services_api_client.boxer import BoxerTokenAuth
 
 
@@ -250,3 +254,17 @@ class BeastConnector:
             request_id, _ = self._submit(submit_request, job_name)
 
         return request_id
+
+    def read_configuration(
+        self, configuration_name: str
+    ) -> Optional[SparkSubmissionConfiguration]:
+        """
+          Returns a deployed SparkJob configuration.
+        :param configuration_name: Name of the configuration to find
+        :return: A SparkSubmissionConfiguration object, if found, or None
+        """
+        response = self.http.get(f"{self.base_url}/job/deployed/{configuration_name}")
+        if not response.ok:
+            return None
+
+        return SparkSubmissionConfiguration.from_dict(response.json())
