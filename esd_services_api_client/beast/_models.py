@@ -187,6 +187,10 @@ class BeastJobParams:
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class RequestDebugMode(DataClassJsonMixin):
+    """
+    Debug mode config.
+    """
+
     event_log_location: str
     max_size_per_file: str
 
@@ -194,6 +198,10 @@ class RequestDebugMode(DataClassJsonMixin):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class V1TypedLocalObjectReference(DataClassJsonMixin):
+    """
+    Reference to another SparkJob.
+    """
+
     api_group: str
     kind: str
     name: str
@@ -202,6 +210,10 @@ class V1TypedLocalObjectReference(DataClassJsonMixin):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class SparkSubmissionConfiguration(DataClassJsonMixin):
+    """
+    Configuration CRD used by Beast to run Spark apps.
+    """
+
     root_path: str
     project_name: str
     version: str
