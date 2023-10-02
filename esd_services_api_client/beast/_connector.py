@@ -266,7 +266,7 @@ class BeastConnector:
         response = self.http.get(f"{self.base_url}/job/deployed/{configuration_name}")
         if response.status_code == 404:
             return None
-        elif not response.ok:
+        if not response.ok:
             response.raise_for_status()
 
         return SparkSubmissionConfiguration.from_dict(response.json())
