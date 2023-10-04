@@ -39,6 +39,7 @@ def test_request_ser():
                 client_tag="12312",
                 overwrite=False,
                 extra_args={},
+                expected_parallelism=10,
             )
         ),
         (
@@ -48,6 +49,7 @@ def test_request_ser():
                 client_tag="12312",
                 overwrite=False,
                 extra_args={},
+                expected_parallelism=10,
             )
         ),
         (
@@ -57,6 +59,7 @@ def test_request_ser():
                 client_tag="12312",
                 overwrite=False,
                 extra_args={},
+                expected_parallelism=10,
             )
         ),
     ],
