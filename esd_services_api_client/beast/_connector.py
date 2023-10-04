@@ -176,6 +176,7 @@ class BeastConnector:
                 overwrite=job_params.overwrite_outputs,
                 extra_args=prepared_arguments,
                 client_tag=job_params.client_tag,
+                expected_parallelism=job_params.expected_parallelism,
             )
 
             (request_id, request_lifecycle) = self._submit(submit_request, job_name)
@@ -249,6 +250,7 @@ class BeastConnector:
                 overwrite=job_params.overwrite_outputs,
                 extra_args=prepared_arguments,
                 client_tag=job_params.client_tag,
+                expected_parallelism=job_params.expected_parallelism,
             )
 
             request_id, _ = self._submit(submit_request, job_name)

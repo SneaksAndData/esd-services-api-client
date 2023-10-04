@@ -22,5 +22,6 @@
         "fail-on-empty-src": "",
         "write-mode": "overwrite"
     },
-    "clientTag": "test_tag"
+    "clientTag": "test_tag",
+    "expectedParallelism": 15
 }
