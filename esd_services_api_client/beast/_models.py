@@ -88,6 +88,7 @@ class JobRequest(DataClassJsonMixin):
     overwrite: bool
     extra_args: Dict[str, str]
     client_tag: str
+    expected_parallelism: Optional[int]
 
 
 class ArgumentValue:
@@ -181,6 +182,12 @@ class BeastJobParams:
             "description": "Whether to wipe existing data before writing new out."
         },
         default=False,
+    )
+    expected_parallelism: Optional[int] = field(
+        metadata={
+            "description": "Expected number of executors for this job (overrides the deployed value)."
+        },
+        default=None,
     )
 
 
