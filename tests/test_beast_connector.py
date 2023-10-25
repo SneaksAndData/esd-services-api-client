@@ -18,7 +18,7 @@ import pathlib
 
 import pytest
 
-from esd_services_api_client.beast import JobRequest
+from esd_services_api_client.beast.v3 import JobRequest
 
 
 def test_request_ser():
