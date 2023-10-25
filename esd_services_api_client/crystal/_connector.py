@@ -17,6 +17,7 @@
 #
 
 import json
+import os
 from argparse import Namespace, ArgumentParser
 from datetime import timedelta
 from typing import Dict, Optional, Type, TypeVar, List
@@ -84,21 +85,32 @@ class CrystalConnector:
     def __init__(
         self,
         *,
-        base_url: str,
+        scheduler_base_url: Optional[str] = None,
+        receiver_base_url: Optional[str] = None,
         logger: Optional[SemanticLogger] = None,
         auth: Optional[AuthBase] = None,
         api_version: ApiVersion = ApiVersion.V1_2,
         default_timeout: timedelta = timedelta(seconds=300),
         default_retry_count: int = 10,
     ):
-        self.base_url = base_url
-        self.http = session_with_retries(
+        # keeping CRYSTAL_URL for backwards-compatibility
+        self._scheduler_base_url = (
+            scheduler_base_url
+            or os.environ["ESDAPI__CRYSTAL_SCHEDULER_URL"]
+            or os.environ["CRYSTAL_URL"]
+        )
+        self._receiver_base_url = (
+            receiver_base_url
+            or os.environ["ESDAPI__CRYSTAL_RECEIVER_URL"]
+            or os.environ["CRYSTAL_URL"]
+        )
+        self._http = session_with_retries(
             status_list=(400, 429, 500, 502, 503, 504, 404),
             retry_count=default_retry_count,
             request_timeout=default_timeout.total_seconds(),
         )
         if auth and isinstance(auth, BoxerTokenAuth):
-            self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
+            self._http.hooks["response"].append(auth.get_refresh_hook(self._http))
         self._api_version = api_version
         self._logger = logger
         if isinstance(auth, BoxerTokenAuth):
@@ -106,7 +118,7 @@ class CrystalConnector:
                 api_version == ApiVersion.V1_2
             ), "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
 
-        self.http.auth = auth
+        self._http.auth = auth
         self._finished_statuses = [
             RequestLifeCycleStage.COMPLETED,
             RequestLifeCycleStage.FAILED,
@@ -117,13 +129,19 @@ class CrystalConnector:
     @classmethod
     def create_anonymous(
         cls,
-        base_url: str,
+        scheduler_base_url: Optional[str] = None,
+        receiver_base_url: Optional[str] = None,
         logger: Optional[SemanticLogger] = None,
         api_version: ApiVersion = ApiVersion.V1_2,
     ) -> "CrystalConnector":
         """Creates Crystal connector with no authentication.
         This should be use for accessing Crystal from inside a hosting cluster."""
-        return cls(base_url=base_url, logger=logger, api_version=api_version)
+        return cls(
+            scheduler_base_url=scheduler_base_url,
+            receiver_base_url=receiver_base_url,
+            logger=logger,
+            api_version=api_version,
+        )
 
     def __enter__(self):
         return self
@@ -150,7 +168,7 @@ class CrystalConnector:
 
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f"{self.base_url}/algorithm/{self._api_version.value}/run/{algorithm}"
+                return f"{self._scheduler_base_url}/algorithm/{self._api_version.value}/run/{algorithm}"
 
             raise ValueError(f"Unsupported API version {self._api_version}")
 
@@ -161,7 +179,7 @@ class CrystalConnector:
             tag=tag,
         ).to_dict()
 
-        run_response = self.http.post(get_api_path(), json=run_body)
+        run_response = self._http.post(get_api_path(), json=run_body)
 
         # raise if not successful
         run_response.raise_for_status()
@@ -194,11 +212,11 @@ class CrystalConnector:
     ) -> RequestResult:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}"
+                return f"{self._scheduler_base_url}/algorithm/{self._api_version.value}/results/{algorithm}/requests/{run_id}"
 
             raise ValueError(f"Unsupported API version {self._api_version}")
 
-        response = self.http.get(url=get_api_path())
+        response = self._http.get(url=get_api_path())
 
         # raise if not successful
         response.raise_for_status()
@@ -224,11 +242,11 @@ class CrystalConnector:
     ) -> List[RequestResult]:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f"{self.base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}"
+                return f"{self._scheduler_base_url}/algorithm/{self._api_version.value}/results/{algorithm}/tags/{tag}"
 
             raise ValueError(f"Unsupported API version {self._api_version}")
 
-        response = self.http.get(url=get_api_path())
+        response = self._http.get(url=get_api_path())
 
         # raise if not successful
         response.raise_for_status()
@@ -254,7 +272,7 @@ class CrystalConnector:
 
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
-                return f"{self.base_url}/algorithm/{self._api_version.value}/complete/{algorithm}/requests/{run_id}"
+                return f"{self._receiver_base_url}/algorithm/{self._api_version.value}/complete/{algorithm}/requests/{run_id}"
 
             raise ValueError(f"Unsupported API version {self._api_version}")
 
@@ -272,7 +290,7 @@ class CrystalConnector:
             )
 
         else:
-            run_response = self.http.post(url=get_api_path(), json=payload)
+            run_response = self._http.post(url=get_api_path(), json=payload)
 
             # raise if not successful
             run_response.raise_for_status()
@@ -299,7 +317,7 @@ class CrystalConnector:
         """
         Gracefully dispose object.
         """
-        self.http.close()
+        self._http.close()
 
     def await_tagged_runs(
         self, algorithm: str, tags: List[str]

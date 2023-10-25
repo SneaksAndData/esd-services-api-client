@@ -12,6 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+import os
 
 import pytest
 from typing import Type
@@ -130,7 +131,10 @@ def test_await_runs_request_id(mocker, request_statuses):
         "esd_services_api_client.crystal._connector.session_with_retries",
         return_value=MockHttpConnection(MockHttpResponse({"run_id": request_id})),
     )
-    connector = CrystalConnector.create_anonymous(base_url="https://some.url.com")
+    os.environ["ESDAPI__CRYSTAL_RECEIVER_URL"] = "https://some.url.com/receiver"
+    connector = CrystalConnector.create_anonymous(
+        scheduler_base_url="https://some.url.com"
+    )
 
     request_results = [
         RequestResult(run_id=request_id, status=status) for status in request_statuses
@@ -161,7 +165,9 @@ def test_boxer_token_refresh():
     external_auth = ExternalTokenAuth("external_token", method)
     boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
     connector = CrystalConnector(
-        base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
+        scheduler_base_url="https://example.com",
+        receiver_base_url="http://localhost",
+        auth=BoxerTokenAuth(boxer_connector),
     )
     connector.await_runs("algorithm", ["id"])
 
@@ -193,7 +199,9 @@ def test_external_token_refresh():
     external_auth = RefreshableExternalTokenAuth(lambda: "external_token", method)
     boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
     connector = CrystalConnector(
-        base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
+        scheduler_base_url="https://example.com",
+        receiver_base_url="http://localhost",
+        auth=BoxerTokenAuth(boxer_connector),
     )
     connector.await_runs("algorithm", ["id"])
 
@@ -230,7 +238,7 @@ def test_external_token_refresh_failed():
     external_auth = RefreshableExternalTokenAuth(lambda: "external_token", method)
     boxer_connector = BoxerConnector(base_url="https://example.com", auth=external_auth)
     connector = CrystalConnector(
-        base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
+        scheduler_base_url="https://example.com", auth=BoxerTokenAuth(boxer_connector)
     )
     with pytest.raises(requests.exceptions.HTTPError) as error:
         connector.await_runs("algorithm", ["id"])
