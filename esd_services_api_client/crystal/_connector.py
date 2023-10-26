@@ -96,13 +96,13 @@ class CrystalConnector:
         # keeping CRYSTAL_URL for backwards-compatibility
         self._scheduler_base_url = (
             scheduler_base_url
-            or os.environ["ESDAPI__CRYSTAL_SCHEDULER_URL"]
-            or os.environ["CRYSTAL_URL"]
+            or os.getenv("ESDAPI__CRYSTAL_SCHEDULER_URL")
+            or os.getenv("CRYSTAL_URL")
         )
         self._receiver_base_url = (
             receiver_base_url
-            or os.environ["ESDAPI__CRYSTAL_RECEIVER_URL"]
-            or os.environ["CRYSTAL_URL"]
+            or os.getenv("ESDAPI__CRYSTAL_RECEIVER_URL")
+            or os.getenv("CRYSTAL_URL")
         )
         self._http = session_with_retries(
             status_list=(400, 429, 500, 502, 503, 504, 404),
