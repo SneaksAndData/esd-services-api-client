@@ -166,16 +166,16 @@ class BeastJobParams:
     extra_arguments: Dict[str, Union[ArgumentValue, str]] = field(
         metadata={
             "description": "Extra arguments for a submission, defined by an author."
-        }
+        },
     )
     client_tag: str = field(
         metadata={"description": "Client-assigned identifier for this request"}
     )
     project_inputs: List[JobSocket] = field(
-        metadata={"description": "List of job inputs."}, default=list
+        metadata={"description": "List of job inputs."}, default_factory=list
     )
     project_outputs: List[JobSocket] = field(
-        metadata={"description": "List of job outputs."}, default=list
+        metadata={"description": "List of job outputs."}, default_factory=list
     )
     overwrite_outputs: bool = field(
         metadata={
