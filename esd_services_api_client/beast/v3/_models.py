@@ -204,14 +204,27 @@ class RequestDebugMode(DataClassJsonMixin):
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class V1TypedLocalObjectReference(DataClassJsonMixin):
+class SparkSubmissionDetails(DataClassJsonMixin):
     """
-    Reference to another SparkJob.
+    Job runtime details
     """
 
-    api_group: str
-    kind: str
-    name: str
+    version: str
+    execution_group: str
+    expected_parallelism: Optional[int]
+    flexible_driver: Optional[bool]
+    additional_driver_node_tolerations: Dict[str, str]
+    max_runtime_hours: Optional[int]
+    debug_mode: Optional[RequestDebugMode]
+    submission_mode: Optional[str]
+    extended_code_mount: Optional[bool]
+    submission_job_template: str
+    executor_spec_template: str
+    driver_job_retries: Optional[int]
+    default_arguments: Dict[str, str]
+    inputs: List[JobSocket]
+    outputs: List[JobSocket]
+    overwrite: Optional[bool]
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
@@ -223,21 +236,5 @@ class SparkSubmissionConfiguration(DataClassJsonMixin):
 
     root_path: str
     project_name: str
-    version: str
     runnable: str
-    execution_group: str
-    expected_parallelism: Optional[int]
-    flexible_driver: Optional[bool]
-    additional_driver_node_tolerations: Dict[str, str]
-    max_runtime_hours: Optional[int]
-    debug_mode: RequestDebugMode
-    submission_mode: Optional[str]
-    extended_code_mount: Optional[bool]
-    submission_job_template: str
-    executor_spec_template: str
-    driver_job_retries: Optional[int]
-    default_arguments: Dict[str, str]
-    inputs: List[JobSocket]
-    outputs: List[JobSocket]
-    overwrite: bool
-    base_submission_configuration_ref: V1TypedLocalObjectReference
+    submission_details: SparkSubmissionDetails
