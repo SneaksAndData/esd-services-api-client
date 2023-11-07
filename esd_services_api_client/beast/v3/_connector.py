@@ -283,7 +283,8 @@ class BeastConnector:
 
     def get_logs(self, request_id: str) -> Optional[str]:
         """
-          Returns a deployed SparkJob configuration.
+          Returns logs for a running or a completed submission.
+
         :param request_id: Submission request identifier.
         :return: A job log, if found, or None
         """
