@@ -84,7 +84,7 @@ class BeastConnector:
         lifecycle_check_interval: int = 60,
         failure_type: Optional[Exception] = None,
     ) -> "BeastConnector":
-        """Creates Crystal connector with no authentication.
+        """Creates Beast connector with no authentication.
         This should be used within a hosting clusters."""
         return cls(
             base_url=base_url,
