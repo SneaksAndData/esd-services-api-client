@@ -82,11 +82,11 @@ class BeastConnector:
 
     @classmethod
     def create_anonymous(
-            cls,
-            base_url,
-            code_root="/ecco/dist",
-            lifecycle_check_interval: int = 60,
-            failure_type: Optional[Exception] = None,
+        cls,
+        base_url,
+        code_root="/ecco/dist",
+        lifecycle_check_interval: int = 60,
+        failure_type: Optional[Exception] = None,
     ) -> "BeastConnector":
         """Creates Crystal connector with no authentication.
         This should be used within a hosting clusters."""
