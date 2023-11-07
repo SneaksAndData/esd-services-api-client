@@ -43,8 +43,8 @@ class BeastConnector:
         *,
         base_url,
         code_root="/ecco/dist",
-        auth: BoxerTokenAuth,
         lifecycle_check_interval: int = 60,
+        auth: Optional[BoxerTokenAuth] = None,
         failure_type: Optional[Exception] = None,
     ):
         """
@@ -67,7 +67,8 @@ class BeastConnector:
         ]
         self.success_stages = ["COMPLETED"]
         self.http = session_with_retries()
-        self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
+        if auth and isinstance(auth, BoxerTokenAuth):
+            self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self.http.auth = auth
         self._failure_type = failure_type or Exception
         self._version = "v3"
@@ -78,6 +79,23 @@ class BeastConnector:
         Returns the client API version for this connector
         """
         return self._version
+
+    @classmethod
+    def create_anonymous(
+        cls,
+        base_url,
+        code_root="/ecco/dist",
+        lifecycle_check_interval: int = 60,
+        failure_type: Optional[Exception] = None,
+    ) -> "BeastConnector":
+        """Creates Beast connector with no authentication.
+        This should be used within a hosting clusters."""
+        return cls(
+            base_url=base_url,
+            code_root=code_root,
+            lifecycle_check_interval=lifecycle_check_interval,
+            failure_type=failure_type,
+        )
 
     def _submit(self, request: JobRequest, spark_job_name: str) -> (str, str):
         request_json = request.to_dict()
