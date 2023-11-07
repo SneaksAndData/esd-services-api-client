@@ -280,3 +280,17 @@ class BeastConnector:
             response.raise_for_status()
 
         return SparkSubmissionConfiguration.from_dict(response.json())
+
+    def get_logs(self, request_id: str) -> Optional[str]:
+        """
+          Returns a deployed SparkJob configuration.
+        :param request_id: Submission request identifier.
+        :return: A job log, if found, or None
+        """
+        response = self.http.get(f"{self.base_url}/job/logs/{request_id}")
+        if response.status_code == 404:
+            return None
+        if not response.ok:
+            response.raise_for_status()
+
+        return "\n".join(response.json())
