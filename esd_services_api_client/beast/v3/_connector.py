@@ -254,7 +254,7 @@ class BeastConnector:
 
         return response.json()["lifeCycleStage"]
 
-    def get_request_runtime_info(self, request_id: str) -> Optional[Dict]:
+    def get_request_runtime_info(self, request_id: str) -> Optional[dict]:
         """
           Returns the runtime information for the given request. Returns None in case error retry fails to resolve within given timeout.
         :param request_id: A request identifier to read runtime info for.
