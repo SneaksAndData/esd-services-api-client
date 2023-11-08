@@ -254,6 +254,16 @@ class BeastConnector:
 
         return response.json()["lifeCycleStage"]
 
+    def get_request_runtime_info(self, request_id: str) -> Optional[str]:
+        """
+          Returns the runtime information for the given request. Returns None in case error retry fails to resolve within given timeout.
+        :param request_id: A request identifier to read runtime info for.
+        """
+        response = self.http.get(f"{self.base_url}/job/requests/{request_id}")
+        response.raise_for_status()
+
+        return response.json()
+
     def start_job(self, job_params: BeastJobParams, job_name: str) -> Optional[str]:
         """
           Starts a job through Beast.
