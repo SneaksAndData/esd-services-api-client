@@ -19,7 +19,7 @@
 import json
 from http.client import HTTPException
 from json import JSONDecodeError
-from typing import Optional, Any, Dict
+from typing import Optional, Any
 
 import backoff
 from adapta.utils import doze, session_with_retries
