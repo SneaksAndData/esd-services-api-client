@@ -21,6 +21,32 @@ from typing import Dict
 
 
 @dataclass
+class Claim:
+    claim_name: str
+    claim_value: str
+
+    def to_dict(self) -> Dict:
+        """Convert to Dictionary
+        :return: Dictionary
+        """
+        return {
+            self.claim_name: self.claim_value
+        }
+
+    @classmethod
+    def from_dict(cls, json_data: Dict) -> "Claim":
+        """Initialize from Dictionary
+        :param json_data: Dictionary
+        :return:
+        """
+        name = json_data.keys()[0]
+        return Claim(
+            claim_name=name,
+            claim_value=json_data[f"{name}"],
+        )
+
+
+@dataclass
 class BoxerClaim:
     """
     Boxer Claim

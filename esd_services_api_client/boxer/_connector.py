@@ -1,6 +1,7 @@
 """
   Connector for Boxer Auth API.
 """
+import json
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +18,8 @@
 #
 
 import os
-from typing import Iterator, Optional
+from typing import Optional
 
-import jwt
 from adapta.security.clients import AzureClient
 from adapta.utils import session_with_retries
 from requests import Session
@@ -32,11 +32,61 @@ from esd_services_api_client.boxer._auth import (
     ExternalAuthBase,
     RefreshableExternalTokenAuth,
 )
-from esd_services_api_client.boxer._helpers import (
-    _iterate_user_claims_response,
-    _iterate_boxer_claims_response,
-)
-from esd_services_api_client.boxer._models import BoxerClaim, UserClaim, BoxerToken
+from esd_services_api_client.boxer._models import BoxerToken, Claim
+
+
+class BoxerClaimConnector:
+    def __init__(self,
+                 *,
+                 base_url,
+                 auth: Optional[BoxerTokenAuth] = None):
+        self.base_url = base_url
+        self.http = session_with_retries()
+        if auth and isinstance(auth, BoxerTokenAuth):
+            self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
+        self.http.auth = auth
+
+    def get_claims(self, user_id: str, provider: str):
+        target_url_get_user = f"{self.base_url}/claim/{provider}/{user_id}"
+        response = self.http.get(target_url_get_user)
+        if response.status_code == 404:
+            return None
+        if not response.ok:
+            response.raise_for_status()
+        return response.json()
+
+    def add_user(self, user_id: str, provider: str):
+        response = self.http.post(f"{self.base_url}/claim/{provider}/{user_id}")
+        response.raise_for_status()
+        return response.json()
+
+    def remove_user(self, user_id: str, provider: str):
+        response = self.http.delete(f"{self.base_url}/claim/{provider}/{user_id}")
+        response.raise_for_status()
+        return response
+
+    def add_claim(self, user_id: str, provider: str, claim: Claim):
+        if self.get_claims(user_id, provider):
+            payload = {
+                "operation": "Insert",
+                "claims": claim.to_dict()
+            }
+            payload_json = json.dumps(payload)
+            response = self.http.patch(f"{self.base_url}/claim/{provider}/{user_id}", data=payload_json,
+                                       headers={"Content-Type": "application/json"})
+            response.raise_for_status()
+            return response.json()
+
+    def remove_claim(self, user_id: str, provider: str, claim: Claim):
+        if self.get_claims(user_id, provider):
+            payload = {
+                "operation": "Delete",
+                "claims": claim.to_dict()
+            }
+            payload_json = json.dumps(payload)
+            response = self.http.patch(f"{self.base_url}/claim/{provider}/{user_id}", data=payload_json,
+                                       headers={"Content-Type": "application/json"})
+            return response
 
 
 class BoxerConnector(BoxerTokenProvider):
@@ -45,12 +95,12 @@ class BoxerConnector(BoxerTokenProvider):
     """
 
     def __init__(
-        self,
-        *,
-        base_url,
-        auth: ExternalAuthBase,
-        retry_attempts=10,
-        session: Optional[Session] = None,
+            self,
+            *,
+            base_url,
+            auth: ExternalAuthBase,
+            retry_attempts=10,
+            session: Optional[Session] = None,
     ):
         """Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
@@ -64,92 +114,6 @@ class BoxerConnector(BoxerTokenProvider):
         if isinstance(auth, RefreshableExternalTokenAuth):
             self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self.retry_attempts = retry_attempts
-
-    def push_user_claim(self, claim: BoxerClaim, user_id: str):
-        """Adds/Overwrites a new Boxer Claim to a user
-        :param claim: Boxer Claim
-        :param user_id: User's UPN
-        :return:
-        """
-        target_url = f"{self.base_url}/claims/user/{user_id}"
-        claim_json = claim.to_dict()
-        response = self.http.post(target_url, json=claim_json)
-        response.raise_for_status()
-        print(f"Successfully pushed user claim for user {user_id}")
-
-    def push_group_claim(self, claim: BoxerClaim, group_name: str):
-        """Adds/Overwrites a new Boxer Claim to a user
-        :param claim: Boxer Claim
-        :param group_name: Group Name
-        :return:
-        """
-        target_url = f"{self.base_url}/claims/group/{group_name}"
-        claim_json = claim.to_dict()
-        response = self.http.post(target_url, json=claim_json)
-        response.raise_for_status()
-        print(f"Successfully pushed user claim for group {group_name}")
-
-    def get_claims_by_type(self, claims_type: str) -> Iterator[UserClaim]:
-        """Reads claims of specified type from Boxer.
-        :param claims_type: claim type to filter claims by.
-        :return: Iterator[UserClaim]
-        """
-        target_url = f"{self.base_url}/claims/type/{claims_type}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_user_claims_response(response)
-
-    def get_claims_by_user(self, user_id: str) -> Iterator[BoxerClaim]:
-        """Reads user claims from Boxer
-        :param user_id: user upn to load claims for
-        :return: Iterator[UserClaim]
-        """
-        empty_user_token = jwt.encode({"upn": user_id}, "_", algorithm="HS256")
-        target_url = f"{self.base_url}/claims/user/{empty_user_token}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_boxer_claims_response(response)
-
-    def get_claims_by_group(self, group_name: str) -> Iterator[BoxerClaim]:
-        """Reads group claims from Boxer
-        :param group_name: group name to load claims for
-        :return: Iterator[UserClaim]
-        """
-        target_url = f"{self.base_url}/claims/group/{group_name}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_boxer_claims_response(response)
-
-    def get_claims_for_token(self, jwt_token: str) -> Iterator[BoxerClaim]:
-        """Reads user claims from Boxer based on jwt token
-        :param jwt_token: jwt token with UPN set
-        :return: Iterator[UserClaim]
-        """
-        target_url = f"{self.base_url}/claims/user/{jwt_token}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_boxer_claims_response(response)
-
-    def create_consumer(self, consumer_id: str, overwrite: bool = False) -> str:
-        """Adds/Overwrites a new Boxer Claim to a user
-        :param consumer_id: Consumer ID of new consumer
-        :param overwrite: Flag to overwrite if consumer with given consumer_id already exists
-        :return: New consumer's private key (Base64 Encoded)
-        """
-        target_url = f"{self.base_url}/consumer/{consumer_id}?overwrite={overwrite}"
-        response = self.http.post(target_url, json={})
-        response.raise_for_status()
-        return response.text
-
-    def get_consumer_public_key(self, consumer_id: str) -> str:
-        """Reads Consumer's public key
-        :param consumer_id: Boxer Claim
-        :return: public key (Base64 Encoded)
-        """
-        target_url = f"{self.base_url}/consumer/publicKey/{consumer_id}"
-        response = self.http.get(target_url, json={})
-        response.raise_for_status()
-        return response.text
 
     def get_token(self) -> BoxerToken:
         """
@@ -207,7 +171,7 @@ def get_kubernetes_token(cluster_name: str, boxer_base_url: str) -> BoxerTokenAu
     :return: BoxerTokenAuth configured fot particular identity provider and kubernetes auth token
     """
     with open(
-        "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
+            "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
     ) as token_file:
         external_auth = ExternalTokenAuth(token_file.readline(), cluster_name)
         boxer_connector = BoxerConnector(base_url=boxer_base_url, auth=external_auth)
