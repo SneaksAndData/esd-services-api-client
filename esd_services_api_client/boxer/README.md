@@ -11,62 +11,52 @@ export BOXER_CONSUMER_ID="my_app_consumer"
 export BOXER_PRIVATE_KEY="MIIEpAIBAA..."
 ```
 
-### Retrieving User Claims:
+### Retrieving Claims:
 
 ```python
-from esd_services_api_client.boxer import BoxerConnector
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-claims = conn.get_claims_by_user("user@domain.tld")
-for claim in claims:
+from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector
+auth = select_authentication("azuread", "test")
+conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
+resp = conn.get_claims("adma@ecco.com", "azuread")
+for claim in resp:
     print(claim.to_dict())
 ```
 
-### Retrieving Claims by Type:
-
+### Insert a claim:
 ```python
-from esd_services_api_client.boxer import BoxerConnector
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-claims = conn.get_claims_by_type("App1.AccessPolicy")
+from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
+auth = select_authentication("azuread", "test")
+conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
+claim_to_insert = Claim("some-test.test.sneaksanddata.com", ".*")
+resp = conn.add_claim("adma@ecco.com", "azuread", claim_to_insert)
+print(resp)
 ```
 
-### Retrieving Group Claims:
-
+### Remove a claim:
 ```python
-from esd_services_api_client.boxer import BoxerConnector
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-claims = conn.get_claims_by_group("ad_group_name")
+from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
+auth = select_authentication("azuread", "test")
+conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
+claim_to_remove = Claim("some-test.test.sneaksanddata.com", ".*")
+resp = conn.remove_claim("adma@ecco.com", "azuread", claim_to_remove)
+print(resp)
 ```
 
-### Setting a user claim:
+### Add a user:
 ```python
-from esd_services_api_client.boxer import BoxerConnector
-from esd_services_api_client.boxer import BoxerClaim
-claim = BoxerClaim(issuer="App1", claim_type="App1.CanManageConsumers", claim_value="true")
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-conn.push_user_claim(claim, "app1admin")
+from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
+auth = select_authentication("azuread", "test")
+conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
+resp = conn.add_user("test@ecco.com", "azuread")
+print(resp)
 ```
 
-### Setting a group claim:
+### Remove a user:
 ```python
-from esd_services_api_client.boxer import BoxerConnector
-from esd_services_api_client.boxer import BoxerClaim
-claim = BoxerClaim(issuer="App1", claim_type="App1.CanManageConsumers", claim_value="true")
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-conn.push_group_claim(claim, "ad_group_name")
-```
-
-### Creating a new Auth Consumer (obtaining private key):
-```python
-from esd_services_api_client.boxer import BoxerConnector
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-priv_key = conn.create_consumer("app_consumer")
-```
-
-### Getting Consumer's public key:
-```python
-from esd_services_api_client.boxer import BoxerConnector
-conn = BoxerConnector(base_url="https://boxer.test.sneaksanddata.com")
-pub_key = conn.get_consumer_public_key("app_consumer")
+from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
+auth = select_authentication("azuread", "test")
+conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
+resp = conn.remove_user("test@ecco.com", "azuread")
 ```
 
 ### Using as an authentication provider for other connectors
