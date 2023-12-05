@@ -18,7 +18,7 @@ import json
 #
 
 import os
-from typing import Optional
+from typing import Optional, Union, Dict
 
 from adapta.security.clients import AzureClient
 from adapta.utils import session_with_retries
@@ -36,17 +36,28 @@ from esd_services_api_client.boxer._models import BoxerToken, Claim
 
 
 class BoxerClaimConnector:
+    """
+    Boxer Claims API connector
+    """
+
     def __init__(self,
                  *,
                  base_url,
                  auth: Optional[BoxerTokenAuth] = None):
+        """Creates Boxer Claims connector, capable of managing claims
+        :param base_url: Base URL for Boxer Claims endpoint
+        :param auth: Boxer-based authentication
+        """
         self.base_url = base_url
         self.http = session_with_retries()
         if auth and isinstance(auth, BoxerTokenAuth):
             self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self.http.auth = auth
 
-    def get_claims(self, user_id: str, provider: str):
+    def get_claims(self, user_id: str, provider: str) -> Union[Dict, None]:
+        """
+        Returns the claims assigned to the specified user_id and provider
+        """
         target_url_get_user = f"{self.base_url}/claim/{provider}/{user_id}"
         response = self.http.get(target_url_get_user)
         if response.status_code == 404:
@@ -55,17 +66,26 @@ class BoxerClaimConnector:
             response.raise_for_status()
         return response.json()
 
-    def add_user(self, user_id: str, provider: str):
+    def add_user(self, user_id: str, provider: str) -> Dict:
+        """
+        Adds a new user_id, provider pair
+        """
         response = self.http.post(f"{self.base_url}/claim/{provider}/{user_id}")
         response.raise_for_status()
         return response.json()
 
-    def remove_user(self, user_id: str, provider: str):
+    def remove_user(self, user_id: str, provider: str) -> Dict:
+        """
+        Removes the specified user_id, provider pair and assigned claims
+        """
         response = self.http.delete(f"{self.base_url}/claim/{provider}/{user_id}")
         response.raise_for_status()
-        return response
+        return response.json()
 
-    def add_claim(self, user_id: str, provider: str, claim: Claim):
+    def add_claim(self, user_id: str, provider: str, claim: Claim) -> Union[Dict, None]:
+        """
+        Adds a new claim to an existing user_id, provider pair
+        """
         if self.get_claims(user_id, provider):
             payload = {
                 "operation": "Insert",
@@ -76,8 +96,12 @@ class BoxerClaimConnector:
                                        headers={"Content-Type": "application/json"})
             response.raise_for_status()
             return response.json()
+        return None
 
     def remove_claim(self, user_id: str, provider: str, claim: Claim):
+        """
+        Removes the specified claim
+        """
         if self.get_claims(user_id, provider):
             payload = {
                 "operation": "Delete",
@@ -87,6 +111,7 @@ class BoxerClaimConnector:
             response = self.http.patch(f"{self.base_url}/claim/{provider}/{user_id}", data=payload_json,
                                        headers={"Content-Type": "application/json"})
             return response
+        return None
 
 
 class BoxerConnector(BoxerTokenProvider):

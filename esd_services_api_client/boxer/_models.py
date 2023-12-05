@@ -22,6 +22,9 @@ from typing import Dict
 
 @dataclass
 class Claim:
+    """
+    Boxer Claim
+    """
     claim_name: str
     claim_value: str
 
