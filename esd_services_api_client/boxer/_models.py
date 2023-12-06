@@ -19,6 +19,8 @@
 from dataclasses import dataclass
 from typing import Dict
 
+from dataclasses_json import DataClassJsonMixin
+
 
 @dataclass
 class Claim:
@@ -46,6 +48,15 @@ class Claim:
             claim_name=name,
             claim_value=json_data[f"{name}"],
         )
+
+
+@dataclass
+class ClaimPayload(DataClassJsonMixin):
+    """
+    Boxer Claim Payload for Deleting/Inserting claims
+    """
+    operation: str
+    claims: dict
 
 
 class BoxerToken:

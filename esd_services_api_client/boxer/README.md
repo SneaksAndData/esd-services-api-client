@@ -17,9 +17,14 @@ export BOXER_PRIVATE_KEY="MIIEpAIBAA..."
 from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector
 auth = select_authentication("azuread", "test")
 conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
-resp = conn.get_claims("adma@ecco.com", "azuread")
+resp = conn.get_claims("email@ecco.com", "azuread")
 for claim in resp:
     print(claim.to_dict())
+```
+Output:
+```bash
+{'test1.test.sneaksanddata.com/.*': '.*'}
+{'test2.test.sneaksanddata.com/.*': '.*'}
 ```
 
 ### Insert a claim:
@@ -27,9 +32,13 @@ for claim in resp:
 from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
 auth = select_authentication("azuread", "test")
 conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
-claim_to_insert = Claim("some-test.test.sneaksanddata.com", ".*")
-resp = conn.add_claim("adma@ecco.com", "azuread", claim_to_insert)
+claims = [Claim("some-test-1.test.sneaksanddata.com", ".*"), Claim("some-test-2.test.sneaksanddata.com", ".*")]
+resp = conn.add_claim("email@ecco.com", "azuread", claims)
 print(resp)
+```
+Output:
+```bash
+{'identityProvider': 'azuread', 'userId': 'email@ecco.com', 'claims': [{'some-test-1.test.sneaksanddata.com': '.*'}, {'some-test-2.test.sneaksanddata.com': '.*'}], 'billingId': None}
 ```
 
 ### Remove a claim:
@@ -37,9 +46,13 @@ print(resp)
 from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
 auth = select_authentication("azuread", "test")
 conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
-claim_to_remove = Claim("some-test.test.sneaksanddata.com", ".*")
-resp = conn.remove_claim("adma@ecco.com", "azuread", claim_to_remove)
+claims = [Claim("some-test-1.test.sneaksanddata.com", ".*"), Claim("some-test-2.test.sneaksanddata.com", ".*")]
+resp = conn.remove_claim("email@ecco.com", "azuread", claims)
 print(resp)
+```
+Output:
+```bash
+{'identityProvider': 'azuread', 'userId': 'email@ecco.com', 'claims': [], 'billingId': None}
 ```
 
 ### Add a user:
@@ -50,6 +63,10 @@ conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com"
 resp = conn.add_user("test@ecco.com", "azuread")
 print(resp)
 ```
+Output:
+```bash
+{'identityProvider': 'azuread', 'userId': 'test@ecco.com', 'claims': [], 'billingId': None}
+```
 
 ### Remove a user:
 ```python
@@ -57,6 +74,11 @@ from esd_services_api_client.boxer import select_authentication, BoxerClaimConne
 auth = select_authentication("azuread", "test")
 conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
 resp = conn.remove_user("test@ecco.com", "azuread")
+print(resp_add_user.status_code)
+```
+Output:
+```bash
+200
 ```
 
 ### Using as an authentication provider for other connectors

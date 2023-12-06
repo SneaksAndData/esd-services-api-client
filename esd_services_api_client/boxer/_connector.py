@@ -19,7 +19,7 @@ import json
 #
 
 import os
-from typing import Optional, Iterator
+from typing import Optional, Iterator, final
 
 from adapta.security.clients import AzureClient
 from adapta.utils import session_with_retries
@@ -34,7 +34,7 @@ from esd_services_api_client.boxer._auth import (
     RefreshableExternalTokenAuth,
 )
 from esd_services_api_client.boxer._helpers import _iterate_user_claims_response
-from esd_services_api_client.boxer._models import BoxerToken, Claim
+from esd_services_api_client.boxer._models import BoxerToken, Claim, ClaimPayload
 
 
 class BoxerClaimConnector:
@@ -47,17 +47,18 @@ class BoxerClaimConnector:
         :param base_url: Base URL for Boxer Claims endpoint
         :param auth: Boxer-based authentication
         """
-        self.base_url = base_url
+        self._base_url = base_url
         self.http = session_with_retries()
         if auth and isinstance(auth, BoxerTokenAuth):
             self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self.http.auth = auth
 
+    @final
     def get_claims(self, user_id: str, provider: str) -> Optional[Iterator[Claim]]:
         """
         Returns the claims assigned to the specified user_id and provider
         """
-        response = self.http.get(f"{self.base_url}/claim/{provider}/{user_id}")
+        response = self.http.get(f"{self._base_url}/claim/{provider}/{user_id}")
         if response.status_code == 404:
             return None
         response.raise_for_status()
@@ -67,7 +68,7 @@ class BoxerClaimConnector:
         """
         Adds a new user_id, provider pair
         """
-        response = self.http.post(f"{self.base_url}/claim/{provider}/{user_id}")
+        response = self.http.post(f"{self._base_url}/claim/{provider}/{user_id}")
         response.raise_for_status()
         return response.json()
 
@@ -75,42 +76,44 @@ class BoxerClaimConnector:
         """
         Removes the specified user_id, provider pair and assigned claims
         """
-        response = self.http.delete(f"{self.base_url}/claim/{provider}/{user_id}")
+        response = self.http.delete(f"{self._base_url}/claim/{provider}/{user_id}")
         response.raise_for_status()
         return response
 
-    def add_claim(self, user_id: str, provider: str, claim: Claim) -> Optional[dict]:
+    def add_claim(self, user_id: str, provider: str, claims: list[Claim]) -> Optional[dict]:
         """
         Adds a new claim to an existing user_id, provider pair
         """
-        claims = self.get_claims(user_id, provider)
-        if claims is not None:
-            payload = {"operation": "Insert", "claims": claim.to_dict()}
-            payload_json = json.dumps(payload)
-            response = self.http.patch(
-                f"{self.base_url}/claim/{provider}/{user_id}",
-                data=payload_json,
-                headers={"Content-Type": "application/json"},
-            )
-            response.raise_for_status()
-            return response.json()
-        return None
+        payload_json = _prepare_claim_payload(self, user_id, provider, claims, "Insert")
+        response = self.http.patch(
+            f"{self._base_url}/claim/{provider}/{user_id}",
+            data=payload_json,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        return response.json()
 
-    def remove_claim(self, user_id: str, provider: str, claim: Claim) -> Optional[dict]:
+    def remove_claim(self, user_id: str, provider: str, claims: list[Claim]) -> Optional[dict]:
         """
         Removes the specified claim
         """
-        claims = self.get_claims(user_id, provider)
-        if claims is not None:
-            payload = {"operation": "Delete", "claims": claim.to_dict()}
-            payload_json = json.dumps(payload)
-            response = self.http.patch(
-                f"{self.base_url}/claim/{provider}/{user_id}",
-                data=payload_json,
-                headers={"Content-Type": "application/json"},
-            )
-            return response.json()
-        return None
+        payload_json = _prepare_claim_payload(self, user_id, provider, claims, "Delete")
+        response = self.http.patch(
+            f"{self._base_url}/claim/{provider}/{user_id}",
+            data=payload_json,
+            headers={"Content-Type": "application/json"},
+        )
+        return response.json()
+
+
+def _prepare_claim_payload(self, user_id: str, provider: str, claims: list[Claim], operation: str) -> Optional[str]:
+    """
+    Prepare payload for Inserting/Deleting claims
+    """
+    if self.get_claims(user_id, provider) is not None:
+        claims_dict = {k: v for claim in claims for k, v in claim.to_dict().items()}
+        return ClaimPayload(operation, claims_dict).to_json()
+    return None
 
 
 class BoxerConnector(BoxerTokenProvider):
@@ -119,12 +122,12 @@ class BoxerConnector(BoxerTokenProvider):
     """
 
     def __init__(
-        self,
-        *,
-        base_url,
-        auth: ExternalAuthBase,
-        retry_attempts=10,
-        session: Optional[Session] = None,
+            self,
+            *,
+            base_url,
+            auth: ExternalAuthBase,
+            retry_attempts=10,
+            session: Optional[Session] = None,
     ):
         """Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
@@ -195,7 +198,7 @@ def get_kubernetes_token(cluster_name: str, boxer_base_url: str) -> BoxerTokenAu
     :return: BoxerTokenAuth configured fot particular identity provider and kubernetes auth token
     """
     with open(
-        "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
+            "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
     ) as token_file:
         external_auth = ExternalTokenAuth(token_file.readline(), cluster_name)
         boxer_connector = BoxerConnector(base_url=boxer_base_url, auth=external_auth)
