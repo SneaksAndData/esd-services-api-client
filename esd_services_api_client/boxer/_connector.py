@@ -1,8 +1,6 @@
 """
   Connector for Boxer Auth API.
 """
-import json
-
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,7 +78,9 @@ class BoxerClaimConnector:
         response.raise_for_status()
         return response
 
-    def add_claim(self, user_id: str, provider: str, claims: list[Claim]) -> Optional[dict]:
+    def add_claim(
+        self, user_id: str, provider: str, claims: list[Claim]
+    ) -> Optional[dict]:
         """
         Adds a new claim to an existing user_id, provider pair
         """
@@ -93,7 +93,9 @@ class BoxerClaimConnector:
         response.raise_for_status()
         return response.json()
 
-    def remove_claim(self, user_id: str, provider: str, claims: list[Claim]) -> Optional[dict]:
+    def remove_claim(
+        self, user_id: str, provider: str, claims: list[Claim]
+    ) -> Optional[dict]:
         """
         Removes the specified claim
         """
@@ -106,7 +108,9 @@ class BoxerClaimConnector:
         return response.json()
 
 
-def _prepare_claim_payload(self, user_id: str, provider: str, claims: list[Claim], operation: str) -> Optional[str]:
+def _prepare_claim_payload(
+    self, user_id: str, provider: str, claims: list[Claim], operation: str
+) -> Optional[str]:
     """
     Prepare payload for Inserting/Deleting claims
     """
@@ -122,12 +126,12 @@ class BoxerConnector(BoxerTokenProvider):
     """
 
     def __init__(
-            self,
-            *,
-            base_url,
-            auth: ExternalAuthBase,
-            retry_attempts=10,
-            session: Optional[Session] = None,
+        self,
+        *,
+        base_url,
+        auth: ExternalAuthBase,
+        retry_attempts=10,
+        session: Optional[Session] = None,
     ):
         """Creates Boxer Auth connector, capable of managing claims/consumers
         :param base_url: Base URL for Boxer Auth endpoint
@@ -198,7 +202,7 @@ def get_kubernetes_token(cluster_name: str, boxer_base_url: str) -> BoxerTokenAu
     :return: BoxerTokenAuth configured fot particular identity provider and kubernetes auth token
     """
     with open(
-            "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
+        "/var/run/secrets/kubernetes.io/serviceaccount/token", "r", encoding="utf-8"
     ) as token_file:
         external_auth = ExternalTokenAuth(token_file.readline(), cluster_name)
         boxer_connector = BoxerConnector(base_url=boxer_base_url, auth=external_auth)

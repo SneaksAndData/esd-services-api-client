@@ -55,6 +55,7 @@ class ClaimPayload(DataClassJsonMixin):
     """
     Boxer Claim Payload for Deleting/Inserting claims
     """
+
     operation: str
     claims: dict
 
