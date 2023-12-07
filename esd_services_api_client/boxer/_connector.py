@@ -40,6 +40,7 @@ from esd_services_api_client.boxer._models import (
 )
 
 
+@final
 class BoxerClaimConnector:
     """
     Boxer Claims API connector
@@ -56,7 +57,6 @@ class BoxerClaimConnector:
             self._http.hooks["response"].append(auth.get_refresh_hook(self._http))
         self._http.auth = auth
 
-    @final
     def get_claims(self, user_id: str, provider: str) -> Optional[Iterator[Claim]]:
         """
         Returns the claims assigned to the specified user_id and provider
