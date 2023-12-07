@@ -27,7 +27,7 @@ Output:
 {'claim_name':'test2.test.sneaksanddata.com/.*', 'claim_value':'.*'}
 ```
 
-### Insert a claim:
+### Insert claims:
 ```python
 from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
 auth = select_authentication("azuread", "test")
@@ -38,10 +38,10 @@ print(resp)
 ```
 Output:
 ```bash
-{'identityProvider': 'azuread', 'userId': 'email@ecco.com', 'claims': [{'some-test-1.test.sneaksanddata.com': '.*'}, {'some-test-2.test.sneaksanddata.com': '.*'}], 'billingId': None}
+ClaimResponse(identity_provider='azuread', user_id='email@ecco.com', claims=[{'some-test-1.test.sneaksanddata.com': '.*'}, {'some-test-2.test.sneaksanddata.com': '.*'}], billing_id= None}
 ```
 
-### Remove a claim:
+### Remove claims:
 ```python
 from esd_services_api_client.boxer import select_authentication, BoxerClaimConnector, Claim
 auth = select_authentication("azuread", "test")
@@ -52,7 +52,7 @@ print(resp)
 ```
 Output:
 ```bash
-{'identityProvider': 'azuread', 'userId': 'email@ecco.com', 'claims': [], 'billingId': None}
+ClaimResponse(identity_provider='azuread', user_id='email@ecco.com', claims=[], billing_id= None}
 ```
 
 ### Add a user:
@@ -65,7 +65,7 @@ print(resp)
 ```
 Output:
 ```bash
-{'identityProvider': 'azuread', 'userId': 'test@ecco.com', 'claims': [], 'billingId': None}
+ClaimResponse(identity_provider='azuread', user_id='test@ecco.com', claims=[], billing_id=None)
 ```
 
 ### Remove a user:

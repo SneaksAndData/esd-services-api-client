@@ -16,9 +16,9 @@
 #  limitations under the License.
 #
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from dataclasses_json import DataClassJsonMixin
+from dataclasses_json import DataClassJsonMixin, config, LetterCase
 
 
 @dataclass
@@ -30,12 +30,6 @@ class Claim(DataClassJsonMixin):
     claim_name: str
     claim_value: str
 
-    def to_custom_dict(self) -> dict:
-        """Convert to dict
-        :return: dict
-        """
-        return {self.claim_name: self.claim_value}
-
 
 @dataclass
 class ClaimPayload(DataClassJsonMixin):
@@ -45,6 +39,25 @@ class ClaimPayload(DataClassJsonMixin):
 
     operation: str
     claims: dict
+
+    def add_claim(self, claim: Claim) -> "ClaimPayload":
+        """
+        Add a claim to the ClaimPayload
+        """
+        self.claims |= {claim.claim_name: claim.claim_value}
+        return self
+
+
+@dataclass
+class ClaimResponse(DataClassJsonMixin):
+    """
+    Boxer Claim request response
+    """
+
+    identity_provider: str = field(metadata=config(letter_case=LetterCase.CAMEL))
+    user_id: str = field(metadata=config(letter_case=LetterCase.CAMEL))
+    claims: list[dict]
+    billing_id: str = field(metadata=config(letter_case=LetterCase.CAMEL))
 
 
 class BoxerToken:
