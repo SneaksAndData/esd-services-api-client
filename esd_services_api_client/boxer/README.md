@@ -23,8 +23,8 @@ for claim in resp:
 ```
 Output:
 ```bash
-{'test1.test.sneaksanddata.com/.*': '.*'}
-{'test2.test.sneaksanddata.com/.*': '.*'}
+{'claim_name':'test1.test.sneaksanddata.com/.*', 'claim_value':'.*'}
+{'claim_name':'test2.test.sneaksanddata.com/.*', 'claim_value':'.*'}
 ```
 
 ### Insert a claim:
@@ -74,7 +74,7 @@ from esd_services_api_client.boxer import select_authentication, BoxerClaimConne
 auth = select_authentication("azuread", "test")
 conn = BoxerClaimConnector(base_url="https://boxer-claim.test.sneaksanddata.com", auth=auth)
 resp = conn.remove_user("test@ecco.com", "azuread")
-print(resp_add_user.status_code)
+print(resp.status_code)
 ```
 Output:
 ```bash

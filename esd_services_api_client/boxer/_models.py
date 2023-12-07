@@ -17,13 +17,12 @@
 #
 
 from dataclasses import dataclass
-from typing import Dict
 
 from dataclasses_json import DataClassJsonMixin
 
 
 @dataclass
-class Claim:
+class Claim(DataClassJsonMixin):
     """
     Boxer Claim
     """
@@ -31,23 +30,11 @@ class Claim:
     claim_name: str
     claim_value: str
 
-    def to_dict(self) -> Dict:
-        """Convert to Dictionary
-        :return: Dictionary
+    def to_custom_dict(self) -> dict:
+        """Convert to dict
+        :return: dict
         """
         return {self.claim_name: self.claim_value}
-
-    @classmethod
-    def from_dict(cls, json_data: Dict) -> "Claim":
-        """Initialize from Dictionary
-        :param json_data: Dictionary
-        :return:
-        """
-        name = list(json_data.keys())[0]
-        return Claim(
-            claim_name=name,
-            claim_value=json_data[f"{name}"],
-        )
 
 
 @dataclass

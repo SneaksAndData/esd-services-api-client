@@ -115,7 +115,9 @@ def _prepare_claim_payload(
     Prepare payload for Inserting/Deleting claims
     """
     if self.get_claims(user_id, provider) is not None:
-        claims_dict = {k: v for claim in claims for k, v in claim.to_dict().items()}
+        claims_dict = {
+            k: v for claim in claims for k, v in claim.to_custom_dict().items()
+        }
         return ClaimPayload(operation, claims_dict).to_json()
     return None
 

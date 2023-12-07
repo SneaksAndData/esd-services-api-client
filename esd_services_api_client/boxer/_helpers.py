@@ -22,12 +22,14 @@ from esd_services_api_client.boxer._models import Claim
 
 def _iterate_user_claims_response(user_claim_response: Response):
     """Creates an iterator to iterate user claims from Json Response
-    :param user_claim_response: HTTP Response containing json array of type UserClaim
+    :param user_claim_response: HTTP Response
     """
     response_json = user_claim_response.json()
-
-    if response_json:
+    if response_json and "claims" in response_json:
         for claim in response_json["claims"]:
-            yield Claim.from_dict(claim)
+            if isinstance(claim, dict) and len(claim) == 1:
+                for key, value in claim.items():
+                    yield Claim.from_dict({"claim_name": key, "claim_value": value})
+                    break
     else:
         raise ValueError("Expected response body of type application/json")
