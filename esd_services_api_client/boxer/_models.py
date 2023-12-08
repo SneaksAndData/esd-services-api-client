@@ -18,12 +18,12 @@
 
 from dataclasses import dataclass
 
-from dataclasses_json import LetterCase, dataclass_json
+from dataclasses_json import LetterCase, dataclass_json, DataClassJsonMixin
 
 
 @dataclass_json
 @dataclass
-class Claim:
+class Claim(DataClassJsonMixin):
     """
     Boxer Claim
     """
@@ -34,7 +34,7 @@ class Claim:
 
 @dataclass_json
 @dataclass
-class ClaimPayload:
+class ClaimPayload(DataClassJsonMixin):
     """
     Boxer Claim Payload for Deleting/Inserting claims
     """
@@ -52,7 +52,7 @@ class ClaimPayload:
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
-class ClaimResponse:
+class ClaimResponse(DataClassJsonMixin):
     """
     Boxer Claim request response
     """
