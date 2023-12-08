@@ -17,12 +17,12 @@
 #
 
 import os
-from typing import Iterator, Optional
+from functools import reduce
+from typing import Optional, Iterator, final
 
-import jwt
 from adapta.security.clients import AzureClient
 from adapta.utils import session_with_retries
-from requests import Session
+from requests import Session, Response
 
 from esd_services_api_client.boxer._base import BoxerTokenProvider
 from esd_services_api_client.boxer._auth import (
@@ -32,11 +32,116 @@ from esd_services_api_client.boxer._auth import (
     ExternalAuthBase,
     RefreshableExternalTokenAuth,
 )
-from esd_services_api_client.boxer._helpers import (
-    _iterate_user_claims_response,
-    _iterate_boxer_claims_response,
+from esd_services_api_client.boxer._models import (
+    BoxerToken,
+    Claim,
+    ClaimPayload,
+    ClaimResponse,
 )
-from esd_services_api_client.boxer._models import BoxerClaim, UserClaim, BoxerToken
+
+
+@final
+class BoxerClaimConnector:
+    """
+    Boxer Claims API connector
+    """
+
+    def __init__(self, *, base_url: str, auth: Optional[BoxerTokenAuth] = None):
+        """Creates Boxer Claims connector, capable of managing claims
+        :param base_url: Base URL for Boxer Claims endpoint
+        :param auth: Boxer-based authentication
+        """
+        self._base_url = base_url
+        self._http = session_with_retries()
+        if auth and isinstance(auth, BoxerTokenAuth):
+            self._http.hooks["response"].append(auth.get_refresh_hook(self._http))
+        self._http.auth = auth
+
+    def get_claims(self, user_id: str, provider: str) -> Optional[Iterator[Claim]]:
+        """
+        Returns the claims assigned to the specified user_id and provider
+        """
+        response = self._http.get(f"{self._base_url}/claim/{provider}/{user_id}")
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        return self._iterate_user_claims_response(response)
+
+    def add_user(self, user_id: str, provider: str) -> ClaimResponse:
+        """
+        Adds a new user_id, provider pair
+        """
+        response = self._http.post(f"{self._base_url}/claim/{provider}/{user_id}")
+        response.raise_for_status()
+        return ClaimResponse.from_dict(response.json())
+
+    def remove_user(self, user_id: str, provider: str) -> Response:
+        """
+        Removes the specified user_id, provider pair and assigned claims
+        """
+        response = self._http.delete(f"{self._base_url}/claim/{provider}/{user_id}")
+        response.raise_for_status()
+        return response
+
+    def add_claim(
+        self, user_id: str, provider: str, claims: list[Claim]
+    ) -> Optional[ClaimResponse]:
+        """
+        Adds a new claim to an existing user_id, provider pair
+        """
+        payload_json = self._prepare_claim_payload(user_id, provider, claims, "Insert")
+        response = self._http.patch(
+            f"{self._base_url}/claim/{provider}/{user_id}",
+            data=payload_json,
+            headers={"Content-Type": "application/json"},
+        )
+        response.raise_for_status()
+        return ClaimResponse.from_dict(response.json())
+
+    def remove_claim(
+        self, user_id: str, provider: str, claims: list[Claim]
+    ) -> Optional[ClaimResponse]:
+        """
+        Removes the specified claim
+        """
+        payload_json = self._prepare_claim_payload(user_id, provider, claims, "Delete")
+        response = self._http.patch(
+            f"{self._base_url}/claim/{provider}/{user_id}",
+            data=payload_json,
+            headers={"Content-Type": "application/json"},
+        )
+        return ClaimResponse.from_dict(response.json())
+
+    def _prepare_claim_payload(
+        self, user_id: str, provider: str, claims: list[Claim], operation: str
+    ) -> Optional[str]:
+        """
+        Prepare payload for Inserting/Deleting claims
+        """
+        if self.get_claims(user_id, provider) is not None:
+            payload = ClaimPayload(operation, {})
+            claim_payload = reduce(
+                lambda cp, claim: cp.add_claim(claim), claims, payload
+            )
+
+            return claim_payload.to_json()
+        return None
+
+    def _iterate_user_claims_response(
+        self, user_claim_response: Response
+    ) -> Optional[Iterator[Claim]]:
+        """Creates an iterator to iterate user claims from Json Response
+        :param user_claim_response: HTTP Response
+        """
+        response_json = user_claim_response.json()
+        if response_json and "claims" in response_json:
+            for claim in response_json["claims"]:
+                if isinstance(claim, dict) and len(claim) == 1:
+                    for key, value in claim.items():
+                        yield Claim.from_dict({"claim_name": key, "claim_value": value})
+                        break
+        else:
+            raise ValueError("Expected response body of type application/json")
 
 
 class BoxerConnector(BoxerTokenProvider):
@@ -64,92 +169,6 @@ class BoxerConnector(BoxerTokenProvider):
         if isinstance(auth, RefreshableExternalTokenAuth):
             self.http.hooks["response"].append(auth.get_refresh_hook(self.http))
         self.retry_attempts = retry_attempts
-
-    def push_user_claim(self, claim: BoxerClaim, user_id: str):
-        """Adds/Overwrites a new Boxer Claim to a user
-        :param claim: Boxer Claim
-        :param user_id: User's UPN
-        :return:
-        """
-        target_url = f"{self.base_url}/claims/user/{user_id}"
-        claim_json = claim.to_dict()
-        response = self.http.post(target_url, json=claim_json)
-        response.raise_for_status()
-        print(f"Successfully pushed user claim for user {user_id}")
-
-    def push_group_claim(self, claim: BoxerClaim, group_name: str):
-        """Adds/Overwrites a new Boxer Claim to a user
-        :param claim: Boxer Claim
-        :param group_name: Group Name
-        :return:
-        """
-        target_url = f"{self.base_url}/claims/group/{group_name}"
-        claim_json = claim.to_dict()
-        response = self.http.post(target_url, json=claim_json)
-        response.raise_for_status()
-        print(f"Successfully pushed user claim for group {group_name}")
-
-    def get_claims_by_type(self, claims_type: str) -> Iterator[UserClaim]:
-        """Reads claims of specified type from Boxer.
-        :param claims_type: claim type to filter claims by.
-        :return: Iterator[UserClaim]
-        """
-        target_url = f"{self.base_url}/claims/type/{claims_type}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_user_claims_response(response)
-
-    def get_claims_by_user(self, user_id: str) -> Iterator[BoxerClaim]:
-        """Reads user claims from Boxer
-        :param user_id: user upn to load claims for
-        :return: Iterator[UserClaim]
-        """
-        empty_user_token = jwt.encode({"upn": user_id}, "_", algorithm="HS256")
-        target_url = f"{self.base_url}/claims/user/{empty_user_token}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_boxer_claims_response(response)
-
-    def get_claims_by_group(self, group_name: str) -> Iterator[BoxerClaim]:
-        """Reads group claims from Boxer
-        :param group_name: group name to load claims for
-        :return: Iterator[UserClaim]
-        """
-        target_url = f"{self.base_url}/claims/group/{group_name}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_boxer_claims_response(response)
-
-    def get_claims_for_token(self, jwt_token: str) -> Iterator[BoxerClaim]:
-        """Reads user claims from Boxer based on jwt token
-        :param jwt_token: jwt token with UPN set
-        :return: Iterator[UserClaim]
-        """
-        target_url = f"{self.base_url}/claims/user/{jwt_token}"
-        response = self.http.get(target_url)
-        response.raise_for_status()
-        return _iterate_boxer_claims_response(response)
-
-    def create_consumer(self, consumer_id: str, overwrite: bool = False) -> str:
-        """Adds/Overwrites a new Boxer Claim to a user
-        :param consumer_id: Consumer ID of new consumer
-        :param overwrite: Flag to overwrite if consumer with given consumer_id already exists
-        :return: New consumer's private key (Base64 Encoded)
-        """
-        target_url = f"{self.base_url}/consumer/{consumer_id}?overwrite={overwrite}"
-        response = self.http.post(target_url, json={})
-        response.raise_for_status()
-        return response.text
-
-    def get_consumer_public_key(self, consumer_id: str) -> str:
-        """Reads Consumer's public key
-        :param consumer_id: Boxer Claim
-        :return: public key (Base64 Encoded)
-        """
-        target_url = f"{self.base_url}/consumer/publicKey/{consumer_id}"
-        response = self.http.get(target_url, json={})
-        response.raise_for_status()
-        return response.text
 
     def get_token(self) -> BoxerToken:
         """

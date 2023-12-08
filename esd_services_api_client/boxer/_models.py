@@ -17,106 +17,50 @@
 #
 
 from dataclasses import dataclass
-from typing import Dict
+
+from dataclasses_json import LetterCase, dataclass_json, DataClassJsonMixin
 
 
+@dataclass_json
 @dataclass
-class BoxerClaim:
+class Claim(DataClassJsonMixin):
     """
     Boxer Claim
     """
 
-    claim_type: str
+    claim_name: str
     claim_value: str
-    issuer: str
-
-    def to_dict(self) -> Dict:
-        """Convert to Dictionary
-        :return: Dictionary
-        """
-        return {
-            "claimType": self.claim_type,
-            "claimValue": self.claim_value,
-            "issuer": self.issuer,
-        }
-
-    @classmethod
-    def from_dict(cls, json_data: Dict):
-        """Initialize from Dictionary
-        :param json_data: Dictionary
-        :return:
-        """
-        return BoxerClaim(
-            claim_type=json_data["claimType"],
-            claim_value=json_data["claimValue"],
-            issuer=json_data["issuer"],
-        )
 
 
+@dataclass_json
 @dataclass
-class UserClaim:
+class ClaimPayload(DataClassJsonMixin):
     """
-    Boxer User Claim
+    Boxer Claim Payload for Deleting/Inserting claims
     """
 
+    operation: str
+    claims: dict
+
+    def add_claim(self, claim: Claim) -> "ClaimPayload":
+        """
+        Add a claim to the ClaimPayload
+        """
+        self.claims |= {claim.claim_name: claim.claim_value}
+        return self
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
+class ClaimResponse(DataClassJsonMixin):
+    """
+    Boxer Claim request response
+    """
+
+    identity_provider: str
     user_id: str
-    user_claim_id: str
-    claim: BoxerClaim
-
-    def to_dict(self) -> Dict:
-        """Convert to Dictionary
-        :return: Dictionary
-        """
-        return {
-            "userId": self.user_id,
-            "userClaimId": self.user_claim_id,
-            "claim": self.claim.to_dict(),
-        }
-
-    @classmethod
-    def from_dict(cls, json_data: Dict):
-        """Initialize from Dictionary
-        :param json_data: Dictionary
-        :return:
-        """
-        return UserClaim(
-            user_id=json_data["userId"],
-            user_claim_id=json_data["userClaimId"],
-            claim=BoxerClaim.from_dict(json_data["claim"]),
-        )
-
-
-@dataclass
-class GroupClaim:
-    """
-    Boxer Group Claim
-    """
-
-    group_name: str
-    group_claim_id: str
-    claim: BoxerClaim
-
-    def to_dict(self) -> Dict:
-        """Convert to Dictionary
-        :return: Dictionary
-        """
-        return {
-            "groupName": self.group_name,
-            "groupClaimId": self.group_claim_id,
-            "claim": self.claim.to_dict(),
-        }
-
-    @classmethod
-    def from_dict(cls, json_data: Dict):
-        """Initialize from Dictionary
-        :param json_data: Dictionary
-        :return:
-        """
-        return GroupClaim(
-            group_name=json_data["groupName"],
-            group_claim_id=json_data["groupClaimId"],
-            claim=BoxerClaim.from_dict(json_data["claim"]),
-        )
+    claims: list[dict]
+    billing_id: str
 
 
 class BoxerToken:
