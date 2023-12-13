@@ -17,5 +17,5 @@
 #  limitations under the License.
 #
 
-# This makes v2 the default import, so v3 users should import v3 directly - until v3 is in GA.
-from esd_services_api_client.beast.v2 import *
+# This makes v3 (GA version) the default import
+from esd_services_api_client.beast.v3 import *
