@@ -13,7 +13,6 @@
             "dataFormat": "delta"
         }
     ],
-    "overwrite": false,
     "extraArgs": {
         "include-source-filename": "",
         "entity-name": "'cde'",

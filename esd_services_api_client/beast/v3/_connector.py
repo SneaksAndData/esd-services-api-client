@@ -199,7 +199,6 @@ class BeastConnector:
             submit_request = JobRequest(
                 inputs=job_params.project_inputs,
                 outputs=job_params.project_outputs,
-                overwrite=job_params.overwrite_outputs,
                 extra_args=prepared_arguments,
                 client_tag=job_params.client_tag,
                 expected_parallelism=job_params.expected_parallelism,
@@ -283,7 +282,6 @@ class BeastConnector:
             submit_request = JobRequest(
                 inputs=job_params.project_inputs,
                 outputs=job_params.project_outputs,
-                overwrite=job_params.overwrite_outputs,
                 extra_args=prepared_arguments,
                 client_tag=job_params.client_tag,
                 expected_parallelism=job_params.expected_parallelism,
