@@ -13,9 +13,8 @@ class RecursiveAlgorithm(BaselineAlgorithm):
 
     @abstractmethod
     async def _is_finished(self, **kwargs) -> bool:
-        """
+        """ """
 
-        """
     async def run(self, **kwargs) -> PandasDataFrame:
         result = await self._run(**self._input_processor.process_input(**kwargs))
         if self._is_finished(**result):

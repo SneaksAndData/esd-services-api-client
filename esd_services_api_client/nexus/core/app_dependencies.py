@@ -62,12 +62,14 @@ class CrystalReceiverClientModule(Module):
             receiver_base_url=configuration.receiver_base_url
         )
 
+
 # TODO: this guy should come from a factory, so it can produce a user-defined class
 class InputProcessorModule(Module):
     @singleton
     @provider
     def provide_input_processor(self) -> InputProcessor:
         return InputProcessor()
+
 
 def binds(binder: Binder):
     binder.bind(
