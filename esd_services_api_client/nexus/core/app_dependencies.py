@@ -1,17 +1,19 @@
 import json
 import os
+from dataclasses import dataclass
 from typing import Dict, Optional
 
 from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
 from injector import Module, singleton, provider, Binder
 
+from esd_services_api_client.crystal import CrystalConnector
+from esd_services_api_client.nexus.input.input_processor import InputProcessor
 
+
+@dataclass
 class DatadogMetricsConfiguration:
-    def __init__(
-        self, metric_namespace: str, fixed_tags: Optional[Dict[str, str]] = None
-    ):
-        self.metric_namespace = metric_namespace
-        self.fixed_tags = fixed_tags
+    metric_namespace: str
+    fixed_tags: Optional[Dict[str, str]] = None
 
     @classmethod
     def from_environment(cls) -> "DatadogMetricsConfiguration":
@@ -39,12 +41,45 @@ class DatadogMetricsModule(Module):
         )
 
 
-def metrics_binder(binder: Binder):
+@dataclass
+class CrystalReceiverConfiguration:
+    receiver_base_url: str
+
+    @classmethod
+    def from_environment(cls) -> "CrystalReceiverConfiguration":
+        return cls(
+            receiver_base_url=os.getenv("NEXUS__ALGORITHM_METRIC_NAMESPACE"),
+        )
+
+
+class CrystalReceiverClientModule(Module):
+    @singleton
+    @provider
+    def provide_crystal_receiver(
+        self, configuration: CrystalReceiverConfiguration
+    ) -> CrystalConnector:
+        return CrystalConnector.create_anonymous(
+            receiver_base_url=configuration.receiver_base_url
+        )
+
+# TODO: this guy should come from a factory, so it can produce a user-defined class
+class InputProcessorModule(Module):
+    @singleton
+    @provider
+    def provide_input_processor(self) -> InputProcessor:
+        return InputProcessor()
+
+def binds(binder: Binder):
     binder.bind(
         DatadogMetricsConfiguration,
         to=DatadogMetricsConfiguration.from_environment(),
         scope=singleton,
     )
+    binder.bind(
+        CrystalReceiverConfiguration,
+        to=CrystalReceiverConfiguration.from_environment(),
+        scope=singleton,
+    )
 
 
-INJECTION_BINDS = [metrics_binder, DatadogMetricsModule()]
+INJECTION_BINDS = [binds, DatadogMetricsModule(), CrystalReceiverClientModule()]
