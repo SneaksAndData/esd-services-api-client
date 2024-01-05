@@ -74,6 +74,8 @@ class Nexus:
         self._algorithm_run_task: Optional[asyncio.Task] = None
         self._on_complete_tasks: list[Coroutine] = []
 
+        attach_signal_handlers()
+
     @property
     def algorithm_class(self) -> Type[BaselineAlgorithm]:
         return self._algorithm_class
@@ -162,6 +164,6 @@ class Nexus:
         await asyncio.wait(on_complete_tasks)
 
     @classmethod
-    def create(cls) -> 'Nexus':
+    def create(cls) -> "Nexus":
         parser = add_crystal_args()
         return Nexus(extract_crystal_args(parser.parse_args()))
