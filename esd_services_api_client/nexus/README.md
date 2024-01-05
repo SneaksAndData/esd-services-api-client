@@ -4,6 +4,8 @@ Example usage:
 ```python
 import asyncio
 from esd_services_api_client.nexus.core.app_core import Nexus
+from esd_services_api_client.nexus.input.input_processor import InputProcessor
+from esd_services_api_client.nexus.input.input_reader import InputReader
 
 async def my_on_complete_func_1(**kwargs):
     pass
