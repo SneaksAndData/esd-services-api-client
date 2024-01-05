@@ -7,6 +7,7 @@ import sys
 import traceback
 from functools import partial
 from pydoc import locate
+from typing import final, Type, Callable, Optional, Coroutine
 
 import backoff
 import urllib3.exceptions
@@ -32,89 +33,9 @@ from esd_services_api_client.nexus.core.app_dependencies import (
 from pandas import DataFrame as PandasDataFrame
 
 
-async def main(args: CrystalEntrypointArguments):
-    injector = Injector(INJECTION_BINDS)
-    algorithm_class = locate(os.getenv("NEXUS__ALGORITHM_CLASS"))
-
-    algorithm: BaselineAlgorithm = injector.get(algorithm_class)
-    crystal_receiver: CrystalConnector = injector.get(CrystalConnector)
-    storage_client: StorageClient = injector.get(StorageClient)
-
-    # TODO: this should be moved to a class to allow adding callbacks via builder pattern
-
-    algorithm_run_task = asyncio.create_task(algorithm.run(**args.__dict__))
-    algorithm_run_task.add_done_callback(
-        partial(submit_result, args.request_id, crystal_receiver, storage_client)
-    )
-
-    await algorithm_run_task
-
-    ex = algorithm_run_task.exception()
-
-    if not is_transient_exception(ex):
-        crystal_receiver.submit_result(
-            result=AlgorithmRunResult(
-                message=f"{type(ex)}: {ex})", cause=traceback.format_exc()
-            ),
-            run_id=args.request_id,
-            algorithm=os.getenv("CRYSTAL__ALGORITHM_NAME"),
-            debug=os.getenv("IS_LOCAL_RUN") == "1",
-        )
-        sys.exit(0)
-    else:
-        sys.exit(1)
-
-
-def submit_result(
-    request_id: str,
-    receiver: CrystalConnector,
-    storage_client: StorageClient,
-    completed_task: asyncio.Task,
-) -> None:
-    @backoff.on_exception(
-        wait_gen=backoff.expo,
-        exception=(
-            azure.core.exceptions.HttpResponseError,
-            urllib3.exceptions.HTTPError,
-        ),
-        max_time=10,
-        raise_on_giveup=True,
-    )
-    def save_result(data: PandasDataFrame) -> str:
-        """
-        Saves blob and returns the uri
-
-        :param: path: path to save the blob
-        :param: output_consumer_df: Formatted dataframe into ECCO format
-        :param: storage_client: Azure storage client
-
-        :return: blob uri
-        """
-        output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{request_id}.json"
-        blob_path = DataSocket(
-            data_path=output_path, alias="output", data_format=""
-        ).parse_data_path()
-        storage_client.save_data_as_blob(
-            data=data,
-            blob_path=blob_path,
-            serialization_format=DataFrameJsonSerializationFormat,
-            overwrite=True,
-        )
-        return storage_client.get_blob_uri(blob_path=blob_path)
-
-    if not completed_task.done():
-        raise RuntimeError("Attempted to submit result for an unfinished task")
-
-    if not completed_task.exception():
-        receiver.submit_result(
-            result=AlgorithmRunResult(sas_uri=save_result(completed_task.result())),
-            run_id=request_id,
-            algorithm=os.getenv("CRYSTAL__ALGORITHM_NAME"),
-            debug=os.getenv("IS_LOCAL_RUN") == "1",
-        )
-
-
-def is_transient_exception(exception: BaseException) -> bool:
+def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]:
+    if not exception:
+        return None
     match type(exception):
         case azure.core.exceptions.HttpResponseError:
             return True
@@ -132,8 +53,7 @@ async def graceful_shutdown():
     asyncio.get_event_loop().stop()
 
 
-if __name__ == "__main__":
-    parser = add_crystal_args()
+def attach_signal_handlers():
     if platform.system() != "Windows":
         asyncio.get_event_loop().add_signal_handler(
             signal.SIGTERM, lambda: asyncio.create_task(graceful_shutdown())
@@ -142,4 +62,106 @@ if __name__ == "__main__":
             signal.SIGKILL, lambda: asyncio.create_task(graceful_shutdown())
         )
 
-    asyncio.run(main(extract_crystal_args(parser.parse_args())))
+
+@final
+class Nexus:
+    def __init__(self, args: CrystalEntrypointArguments):
+        self._injector = Injector(INJECTION_BINDS)
+        self._algorithm_class: Type[BaselineAlgorithm] = locate(
+            os.getenv("NEXUS__ALGORITHM_CLASS")
+        )
+        self._run_args = args
+        self._algorithm_run_task: Optional[asyncio.Task] = None
+        self._on_complete_tasks: list[Coroutine] = []
+
+    @property
+    def algorithm_class(self) -> Type[BaselineAlgorithm]:
+        return self._algorithm_class
+
+    def on_complete(self, coro: Coroutine) -> "Nexus":
+        self._on_complete_tasks.append(coro)
+        return self
+
+    async def _submit_result(
+        self,
+        result: Optional[PandasDataFrame] = None,
+        ex: Optional[BaseException] = None,
+    ) -> None:
+        @backoff.on_exception(
+            wait_gen=backoff.expo,
+            exception=(
+                azure.core.exceptions.HttpResponseError,
+                urllib3.exceptions.HTTPError,
+            ),
+            max_time=10,
+            raise_on_giveup=True,
+        )
+        def save_result(data: PandasDataFrame) -> str:
+            """
+            Saves blob and returns the uri
+
+            :param: path: path to save the blob
+            :param: output_consumer_df: Formatted dataframe into ECCO format
+            :param: storage_client: Azure storage client
+
+            :return: blob uri
+            """
+            storage_client = self._injector.get(StorageClient)
+            output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
+            blob_path = DataSocket(
+                data_path=output_path, alias="output", data_format=""
+            ).parse_data_path()
+            storage_client.save_data_as_blob(
+                data=data,
+                blob_path=blob_path,
+                serialization_format=DataFrameJsonSerializationFormat,
+                overwrite=True,
+            )
+            return storage_client.get_blob_uri(blob_path=blob_path)
+
+        receiver = self._injector.get(CrystalConnector)
+
+        match is_transient_exception(ex):
+            case None:
+                receiver.submit_result(
+                    result=AlgorithmRunResult(sas_uri=save_result(result)),
+                    run_id=self._run_args.request_id,
+                    algorithm=os.getenv("CRYSTAL__ALGORITHM_NAME"),
+                    debug=os.getenv("IS_LOCAL_RUN") == "1",
+                )
+            case True:
+                sys.exit(1)
+            case False:
+                receiver.submit_result(
+                    result=AlgorithmRunResult(
+                        message=f"{type(ex)}: {ex})", cause=traceback.format_exc()
+                    ),
+                    run_id=self._run_args.request_id,
+                    algorithm=os.getenv("CRYSTAL__ALGORITHM_NAME"),
+                    debug=os.getenv("IS_LOCAL_RUN") == "1",
+                )
+            case _:
+                sys.exit(1)
+
+    async def activate(self):
+        self._algorithm_run_task = asyncio.create_task(
+            self._injector.get(self._algorithm_class).run(**self._run_args.__dict__)
+        )
+
+        await self._algorithm_run_task
+        ex = self._algorithm_run_task.exception()
+        on_complete_tasks = [
+            asyncio.create_task(on_complete_task)
+            for on_complete_task in self._on_complete_tasks
+        ]
+
+        await self._submit_result(
+            self._algorithm_run_task.result() if not ex else None,
+            self._algorithm_run_task.exception(),
+        )
+        await asyncio.wait(on_complete_tasks)
+
+    @classmethod
+    def create(cls) -> 'Nexus':
+        parser = add_crystal_args()
+        return Nexus(extract_crystal_args(parser.parse_args()))
