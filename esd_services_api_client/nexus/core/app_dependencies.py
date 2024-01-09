@@ -3,7 +3,12 @@ import os
 from dataclasses import dataclass
 from typing import Dict, Optional, final, Type
 
+from adapta.logs import create_async_logger
 from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
+from adapta.security.clients import AzureClient
+from adapta.storage.blob.azure_storage_client import AzureStorageClient
+from adapta.storage.models.azure import AdlsGen2Path
+from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Module, singleton, provider, Binder
 
 from esd_services_api_client.crystal import CrystalConnector
@@ -60,9 +65,21 @@ class CrystalReceiverClientModule(Module):
         self, configuration: CrystalReceiverConfiguration
     ) -> CrystalConnector:
         return CrystalConnector.create_anonymous(
-            receiver_base_url=configuration.receiver_base_url
+            receiver_base_url=configuration.receiver_base_url,
+            logger=create_async_logger(logger_type=CrystalConnector, log_handlers=[])
         )
 
+class QueryEnabledStoreModule(Module):
+    @singleton
+    @provider
+    def provide_qes(self) -> QueryEnabledStore:
+        return QueryEnabledStore.from_string(os.getenv("NEXUS__QES_CONNECTION_STRING"))
+
+class AzureStorageClientModule(Module):
+    @singleton
+    @provider
+    def provide_client(self) -> AzureStorageClient:
+        return AzureStorageClient(base_client=AzureClient(), path=AdlsGen2Path.from_hdfs_path(os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')))
 
 def binds(binder: Binder):
     binder.bind(
@@ -84,6 +101,8 @@ class ServiceConfigurator:
             binds,
             DatadogMetricsModule(),
             CrystalReceiverClientModule(),
+            QueryEnabledStoreModule(),
+            AzureStorageClientModule()
         ]
 
     @property

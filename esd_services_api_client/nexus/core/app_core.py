@@ -12,6 +12,7 @@ import backoff
 import urllib3.exceptions
 import azure.core.exceptions
 from adapta.process_communication import DataSocket
+from adapta.storage.blob.azure_storage_client import AzureStorageClient
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.models.format import DataFrameJsonSerializationFormat
 from injector import Injector
@@ -60,9 +61,6 @@ def attach_signal_handlers():
     if platform.system() != "Windows":
         asyncio.get_event_loop().add_signal_handler(
             signal.SIGTERM, lambda: asyncio.create_task(graceful_shutdown())
-        )
-        asyncio.get_event_loop().add_signal_handler(
-            signal.SIGKILL, lambda: asyncio.create_task(graceful_shutdown())
         )
 
 
@@ -122,10 +120,10 @@ class Nexus:
 
             :return: blob uri
             """
-            storage_client = self._injector.get(StorageClient)
+            storage_client = self._injector.get(StorageClientFactory).get_client()
             output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
             blob_path = DataSocket(
-                data_path=output_path, alias="output", data_format=""
+                data_path=output_path, alias="output", data_format="null"
             ).parse_data_path()
             storage_client.save_data_as_blob(
                 data=data,
@@ -176,7 +174,8 @@ class Nexus:
             self._algorithm_run_task.result() if not ex else None,
             self._algorithm_run_task.exception(),
         )
-        await asyncio.wait(on_complete_tasks)
+        if len(on_complete_tasks) > 0:
+            await asyncio.wait(on_complete_tasks)
 
     @classmethod
     def create(cls) -> "Nexus":
