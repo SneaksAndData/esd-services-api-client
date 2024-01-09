@@ -28,9 +28,12 @@ from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
 from esd_services_api_client.nexus.core.app_dependencies import (
-    INJECTION_BINDS,
+    ServiceConfigurator,
 )
 from pandas import DataFrame as PandasDataFrame
+
+from esd_services_api_client.nexus.input.input_processor import InputProcessor
+from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
 def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]:
@@ -66,10 +69,9 @@ def attach_signal_handlers():
 @final
 class Nexus:
     def __init__(self, args: CrystalEntrypointArguments):
-        self._injector = Injector(INJECTION_BINDS)
-        self._algorithm_class: Type[BaselineAlgorithm] = locate(
-            os.getenv("NEXUS__ALGORITHM_CLASS")
-        )
+        self._configurator = ServiceConfigurator()
+        self._injector: Optional[Injector] = None
+        self._algorithm_class: Optional[Type[BaselineAlgorithm]] = None
         self._run_args = args
         self._algorithm_run_task: Optional[asyncio.Task] = None
         self._on_complete_tasks: list[Coroutine] = []
@@ -82,6 +84,18 @@ class Nexus:
 
     def on_complete(self, coro: Coroutine) -> "Nexus":
         self._on_complete_tasks.append(coro)
+        return self
+
+    def add_reader(self, reader: Type[InputReader]) -> "Nexus":
+        self._configurator = self._configurator.with_input_reader(reader)
+        return self
+
+    def use_processor(self, input_processor: Type[InputProcessor]) -> "Nexus":
+        self._configurator = self._configurator.with_input_processor(input_processor)
+        return self
+
+    def use_algorithm(self, algorithm: Type[BaselineAlgorithm]) -> "Nexus":
+        self._algorithm_class = algorithm
         return self
 
     async def _submit_result(
@@ -146,6 +160,7 @@ class Nexus:
                 sys.exit(1)
 
     async def activate(self):
+        self._injector = Injector(self._configurator.injection_binds)
         self._algorithm_run_task = asyncio.create_task(
             self._injector.get(self._algorithm_class).run(**self._run_args.__dict__)
         )

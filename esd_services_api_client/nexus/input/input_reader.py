@@ -1,13 +1,13 @@
 import re
 from abc import ABC, abstractmethod
 from functools import partial
-from typing import Optional
+from typing import Optional, Type
 
 from adapta.logs import SemanticLogger
 from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import inject
+from injector import inject, Module, singleton, provider
 from pandas import DataFrame as PandasDataFrame
 from adapta.utils.decorators import run_time_metrics
 

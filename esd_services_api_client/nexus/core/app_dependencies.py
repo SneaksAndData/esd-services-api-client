@@ -1,13 +1,14 @@
 import json
 import os
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Optional, final, Type
 
 from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
 from injector import Module, singleton, provider, Binder
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
+from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
 @dataclass
@@ -63,14 +64,6 @@ class CrystalReceiverClientModule(Module):
         )
 
 
-# TODO: this guy should come from a factory, so it can produce a user-defined class
-class InputProcessorModule(Module):
-    @singleton
-    @provider
-    def provide_input_processor(self) -> InputProcessor:
-        return InputProcessor()
-
-
 def binds(binder: Binder):
     binder.bind(
         DatadogMetricsConfiguration,
@@ -84,4 +77,27 @@ def binds(binder: Binder):
     )
 
 
-INJECTION_BINDS = [binds, DatadogMetricsModule(), CrystalReceiverClientModule()]
+@final
+class ServiceConfigurator:
+    def __init__(self):
+        self._injection_binds = [
+            binds,
+            DatadogMetricsModule(),
+            CrystalReceiverClientModule(),
+        ]
+
+    @property
+    def injection_binds(self) -> list:
+        return self._injection_binds
+
+    def with_input_reader(self, reader: Type[InputReader]) -> "ServiceConfigurator":
+        self._injection_binds.append(type(f"{reader.__name__}Module", (Module,), {})())
+        return self
+
+    def with_input_processor(
+        self, input_processor: Type[InputProcessor]
+    ) -> "ServiceConfigurator":
+        self._injection_binds.append(
+            type(f"{input_processor.__name__}Module", (Module,), {})()
+        )
+        return self
