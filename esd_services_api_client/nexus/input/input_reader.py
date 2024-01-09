@@ -13,7 +13,6 @@ from adapta.utils.decorators import run_time_metrics
 
 
 class InputReader(ABC):
-    # TODO: change logger type to async-compat
     @inject
     def __init__(
         self,
@@ -28,13 +27,14 @@ class InputReader(ABC):
         self._metrics_provider = metrics_provider
         self._logger = logger
         self._data: Optional[PandasDataFrame] = None
+        self._readers = readers
 
     @property
     def data(self) -> Optional[PandasDataFrame]:
         return self._data
 
     @abstractmethod
-    def _read_input(self) -> PandasDataFrame:
+    async def _read_input(self) -> PandasDataFrame:
         """ """
 
     @property
@@ -51,9 +51,9 @@ class InputReader(ABC):
 
     async def read(self) -> PandasDataFrame:
         @run_time_metrics(metric_name="read_input")
-        def _read(**_) -> PandasDataFrame:
+        async def _read(**_) -> PandasDataFrame:
             if not self._data:
-                self._data = self._read_input()
+                self._data = await self._read_input()
 
             return self._data
 
