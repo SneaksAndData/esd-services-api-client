@@ -1,4 +1,7 @@
+import re
 from abc import ABC, abstractmethod
+from functools import partial
+from typing import Optional
 
 from adapta.logs import SemanticLogger
 from adapta.metrics import MetricsProvider
@@ -18,22 +21,44 @@ class InputReader(ABC):
         store: QueryEnabledStore,
         metrics_provider: MetricsProvider,
         logger: SemanticLogger,
+        *readers: "InputReader",
     ):
         self.socket = socket
         self._store = store
         self._metrics_provider = metrics_provider
         self._logger = logger
+        self._data: Optional[PandasDataFrame] = None
+
+    @property
+    def data(self) -> Optional[PandasDataFrame]:
+        return self._data
 
     @abstractmethod
     def _read_input(self) -> PandasDataFrame:
         """ """
 
-    async def read(self) -> PandasDataFrame:
-        # TODO: add appropriate metric tags based on snake_case_class_name
-        @run_time_metrics(metric_name=f"read_input")
-        def _read(
-            metric_tags={}, metrics_provider=self._metrics_provider
-        ) -> PandasDataFrame:
-            return self._read_input()
+    @property
+    def _metric_name(self) -> str:
+        return re.sub(
+            r"(?<!^)(?=[A-Z])",
+            "_",
+            self.__class__.__name__.lower().replace("reader", ""),
+        )
 
-        return _read()
+    @property
+    def _metric_tags(self) -> dict[str, str]:
+        return {"entity": self._metric_name}
+
+    async def read(self) -> PandasDataFrame:
+        @run_time_metrics(metric_name="read_input")
+        def _read(**_) -> PandasDataFrame:
+            if not self._data:
+                self._data = self._read_input()
+
+            return self._data
+
+        return partial(
+            _read,
+            metric_tags=self._metric_tags,
+            metrics_provider=self._metrics_provider,
+        )

@@ -5,9 +5,8 @@ import platform
 import signal
 import sys
 import traceback
-from functools import partial
 from pydoc import locate
-from typing import final, Type, Callable, Optional, Coroutine
+from typing import final, Type, Optional, Coroutine
 
 import backoff
 import urllib3.exceptions
@@ -17,6 +16,7 @@ from adapta.storage.blob.base import StorageClient
 from adapta.storage.models.format import DataFrameJsonSerializationFormat
 from injector import Injector
 
+import esd_services_api_client.nexus.exceptions
 from esd_services_api_client.crystal import (
     add_crystal_args,
     extract_crystal_args,
@@ -37,10 +37,10 @@ def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]
     if not exception:
         return None
     match type(exception):
-        case azure.core.exceptions.HttpResponseError:
-            return True
-        case builtins.RuntimeError:
+        case esd_services_api_client.nexus.exceptions.FatalNexusError:
             return False
+        case esd_services_api_client.nexus.exceptions.TransientNexusError:
+            return True
         case _:
             return False
 
