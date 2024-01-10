@@ -1,14 +1,12 @@
 import re
 from abc import ABC, abstractmethod
 from functools import partial
-from typing import Optional, Type
+from typing import Optional
 
-from adapta.logs import SemanticLogger, create_async_logger
+from adapta.logs import create_async_logger
 from adapta.metrics import MetricsProvider
-from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import inject, Module, singleton, provider
 from pandas import DataFrame as PandasDataFrame
 from adapta.utils.decorators import run_time_metrics
 
@@ -18,16 +16,13 @@ class InputReader(ABC):
         self,
         socket: DataSocket,
         store: QueryEnabledStore,
-        metrics_provider: DatadogMetricsProvider,
+        metrics_provider: MetricsProvider,
         *readers: "InputReader",
     ):
         self.socket = socket
         self._store = store
         self._metrics_provider = metrics_provider
-        self._logger = create_async_logger(
-            logger_type=self.__class__,
-            log_handlers=[]
-        )
+        self._logger = create_async_logger(logger_type=self.__class__, log_handlers=[])
         self._data: Optional[PandasDataFrame] = None
         self._readers = readers
 
@@ -63,5 +58,5 @@ class InputReader(ABC):
             _read,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
-            logger=self._logger
+            logger=self._logger,
         )()

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, final, Type
 
 from adapta.logs import create_async_logger
+from adapta.metrics import MetricsProvider
 from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
 from adapta.security.clients import AzureClient
 from adapta.storage.blob.azure_storage_client import AzureStorageClient
@@ -35,12 +36,12 @@ class DatadogMetricsConfiguration:
         )
 
 
-class DatadogMetricsModule(Module):
+class MetricsModule(Module):
     @singleton
     @provider
     def provide_metrics_provider(
         self, configuration: DatadogMetricsConfiguration
-    ) -> DatadogMetricsProvider:
+    ) -> MetricsProvider:
         return DatadogMetricsProvider(
             metric_namespace=configuration.metric_namespace,
             fixed_tags=configuration.fixed_tags,
@@ -66,8 +67,9 @@ class CrystalReceiverClientModule(Module):
     ) -> CrystalConnector:
         return CrystalConnector.create_anonymous(
             receiver_base_url=configuration.receiver_base_url,
-            logger=create_async_logger(logger_type=CrystalConnector, log_handlers=[])
+            logger=create_async_logger(logger_type=CrystalConnector, log_handlers=[]),
         )
+
 
 class QueryEnabledStoreModule(Module):
     @singleton
@@ -75,11 +77,16 @@ class QueryEnabledStoreModule(Module):
     def provide_qes(self) -> QueryEnabledStore:
         return QueryEnabledStore.from_string(os.getenv("NEXUS__QES_CONNECTION_STRING"))
 
+
 class AzureStorageClientModule(Module):
     @singleton
     @provider
     def provide_client(self) -> AzureStorageClient:
-        return AzureStorageClient(base_client=AzureClient(), path=AdlsGen2Path.from_hdfs_path(os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')))
+        return AzureStorageClient(
+            base_client=AzureClient(),
+            path=AdlsGen2Path.from_hdfs_path(os.getenv("NEXUS__ALGORITHM_OUTPUT_PATH")),
+        )
+
 
 def binds(binder: Binder):
     binder.bind(
@@ -99,10 +106,10 @@ class ServiceConfigurator:
     def __init__(self):
         self._injection_binds = [
             binds,
-            DatadogMetricsModule(),
+            MetricsModule(),
             CrystalReceiverClientModule(),
             QueryEnabledStoreModule(),
-            AzureStorageClientModule()
+            AzureStorageClientModule(),
         ]
 
     @property

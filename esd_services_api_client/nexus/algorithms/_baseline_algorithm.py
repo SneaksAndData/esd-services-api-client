@@ -16,9 +16,7 @@ class BaselineAlgorithm(ABC):
     ):
         self._input_processor = input_processor
         self._metrics_provider = metrics_provider
-        self._logger = create_async_logger(
-            logger_type=self.__class__, log_handlers=[]
-        )
+        self._logger = create_async_logger(logger_type=self.__class__, log_handlers=[])
 
     @abstractmethod
     async def _run(self, **kwargs) -> PandasDataFrame:

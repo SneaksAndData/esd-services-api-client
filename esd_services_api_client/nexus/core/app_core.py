@@ -120,7 +120,7 @@ class Nexus:
 
             :return: blob uri
             """
-            storage_client = self._injector.get(StorageClientFactory).get_client()
+            storage_client = self._injector.get(AzureStorageClient)
             output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
             blob_path = DataSocket(
                 data_path=output_path, alias="output", data_format="null"

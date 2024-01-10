@@ -4,11 +4,9 @@ from typing import Dict, Union, Type
 
 import deltalake
 from adapta.logs import create_async_logger
-from adapta.logs.handlers.datadog_api_handler import DataDogApiHandler
 from adapta.metrics import MetricsProvider
 
 import azure.core.exceptions
-from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
 
 from injector import inject
 from pandas import DataFrame as PandasDataFrame
@@ -22,12 +20,14 @@ from esd_services_api_client.nexus.input.input_reader import InputReader
 
 class InputProcessor(ABC):
     @inject
-    def __init__(self, *readers: InputReader, metrics_provider: DatadogMetricsProvider): # log_handler: DataDogApiHandler
+    def __init__(
+        self, *readers: InputReader, metrics_provider: MetricsProvider
+    ):  # log_handler: DataDogApiHandler
         self._readers = readers
         self._metrics_provider = metrics_provider
         # TODO: logger and handler configuration
         self._logger = create_async_logger(
-            logger_type=self.__class__, log_handlers=[] # log_handler
+            logger_type=self.__class__, log_handlers=[]  # log_handler
         )
 
     def _get_exc_type(

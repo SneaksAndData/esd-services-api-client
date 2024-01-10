@@ -20,7 +20,7 @@ import asyncio
 from typing import Dict
 
 import pandas
-from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
+from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import inject
@@ -41,7 +41,7 @@ async def my_on_complete_func_2(**kwargs):
 
 class XReader(InputReader):
     @inject
-    def __init__(self, store: QueryEnabledStore, metrics_provider: DatadogMetricsProvider,
+    def __init__(self, store: QueryEnabledStore, metrics_provider: MetricsProvider,
                  *readers: "InputReader"):
         super().__init__(DataSocket(alias="x", data_path="testx", data_format='delta'), store, metrics_provider, *readers)
 
@@ -51,7 +51,7 @@ class XReader(InputReader):
 
 class YReader(InputReader):
     @inject
-    def __init__(self, store: QueryEnabledStore, metrics_provider: DatadogMetricsProvider,
+    def __init__(self, store: QueryEnabledStore, metrics_provider: MetricsProvider,
                  *readers: "InputReader"):
         super().__init__(DataSocket(alias="y", data_path="testy", data_format='delta'), store, metrics_provider, *readers)
 
@@ -61,7 +61,7 @@ class YReader(InputReader):
 
 class MyInputProcessor(InputProcessor):
     @inject
-    def __init__(self, x: XReader, y: YReader, metrics_provider: DatadogMetricsProvider):
+    def __init__(self, x: XReader, y: YReader, metrics_provider: MetricsProvider):
         super().__init__(x, y, metrics_provider=metrics_provider)
 
     async def process_input(self, **_) -> Dict[str, PandasDataFrame]:
@@ -74,7 +74,7 @@ class MyInputProcessor(InputProcessor):
 
 class MyAlgorithm(MinimalisticAlgorithm):
     @inject
-    def __init__(self, input_processor: MyInputProcessor, metrics_provider: DatadogMetricsProvider):
+    def __init__(self, input_processor: MyInputProcessor, metrics_provider: MetricsProvider):
         super().__init__(input_processor, metrics_provider)
 
     async def _run(self, x_ready: PandasDataFrame, y_ready: PandasDataFrame, **kwargs) -> PandasDataFrame:
