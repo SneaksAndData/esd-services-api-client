@@ -282,18 +282,18 @@ class CrystalConnector:
             "sasUri": result.sas_uri,
         }
 
-        if debug and self._logger is not None:
+        if not debug:
+            run_response = self._http.post(url=get_api_path(), json=payload)
+            # raise if not successful
+            run_response.raise_for_status()
+            return
+
+        if self._logger is not None:
             self._logger.debug(
                 "Submitting result to {submission_url}, payload {payload}",
                 submission_url=get_api_path(),
                 payload=json.dumps(payload),
             )
-
-        else:
-            run_response = self._http.post(url=get_api_path(), json=payload)
-
-            # raise if not successful
-            run_response.raise_for_status()
 
     @staticmethod
     def read_input(
