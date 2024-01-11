@@ -22,7 +22,9 @@ import asyncio
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame as PandasDataFrame
-from esd_services_api_client.nexus.algorithms._baseline_algorithm import BaselineAlgorithm
+from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
+    BaselineAlgorithm,
+)
 
 
 class DistributedAlgorithm(BaselineAlgorithm, ABC):
