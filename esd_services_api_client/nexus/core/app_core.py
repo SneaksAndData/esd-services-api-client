@@ -160,24 +160,24 @@ class Nexus:
     async def activate(self):
         self._injector = Injector(self._configurator.injection_binds)
 
-        x: BaselineAlgorithm = self._injector.get(self._algorithm_class)
+        algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
 
-        async with x as t:
+        async with algorithm as instance:
             self._algorithm_run_task = asyncio.create_task(
-                t.run(**self._run_args.__dict__)
+                instance.run(**self._run_args.__dict__)
             )
-        ex = self._algorithm_run_task.exception()
-        on_complete_tasks = [
-            asyncio.create_task(on_complete_task)
-            for on_complete_task in self._on_complete_tasks
-        ]
+            ex = self._algorithm_run_task.exception()
+            on_complete_tasks = [
+                asyncio.create_task(on_complete_task)
+                for on_complete_task in self._on_complete_tasks
+            ]
 
-        await self._submit_result(
-            self._algorithm_run_task.result() if not ex else None,
-            self._algorithm_run_task.exception(),
-        )
-        if len(on_complete_tasks) > 0:
-            await asyncio.wait(on_complete_tasks)
+            await self._submit_result(
+                self._algorithm_run_task.result() if not ex else None,
+                self._algorithm_run_task.exception(),
+            )
+            if len(on_complete_tasks) > 0:
+                await asyncio.wait(on_complete_tasks)
 
     @classmethod
     def create(cls) -> "Nexus":

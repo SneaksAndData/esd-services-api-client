@@ -30,5 +30,5 @@ class BaselineAlgorithm(NexusObject):
         """
         Coroutine that executes the algorithm logic.
         """
-        with self._input_processor as input_processor:
+        async with self._input_processor as input_processor:
             return await self._run(**(await input_processor.process_input(**kwargs)))
