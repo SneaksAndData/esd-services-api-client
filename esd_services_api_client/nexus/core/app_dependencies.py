@@ -50,6 +50,7 @@ class LoggerFactory:
             fixed_template_delimiter=fixed_template_delimiter,
         )
 
+
 class MetricsModule(Module):
     @singleton
     @provider
