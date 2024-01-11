@@ -2,12 +2,9 @@ import json
 import os
 from logging import StreamHandler
 from pydoc import locate
-from typing import final, Type, TypeVar, Optional, Dict
+from typing import final, Type
 
 from adapta.logs import create_async_logger
-from adapta.logs._async_logger import _AsyncLogger
-from adapta.logs.handlers.datadog_api_handler import DataDogApiHandler
-from adapta.logs.models import LogLevel
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
@@ -49,9 +46,6 @@ class CrystalReceiverClientModule(Module):
     def provide(self) -> CrystalConnector:
         return CrystalConnector.create_anonymous(
             receiver_base_url=os.getenv("NEXUS__ALGORITHM_METRIC_NAMESPACE"),
-            logger=create_async_logger(
-                logger_type=CrystalConnector, log_handlers=[StreamHandler()]
-            ),
         )
 
 

@@ -7,7 +7,7 @@ from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from pandas import DataFrame as PandasDataFrame
-from adapta.utils.decorators import run_time_metrics
+from adapta.utils.decorators._logging import run_time_metrics_async
 
 from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
 from esd_services_api_client.nexus.core.app_dependencies import LoggerFactory
@@ -55,7 +55,7 @@ class InputReader(NexusObject):
         Coroutine that reads the data from external store and converts it to a dataframe.
         """
 
-        @run_time_metrics(metric_name="read_input")
+        @run_time_metrics_async(metric_name="read_input")
         async def _read(**_) -> PandasDataFrame:
             if not self._data:
                 self._data = await self._read_input()
