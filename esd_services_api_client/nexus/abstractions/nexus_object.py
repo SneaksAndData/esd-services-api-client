@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from adapta.metrics import MetricsProvider
 
-from esd_services_api_client.nexus.core.app_dependencies import LoggerFactory
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
 
 class NexusObject(ABC):

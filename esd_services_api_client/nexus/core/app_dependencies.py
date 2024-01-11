@@ -14,41 +14,12 @@ from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Module, singleton, provider, Binder
 
 from esd_services_api_client.crystal import CrystalConnector
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.exceptions.startup_error import (
     FatalStartupConfigurationError,
 )
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 from esd_services_api_client.nexus.input.input_reader import InputReader
-
-TLogger = TypeVar("TLogger")
-
-
-@final
-class LoggerFactory:
-    def __init__(self):
-        self._log_handlers = [
-            StreamHandler(),
-        ]
-        if "NEXUS__DATADOG_LOGGER_CONFIGURATION" in os.environ:
-            self._log_handlers.append(
-                DataDogApiHandler(
-                    **json.loads(os.getenv("NEXUS__DATADOG_LOGGER_CONFIGURATION"))
-                )
-            )
-
-    def create_logger(
-        self,
-        logger_type: Type[TLogger],
-        fixed_template: Optional[Dict[str, Dict[str, str]]] = None,
-        fixed_template_delimiter=", ",
-    ) -> _AsyncLogger[TLogger]:
-        return create_async_logger(
-            logger_type=logger_type,
-            log_handlers=self._log_handlers,
-            min_log_level=LogLevel(os.getenv("NEXUS__LOG_LEVEL", "INFO")),
-            fixed_template=fixed_template,
-            fixed_template_delimiter=fixed_template_delimiter,
-        )
 
 
 class MetricsModule(Module):
@@ -102,7 +73,7 @@ class StorageClientModule(Module):
         )
         if not storage_client_class:
             raise FatalStartupConfigurationError("NEXUS__STORAGE_CLIENT_CLASS")
-        if not "NEXUS__ALGORITHM_OUTPUT_PATH" not in os.environ:
+        if "NEXUS__ALGORITHM_OUTPUT_PATH" not in os.environ:
             raise FatalStartupConfigurationError("NEXUS__ALGORITHM_OUTPUT_PATH")
 
         return storage_client_class.for_storage_path(

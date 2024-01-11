@@ -166,6 +166,7 @@ class Nexus:
             self._algorithm_run_task = asyncio.create_task(
                 instance.run(**self._run_args.__dict__)
             )
+            await self._algorithm_run_task
             ex = self._algorithm_run_task.exception()
             on_complete_tasks = [
                 asyncio.create_task(on_complete_task)

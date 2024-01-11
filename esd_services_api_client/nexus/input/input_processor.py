@@ -51,7 +51,7 @@ class InputProcessor(NexusObject):
 
         async def _read(input_reader: InputReader):
             async with input_reader as instance:
-                return instance.read()
+                return await instance.read()
 
         read_tasks: dict[str, asyncio.Task] = {
             reader.socket.alias: asyncio.create_task(_read(reader))
