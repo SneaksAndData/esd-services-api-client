@@ -4,6 +4,8 @@ Set the following environment variables for Azure:
 IS_LOCAL_RUN=1
 NEXUS__ALGORITHM_OUTPUT_PATH=abfss://container@account.dfs.core.windows.net/stuff
 NEXUS__QES_CONNECTION_STRING=qes://engine\=DELTA\;plaintext_credentials\={"auth_client_class":"adapta.security.clients.AzureClient"}\;settings\={}
+NEXUS__METRIC_PROVIDER_CONFIGURATION={"metric_namespace": "test"}
+NEXUS__METRIC_PROVIDER_CLASS=adapta.metrics.providers.datadog_provider.DatadogMetricsProvider
 PROTEUS__USE_AZURE_CREDENTIAL=1
 ```
 

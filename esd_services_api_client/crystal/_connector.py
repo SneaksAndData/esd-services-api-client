@@ -20,9 +20,10 @@ import json
 import os
 from argparse import Namespace, ArgumentParser
 from datetime import timedelta
-from typing import Dict, Optional, Type, TypeVar, List
+from typing import Dict, Optional, Type, TypeVar, List, Union
 
 from adapta.logs import SemanticLogger
+from adapta.logs._async_logger import _AsyncLogger
 from adapta.storage.models.format import SerializationFormat
 from adapta.utils import session_with_retries, doze
 from adapta.utils.concurrent_task_runner import ConcurrentTaskRunner, Executable
