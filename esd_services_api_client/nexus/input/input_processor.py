@@ -30,7 +30,7 @@ from injector import inject
 from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
-from esd_services_api_client.nexus.core.app_dependencies import LoggerFactory
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.exceptions.input_reader_error import (
     FatalInputReaderError,
     TransientInputReaderError,

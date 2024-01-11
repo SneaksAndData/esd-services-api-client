@@ -24,7 +24,7 @@ from adapta.metrics import MetricsProvider
 from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
-from esd_services_api_client.nexus.core.app_dependencies import LoggerFactory
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 
 
