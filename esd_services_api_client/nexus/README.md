@@ -17,7 +17,6 @@ from typing import Dict
 
 import pandas
 from adapta.metrics import MetricsProvider
-from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import inject
 

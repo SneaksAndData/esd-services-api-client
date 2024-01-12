@@ -31,6 +31,7 @@ from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
 
 
 class InputReader(NexusObject):
@@ -44,6 +45,7 @@ class InputReader(NexusObject):
         store: QueryEnabledStore,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
+        payload: AlgorithmPayload,
         *readers: "InputReader"
     ):
         super().__init__(metrics_provider, logger_factory)
@@ -51,6 +53,7 @@ class InputReader(NexusObject):
         self._store = store
         self._data: Optional[PandasDataFrame] = None
         self._readers = readers
+        self._payload = payload
 
     @property
     def data(self) -> Optional[PandasDataFrame]:

@@ -1,6 +1,7 @@
 """
  Dependency injections.
 """
+import asyncio
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -35,6 +36,10 @@ from esd_services_api_client.nexus.exceptions.startup_error import (
 )
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 from esd_services_api_client.nexus.input.input_reader import InputReader
+from esd_services_api_client.nexus.input.payload_reader import (
+    AlgorithmPayloadReader,
+    AlgorithmPayload,
+)
 
 
 class MetricsModule(Module):
@@ -144,6 +149,20 @@ class SocketsModule(Module):
         )
 
 
+class AlgorithmPayloadProviderModule(Module):
+    """
+    Payload reader module.
+    """
+
+    def __init__(self, payload: AlgorithmPayload):
+        self._payload = payload
+
+    @singleton
+    @provider
+    def provide(self) -> AlgorithmPayload:
+        return self._payload
+
+
 @final
 class ServiceConfigurator:
     """
@@ -181,4 +200,8 @@ class ServiceConfigurator:
         self._injection_binds.append(
             type(f"{input_processor.__name__}Module", (Module,), {})()
         )
+        return self
+
+    def with_payload(self, payload: AlgorithmPayload) -> "ServiceConfigurator":
+        self._injection_binds.append(AlgorithmPayloadProviderModule(payload=payload))
         return self
