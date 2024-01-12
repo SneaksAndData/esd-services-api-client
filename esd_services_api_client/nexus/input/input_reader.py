@@ -82,7 +82,14 @@ class InputReader(NexusObject):
         Coroutine that reads the data from external store and converts it to a dataframe.
         """
 
-        @run_time_metrics_async(metric_name="read_input")
+        @run_time_metrics_async(
+            metric_name="read_input",
+            on_finish_message_template="Finished reading {entity} from path {data_path} in {elapsed:.2f}s seconds",
+            template_args={
+                "entity": self._metric_name.upper(),
+                "data_path": self.socket.data_path,
+            },
+        )
         async def _read(**_) -> PandasDataFrame:
             if not self._data:
                 self._data = await self._read_input()

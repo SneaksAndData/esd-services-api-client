@@ -29,6 +29,7 @@ from injector import Module, singleton, provider
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.abstractions.socket_provider import SocketProvider
 from esd_services_api_client.nexus.exceptions.startup_error import (
     FatalStartupConfigurationError,
 )
@@ -124,6 +125,22 @@ class StorageClientModule(Module):
 
         return storage_client_class.for_storage_path(
             path=os.getenv("NEXUS__ALGORITHM_OUTPUT_PATH")
+        )
+
+
+class SocketsModule(Module):
+    """
+    Storage client module.
+    """
+
+    @singleton
+    @provider
+    def provide(self) -> SocketProvider:
+        if not "NEXUS__ALGORITHM_INPUT_DATA_SOCKETS" in os.environ:
+            raise FatalStartupConfigurationError("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
+
+        return SocketProvider.from_serialized(
+            os.getenv("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
         )
 
 

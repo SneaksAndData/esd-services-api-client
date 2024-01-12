@@ -22,6 +22,7 @@ from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import inject
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.abstractions.socket_provider import SocketProvider
 from esd_services_api_client.nexus.core.app_core import Nexus
 from esd_services_api_client.nexus.algorithms import MinimalisticAlgorithm
 from esd_services_api_client.nexus.input import InputReader, InputProcessor
@@ -44,9 +45,9 @@ class XReader(InputReader):
         pass
 
     @inject
-    def __init__(self, store: QueryEnabledStore, metrics_provider: MetricsProvider, logger_factory: LoggerFactory,
+    def __init__(self, store: QueryEnabledStore, metrics_provider: MetricsProvider, logger_factory: LoggerFactory, socket_provider: SocketProvider,
                  *readers: "InputReader"):
-        super().__init__(DataSocket(alias="x", data_path="testx", data_format='delta'), store, metrics_provider, logger_factory, *readers)
+        super().__init__(socket_provider.socket("x"), store, metrics_provider, logger_factory, *readers)
 
     async def _read_input(self) -> PandasDataFrame:
         return pandas.DataFrame([{'a': 1, 'b': 2}, {'a': 2, 'b': 3}])
@@ -60,9 +61,9 @@ class YReader(InputReader):
         pass
 
     @inject
-    def __init__(self, store: QueryEnabledStore, metrics_provider: MetricsProvider, logger_factory: LoggerFactory,
+    def __init__(self, store: QueryEnabledStore, metrics_provider: MetricsProvider, logger_factory: LoggerFactory, socket_provider: SocketProvider,
                  *readers: "InputReader"):
-        super().__init__(DataSocket(alias="y", data_path="testy", data_format='delta'), store, metrics_provider, logger_factory, *readers)
+        super().__init__(socket_provider.socket("y"), store, metrics_provider, logger_factory, *readers)
 
     async def _read_input(self) -> PandasDataFrame:
         return pandas.DataFrame([{'a': 10, 'b': 12}, {'a': 11, 'b': 13}])
