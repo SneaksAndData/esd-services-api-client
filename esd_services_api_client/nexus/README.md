@@ -103,12 +103,13 @@ class MyAlgorithm(MinimalisticAlgorithm):
 
 
 async def main():
-    nexus = Nexus.create() \
+    nexus = await Nexus.create() \
         .add_reader(XReader) \
         .add_reader(YReader) \
         .use_processor(MyInputProcessor) \
-        .use_algorithm(MyAlgorithm)
-
+        .use_algorithm(MyAlgorithm) \
+        .inject_payload()
+    
     await nexus.activate()
     
 

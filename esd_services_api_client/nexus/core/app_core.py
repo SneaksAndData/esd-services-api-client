@@ -143,10 +143,10 @@ class Nexus:
         self._algorithm_class = algorithm
         return self
 
-    async def inject_payload(self) -> "Nexus":
-        async def get_payload() -> AlgorithmPayload:
+    async def inject_payload(self, payload_type: Type[AlgorithmPayload]) -> "Nexus":
+        async def get_payload() -> payload_type:
             async with AlgorithmPayloadReader(
-                payload_uri=self._run_args.sas_uri
+                payload_uri=self._run_args.sas_uri, payload_type=payload_type
             ) as reader:
                 return reader.payload
 
