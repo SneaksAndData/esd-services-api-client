@@ -26,7 +26,7 @@ from adapta.metrics import MetricsProvider
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
 
-TPayload = TypeVar("TPayload")
+TPayload = TypeVar("TPayload")  # pylint: disable=C0103
 
 
 class NexusObject(Generic[TPayload], ABC):

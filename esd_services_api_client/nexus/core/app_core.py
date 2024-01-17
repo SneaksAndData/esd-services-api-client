@@ -146,13 +146,19 @@ class Nexus:
         return self
 
     async def inject_payload(self, *payload_types: Type[AlgorithmPayload]) -> "Nexus":
+        """
+        Adds payloads processed into the specified types to the DI container
+        """
         for payload_type in payload_types:
 
-            async def get_payload() -> payload_type:
+            async def get_payload() -> payload_type:  # pylint: disable=W0640
                 async with AlgorithmPayloadReader(
-                    payload_uri=self._run_args.sas_uri, payload_type=payload_type
+                    payload_uri=self._run_args.sas_uri,
+                    payload_type=payload_type,  # pylint: disable=W0640
                 ) as reader:
                     return reader.payload
+
+            # pylint warnings are silenced here because closure is called inside the same loop it is defined, thus each value of a loop variable is used
 
             self._configurator = self._configurator.with_payload((await get_payload()))
         return self

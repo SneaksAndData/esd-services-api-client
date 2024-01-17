@@ -1,7 +1,6 @@
 """
  Dependency injections.
 """
-import asyncio
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -140,26 +139,15 @@ class SocketsModule(Module):
     @singleton
     @provider
     def provide(self) -> SocketProvider:
+        """
+        Dependency provider.
+        """
         if not "NEXUS__ALGORITHM_INPUT_DATA_SOCKETS" in os.environ:
             raise FatalStartupConfigurationError("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
 
         return SocketProvider.from_serialized(
             os.getenv("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
         )
-
-
-class AlgorithmPayloadProviderModule(Module):
-    """
-    Payload reader module.
-    """
-
-    def __init__(self, payload: AlgorithmPayload):
-        self._payload = payload
-
-    @singleton
-    @provider
-    def provide(self) -> AlgorithmPayload:
-        return self._payload
 
 
 @final
@@ -202,8 +190,15 @@ class ServiceConfigurator:
         return self
 
     def with_payload(self, payload: AlgorithmPayload) -> "ServiceConfigurator":
-        def t(binder: Binder):
+        """
+        Adds the specified payload instance to the DI container.
+        """
+
+        def _(binder: Binder):
+            """
+            Dynamic payload binder for the DI
+            """
             binder.bind(payload.__class__, to=payload, scope=singleton)
 
-        self._injection_binds.append(t)
+        self._injection_binds.append(_)
         return self

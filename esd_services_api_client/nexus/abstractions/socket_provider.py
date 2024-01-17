@@ -40,6 +40,9 @@ class SocketProvider:
 
     @classmethod
     def from_serialized(cls, socket_list_ser: str) -> "SocketProvider":
+        """
+        Creates a SocketProvider from a list of serialized sockets
+        """
         return cls(
             *[
                 DataSocket.from_dict(socket_dict)
