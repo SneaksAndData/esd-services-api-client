@@ -29,12 +29,14 @@ from adapta.utils.decorators._logging import run_time_metrics_async
 
 from pandas import DataFrame as PandasDataFrame
 
-from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
+from esd_services_api_client.nexus.abstractions.nexus_object import (
+    NexusObject,
+    TPayload,
+)
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
 
 
-class InputReader(NexusObject):
+class InputReader(NexusObject[TPayload]):
     """
     Base class for a raw data reader.
     """
@@ -45,7 +47,7 @@ class InputReader(NexusObject):
         store: QueryEnabledStore,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
-        payload: AlgorithmPayload,
+        payload: TPayload,
         *readers: "InputReader"
     ):
         super().__init__(metrics_provider, logger_factory)
