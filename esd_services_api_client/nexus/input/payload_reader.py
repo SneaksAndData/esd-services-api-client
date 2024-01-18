@@ -1,7 +1,6 @@
 """
  Code infrastructure for manipulating payload received from Crystal SAS URI
 """
-from abc import abstractmethod
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
