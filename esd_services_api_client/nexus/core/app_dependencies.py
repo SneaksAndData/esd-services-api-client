@@ -25,7 +25,7 @@ from typing import final, Type
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import Module, singleton, provider, Binder
+from injector import Module, singleton, provider
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
@@ -193,12 +193,7 @@ class ServiceConfigurator:
         """
         Adds the specified payload instance to the DI container.
         """
-
-        def _(binder: Binder):
-            """
-            Dynamic payload binder for the DI
-            """
-            binder.bind(payload.__class__, to=payload, scope=singleton)
-
-        self._injection_binds.append(_)
+        self._injection_binds.append(
+            lambda binder: binder.bind(payload.__class__, to=payload, scope=singleton)
+        )
         return self

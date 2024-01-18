@@ -1,6 +1,7 @@
 """
  Code infrastructure for manipulating payload received from Crystal SAS URI
 """
+from abc import abstractmethod
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -33,6 +34,14 @@ class AlgorithmPayload(DataClassJsonMixin):
     Base class for algorithm payload
     """
 
+    def validate(self):
+        """
+        Optional post-validation of the data. Define this method to analyze class contents after payload has been read and deserialized.
+        """
+
+    def __post_init__(self):
+        self.validate()
+
 
 @final
 class AlgorithmPayloadReader:
@@ -61,7 +70,7 @@ class AlgorithmPayloadReader:
         self._payload_type = payload_type
 
     @property
-    def payload_uri(self) -> Optional[str]:
+    def payload_uri(self) -> str:
         """
         Uri of the paylod for the algorithm
         """
