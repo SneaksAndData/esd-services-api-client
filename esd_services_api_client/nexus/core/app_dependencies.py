@@ -29,11 +29,15 @@ from injector import Module, singleton, provider
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.abstractions.socket_provider import SocketProvider
 from esd_services_api_client.nexus.exceptions.startup_error import (
     FatalStartupConfigurationError,
 )
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 from esd_services_api_client.nexus.input.input_reader import InputReader
+from esd_services_api_client.nexus.input.payload_reader import (
+    AlgorithmPayload,
+)
 
 
 class MetricsModule(Module):
@@ -127,6 +131,25 @@ class StorageClientModule(Module):
         )
 
 
+class SocketsModule(Module):
+    """
+    Storage client module.
+    """
+
+    @singleton
+    @provider
+    def provide(self) -> SocketProvider:
+        """
+        Dependency provider.
+        """
+        if not "NEXUS__ALGORITHM_INPUT_DATA_SOCKETS" in os.environ:
+            raise FatalStartupConfigurationError("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
+
+        return SocketProvider.from_serialized(
+            os.getenv("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
+        )
+
+
 @final
 class ServiceConfigurator:
     """
@@ -163,5 +186,14 @@ class ServiceConfigurator:
         """
         self._injection_binds.append(
             type(f"{input_processor.__name__}Module", (Module,), {})()
+        )
+        return self
+
+    def with_payload(self, payload: AlgorithmPayload) -> "ServiceConfigurator":
+        """
+        Adds the specified payload instance to the DI container.
+        """
+        self._injection_binds.append(
+            lambda binder: binder.bind(payload.__class__, to=payload, scope=singleton)
         )
         return self

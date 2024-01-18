@@ -19,13 +19,17 @@
 
 
 from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 from adapta.metrics import MetricsProvider
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
 
-class NexusObject(ABC):
+TPayload = TypeVar("TPayload")  # pylint: disable=C0103
+
+
+class NexusObject(Generic[TPayload], ABC):
     """
     Base class for all Nexus objects.
     """

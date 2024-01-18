@@ -51,6 +51,10 @@ from esd_services_api_client.nexus.core.app_dependencies import (
 )
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 from esd_services_api_client.nexus.input.input_reader import InputReader
+from esd_services_api_client.nexus.input.payload_reader import (
+    AlgorithmPayloadReader,
+    AlgorithmPayload,
+)
 
 
 def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]:
@@ -139,6 +143,24 @@ class Nexus:
         Algorithm to use for this Nexus instance
         """
         self._algorithm_class = algorithm
+        return self
+
+    async def inject_payload(self, *payload_types: Type[AlgorithmPayload]) -> "Nexus":
+        """
+        Adds payloads processed into the specified types to the DI container
+        """
+        for payload_type in payload_types:
+
+            async def get_payload() -> payload_type:  # pylint: disable=W0640
+                async with AlgorithmPayloadReader(
+                    payload_uri=self._run_args.sas_uri,
+                    payload_type=payload_type,  # pylint: disable=W0640
+                ) as reader:
+                    return reader.payload
+
+            # pylint warnings are silenced here because closure is called inside the same loop it is defined, thus each value of a loop variable is used
+
+            self._configurator = self._configurator.with_payload((await get_payload()))
         return self
 
     async def _submit_result(
