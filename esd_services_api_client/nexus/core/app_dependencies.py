@@ -89,7 +89,7 @@ class CrystalReceiverClientModule(Module):
         DI factory method.
         """
         return CrystalConnector.create_anonymous(
-            receiver_base_url=os.getenv("NEXUS__ALGORITHM_METRIC_NAMESPACE"),
+            receiver_base_url=os.getenv("NEXUS__CRYSTAL_RECEIVER_URL"),
         )
 
 
