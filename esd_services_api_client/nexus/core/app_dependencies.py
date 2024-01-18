@@ -29,7 +29,9 @@ from injector import Module, singleton, provider
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.abstractions.socket_provider import SocketProvider
+from esd_services_api_client.nexus.abstractions.socket_provider import (
+    ExternalSocketProvider,
+)
 from esd_services_api_client.nexus.exceptions.startup_error import (
     FatalStartupConfigurationError,
 )
@@ -131,22 +133,25 @@ class StorageClientModule(Module):
         )
 
 
-class SocketsModule(Module):
+@final
+class ExternalSocketsModule(Module):
     """
     Storage client module.
     """
 
     @singleton
     @provider
-    def provide(self) -> SocketProvider:
+    def provide(self) -> ExternalSocketProvider:
         """
         Dependency provider.
         """
-        if not "NEXUS__ALGORITHM_INPUT_DATA_SOCKETS" in os.environ:
-            raise FatalStartupConfigurationError("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
+        if "NEXUS__ALGORITHM_INPUT_EXTERNAL_DATA_SOCKETS" not in os.environ:
+            raise FatalStartupConfigurationError(
+                "NEXUS__ALGORITHM_INPUT_EXTERNAL_DATA_SOCKETS"
+            )
 
-        return SocketProvider.from_serialized(
-            os.getenv("NEXUS__ALGORITHM_INPUT_DATA_SOCKETS")
+        return ExternalSocketProvider.from_serialized(
+            os.getenv("NEXUS__ALGORITHM_INPUT_EXTERNAL_DATA_SOCKETS")
         )
 
 
@@ -162,6 +167,7 @@ class ServiceConfigurator:
             CrystalReceiverClientModule(),
             QueryEnabledStoreModule(),
             StorageClientModule(),
+            ExternalSocketsModule(),
         ]
 
     @property

@@ -26,10 +26,12 @@ from adapta.metrics import MetricsProvider
 
 import azure.core.exceptions
 
-from injector import inject
 from pandas import DataFrame as PandasDataFrame
 
-from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
+from esd_services_api_client.nexus.abstractions.nexus_object import (
+    NexusObject,
+    TPayload,
+)
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.exceptions.input_reader_error import (
     FatalInputReaderError,
@@ -38,20 +40,21 @@ from esd_services_api_client.nexus.exceptions.input_reader_error import (
 from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
-class InputProcessor(NexusObject):
+class InputProcessor(NexusObject[TPayload]):
     """
     Base class for raw data processing into algorithm input.
     """
 
-    @inject
     def __init__(
         self,
         *readers: InputReader,
+        payload: TPayload,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
     ):
         super().__init__(metrics_provider, logger_factory)
         self._readers = readers
+        self._payload = payload
 
     def _get_exc_type(
         self, ex: BaseException
