@@ -24,7 +24,7 @@ from adapta.process_communication import DataSocket
 
 
 @final
-class SocketProvider:
+class ExternalSocketProvider:
     """
     Wraps a socket collection
     """
@@ -39,7 +39,7 @@ class SocketProvider:
         return self._sockets.get(name, None)
 
     @classmethod
-    def from_serialized(cls, socket_list_ser: str) -> "SocketProvider":
+    def from_serialized(cls, socket_list_ser: str) -> "ExternalSocketProvider":
         """
         Creates a SocketProvider from a list of serialized sockets
         """
