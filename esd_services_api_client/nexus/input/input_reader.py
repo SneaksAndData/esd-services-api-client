@@ -34,9 +34,6 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
     TPayload,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.abstractions.socket_provider import (
-    ExternalSocketProvider,
-)
 
 
 class InputReader(NexusObject[TPayload]):

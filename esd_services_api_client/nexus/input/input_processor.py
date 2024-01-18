@@ -26,7 +26,6 @@ from adapta.metrics import MetricsProvider
 
 import azure.core.exceptions
 
-from injector import inject
 from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.abstractions.nexus_object import (
