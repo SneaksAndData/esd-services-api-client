@@ -46,6 +46,9 @@ from esd_services_api_client.crystal import (
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
+from esd_services_api_client.nexus.configurations.algorithm_configuration import (
+    NexusConfiguration,
+)
 from esd_services_api_client.nexus.core.app_dependencies import (
     ServiceConfigurator,
 )
@@ -161,6 +164,19 @@ class Nexus:
             # pylint warnings are silenced here because closure is called inside the same loop it is defined, thus each value of a loop variable is used
 
             self._configurator = self._configurator.with_payload((await get_payload()))
+        return self
+
+    def inject_configuration(
+        self, *configuration_types: Type[NexusConfiguration]
+    ) -> "Nexus":
+        """
+        Adds custom configuration class instances to the DI container.
+        """
+        for config_type in configuration_types:
+            self._configurator = self._configurator.with_configuration(
+                config_type.from_environment()
+            )
+
         return self
 
     async def _submit_result(

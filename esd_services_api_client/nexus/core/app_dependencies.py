@@ -32,6 +32,9 @@ from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFact
 from esd_services_api_client.nexus.abstractions.socket_provider import (
     ExternalSocketProvider,
 )
+from esd_services_api_client.nexus.configurations.algorithm_configuration import (
+    NexusConfiguration,
+)
 from esd_services_api_client.nexus.exceptions.startup_error import (
     FatalStartupConfigurationError,
 )
@@ -42,6 +45,7 @@ from esd_services_api_client.nexus.input.payload_reader import (
 )
 
 
+@final
 class MetricsModule(Module):
     """
     Metrics provider module.
@@ -63,6 +67,7 @@ class MetricsModule(Module):
         return metrics_class(**metrics_settings)
 
 
+@final
 class LoggerFactoryModule(Module):
     """
     Logger factory module.
@@ -77,6 +82,7 @@ class LoggerFactoryModule(Module):
         return LoggerFactory()
 
 
+@final
 class CrystalReceiverClientModule(Module):
     """
     Crystal receiver module.
@@ -93,6 +99,7 @@ class CrystalReceiverClientModule(Module):
         )
 
 
+@final
 class QueryEnabledStoreModule(Module):
     """
     QES module.
@@ -107,6 +114,7 @@ class QueryEnabledStoreModule(Module):
         return QueryEnabledStore.from_string(os.getenv("NEXUS__QES_CONNECTION_STRING"))
 
 
+@final
 class StorageClientModule(Module):
     """
     Storage client module.
@@ -201,5 +209,14 @@ class ServiceConfigurator:
         """
         self._injection_binds.append(
             lambda binder: binder.bind(payload.__class__, to=payload, scope=singleton)
+        )
+        return self
+
+    def with_configuration(self, config: NexusConfiguration) -> "ServiceConfigurator":
+        """
+        Adds the specified payload instance to the DI container.
+        """
+        self._injection_binds.append(
+            lambda binder: binder.bind(config.__class__, to=config, scope=singleton)
         )
         return self
