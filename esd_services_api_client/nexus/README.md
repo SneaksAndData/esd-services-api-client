@@ -17,6 +17,7 @@ import asyncio
 import json
 import socketserver
 import threading
+import os
 from dataclasses import dataclass
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from typing import Dict, Optional
@@ -34,6 +35,7 @@ from esd_services_api_client.nexus.abstractions.socket_provider import (
 from esd_services_api_client.nexus.core.app_core import Nexus
 from esd_services_api_client.nexus.algorithms import MinimalisticAlgorithm
 from esd_services_api_client.nexus.input import InputReader, InputProcessor
+from esd_services_api_client.nexus.configurations.algorithm_configuration import NexusConfiguration
 from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
@@ -45,6 +47,16 @@ async def my_on_complete_func_1(**kwargs):
 
 async def my_on_complete_func_2(**kwargs):
     pass
+
+
+@dataclass
+class MyAlgorithmConfiguration(NexusConfiguration):
+    @classmethod
+    def from_environment(cls) -> "NexusConfiguration":
+        return MyAlgorithmConfiguration.from_json(os.getenv("NEXUS__MY_CONFIGURATION"))
+
+    c1: str
+    c2: str
 
 
 @dataclass
@@ -250,6 +262,7 @@ async def main():
             .add_reader(YReader)
             .use_processor(MyInputProcessor)
             .use_algorithm(MyAlgorithm)
+            .inject_configuration(MyAlgorithmConfiguration)
             .inject_payload(MyAlgorithmPayload, MyAlgorithmPayload2)
         )
 
