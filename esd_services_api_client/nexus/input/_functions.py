@@ -1,18 +1,6 @@
 """
  Utility functions to handle input processing.
 """
-import asyncio
-from typing import Dict, Union, Type
-import azure.core.exceptions
-import deltalake
-from pandas import DataFrame as PandasDataFrame
-
-from esd_services_api_client.nexus.exceptions.input_reader_error import (
-    FatalInputReaderError,
-    TransientInputReaderError,
-)
-from esd_services_api_client.nexus.input.input_reader import InputReader
-
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -28,6 +16,18 @@ from esd_services_api_client.nexus.input.input_reader import InputReader
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+
+import asyncio
+from typing import Dict, Union, Type
+import azure.core.exceptions
+import deltalake
+from pandas import DataFrame as PandasDataFrame
+
+from esd_services_api_client.nexus.exceptions.input_reader_error import (
+    FatalInputReaderError,
+    TransientInputReaderError,
+)
+from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
 def resolve_reader_exc_type(
