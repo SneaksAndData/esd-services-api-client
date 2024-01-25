@@ -29,7 +29,7 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
     TPayload,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.input import resolve_readers
+from esd_services_api_client.nexus.input._functions import resolve_readers
 from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
