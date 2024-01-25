@@ -1,6 +1,7 @@
 """
  Input reader.
 """
+import functools
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -43,11 +44,11 @@ class InputReader(NexusObject[TPayload]):
 
     def __init__(
         self,
-        socket: DataSocket,
         store: QueryEnabledStore,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
         payload: TPayload,
+        socket: Optional[DataSocket] = None,
         *readers: "InputReader"
     ):
         super().__init__(metrics_provider, logger_factory)
@@ -58,6 +59,16 @@ class InputReader(NexusObject[TPayload]):
         self._payload = payload
 
     @property
+    def alias(self) -> str:
+        """
+        Alias to identify this reader's output
+        """
+        if self.socket:
+            return self.socket.alias
+
+        return self._metric_name
+
+    @functools.cached_property
     def data(self) -> Optional[PandasDataFrame]:
         """
         Data read by this reader.
@@ -92,8 +103,10 @@ class InputReader(NexusObject[TPayload]):
             on_finish_message_template="Finished reading {entity} from path {data_path} in {elapsed:.2f}s seconds",
             template_args={
                 "entity": self._metric_name.upper(),
-                "data_path": self.socket.data_path,
-            },
+            }
+            | {"data_path": self.socket.data_path}
+            if self.socket
+            else {},
         )
         async def _read(**_) -> PandasDataFrame:
             if not self._data:

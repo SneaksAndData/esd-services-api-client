@@ -15,9 +15,9 @@ Example usage:
 ```python
 import asyncio
 import json
+import os
 import socketserver
 import threading
-import os
 from dataclasses import dataclass
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from typing import Dict, Optional
@@ -32,10 +32,12 @@ from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFact
 from esd_services_api_client.nexus.abstractions.socket_provider import (
     ExternalSocketProvider,
 )
+from esd_services_api_client.nexus.configurations.algorithm_configuration import (
+    NexusConfiguration,
+)
 from esd_services_api_client.nexus.core.app_core import Nexus
 from esd_services_api_client.nexus.algorithms import MinimalisticAlgorithm
 from esd_services_api_client.nexus.input import InputReader, InputProcessor
-from esd_services_api_client.nexus.configurations.algorithm_configuration import NexusConfiguration
 from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
@@ -142,11 +144,11 @@ class XReader(InputReader[MyAlgorithmPayload]):
         *readers: "InputReader"
     ):
         super().__init__(
-            socket_provider.socket("x"),
-            store,
-            metrics_provider,
-            logger_factory,
-            payload,
+            socket=socket_provider.socket("x"),
+            store=store,
+            metrics_provider=metrics_provider,
+            logger_factory=logger_factory,
+            payload=payload,
             *readers
         )
 
@@ -177,11 +179,11 @@ class YReader(InputReader[MyAlgorithmPayload2]):
         *readers: "InputReader"
     ):
         super().__init__(
-            socket_provider.socket("y"),
-            store,
-            metrics_provider,
-            logger_factory,
-            payload,
+            socket=socket_provider.socket("y"),
+            store=store,
+            metrics_provider=metrics_provider,
+            logger_factory=logger_factory,
+            payload=payload,
             *readers
         )
 
@@ -208,6 +210,7 @@ class MyInputProcessor(InputProcessor):
         y: YReader,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
+        my_conf: MyAlgorithmConfiguration,
     ):
         super().__init__(
             x,
@@ -217,7 +220,10 @@ class MyInputProcessor(InputProcessor):
             payload=None,
         )
 
+        self.conf = my_conf
+
     async def process_input(self, **_) -> Dict[str, PandasDataFrame]:
+        self._logger.info("Config: {config}", config=self.conf.to_json())
         inputs = await self._read_input()
         return {
             "x_ready": inputs["x"].assign(c=[-1, 1]),
