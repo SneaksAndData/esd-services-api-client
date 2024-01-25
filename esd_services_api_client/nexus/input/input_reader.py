@@ -48,8 +48,8 @@ class InputReader(NexusObject[TPayload]):
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
         payload: TPayload,
+        *readers: "InputReader",
         socket: Optional[DataSocket] = None,
-        *readers: "InputReader"
     ):
         super().__init__(metrics_provider, logger_factory)
         self.socket = socket
