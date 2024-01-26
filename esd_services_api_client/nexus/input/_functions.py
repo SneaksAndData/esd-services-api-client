@@ -62,7 +62,7 @@ async def resolve_readers(*readers: InputReader) -> Dict[str, PandasDataFrame]:
             return await instance.read()
 
     read_tasks: dict[str, asyncio.Task] = {
-        reader.socket.alias: asyncio.create_task(_read(reader)) for reader in readers
+        reader.alias: asyncio.create_task(_read(reader)) for reader in readers
     }
     await asyncio.wait(fs=read_tasks.values())
 

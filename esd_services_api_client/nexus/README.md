@@ -239,17 +239,10 @@ class MyAlgorithm(MinimalisticAlgorithm):
         pass
 
     @inject
-    def __init__(
-        self,
-        input_processor: MyInputProcessor,
-        metrics_provider: MetricsProvider,
-        logger_factory: LoggerFactory,
-    ):
-        super().__init__(input_processor, metrics_provider, logger_factory)
+    def __init__(self, metrics_provider: MetricsProvider, logger_factory: LoggerFactory, input_processor: MyInputProcessor):
+        super().__init__(metrics_provider, logger_factory, input_processor)
 
-    async def _run(
-        self, x_ready: PandasDataFrame, y_ready: PandasDataFrame, **kwargs
-    ) -> PandasDataFrame:
+    async def _run(self, x_ready: PandasDataFrame, y_ready: PandasDataFrame, **kwargs) -> PandasDataFrame:
         return pandas.concat([x_ready, y_ready])
 
 

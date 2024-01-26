@@ -37,8 +37,8 @@ class MinimalisticAlgorithm(BaselineAlgorithm, ABC):
     @inject
     def __init__(
         self,
-        input_processor: InputProcessor,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
+        *input_processors: InputProcessor,
     ):
-        super().__init__(input_processor, metrics_provider, logger_factory)
+        super().__init__(metrics_provider, logger_factory, *input_processors)

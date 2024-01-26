@@ -1,6 +1,7 @@
 """
  Base algorithm
 """
+import asyncio
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -19,6 +20,7 @@
 
 
 from abc import abstractmethod
+from functools import reduce
 
 from adapta.metrics import MetricsProvider
 from pandas import DataFrame as PandasDataFrame
@@ -35,12 +37,12 @@ class BaselineAlgorithm(NexusObject):
 
     def __init__(
         self,
-        input_processor: InputProcessor,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
+        *input_processors: InputProcessor,
     ):
         super().__init__(metrics_provider, logger_factory)
-        self._input_processor = input_processor
+        self._input_processors = input_processors
 
     @abstractmethod
     async def _run(self, **kwargs) -> PandasDataFrame:
@@ -52,5 +54,18 @@ class BaselineAlgorithm(NexusObject):
         """
         Coroutine that executes the algorithm logic.
         """
-        async with self._input_processor as input_processor:
-            return await self._run(**(await input_processor.process_input(**kwargs)))
+
+        async def _process(processor: InputProcessor) -> dict[str, PandasDataFrame]:
+            async with processor as instance:
+                return await instance.process_input(**kwargs)
+
+        process_tasks: dict[str, asyncio.Task] = {
+            input_processor.__class__.__name__.lower(): asyncio.create_task(
+                _process(input_processor)
+            )
+            for input_processor in self._input_processors
+        }
+        await asyncio.wait(fs=process_tasks.values())
+        results = [task.result() for task in process_tasks.values()]
+
+        return await self._run(**reduce(lambda a, b: a | b, results))
