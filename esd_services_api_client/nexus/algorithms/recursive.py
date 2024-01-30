@@ -39,20 +39,18 @@ class RecursiveAlgorithm(BaselineAlgorithm):
     @inject
     def __init__(
         self,
-        input_processor: InputProcessor,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
+        *input_processors: InputProcessor,
     ):
-        super().__init__(input_processor, metrics_provider, logger_factory)
+        super().__init__(metrics_provider, logger_factory, *input_processors)
 
     @abstractmethod
     async def _is_finished(self, **kwargs) -> bool:
         """ """
 
     async def run(self, **kwargs) -> PandasDataFrame:
-        result = await self._run(
-            **(await self._input_processor.process_input(**kwargs))
-        )
+        result = await self._run(**kwargs)
         if self._is_finished(**result):
             return result
         return await self.run(**result)
