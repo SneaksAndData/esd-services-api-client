@@ -23,14 +23,13 @@ from abc import abstractmethod
 from functools import reduce
 
 from adapta.metrics import MetricsProvider
-from pandas import DataFrame as PandasDataFrame
 
-from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject
+from esd_services_api_client.nexus.abstractions.nexus_object import NexusObject, TPayload, TResult
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 
 
-class BaselineAlgorithm(NexusObject):
+class BaselineAlgorithm(NexusObject[TPayload, TResult]):
     """
     Base class for all algorithm implementations.
     """
@@ -45,17 +44,17 @@ class BaselineAlgorithm(NexusObject):
         self._input_processors = input_processors
 
     @abstractmethod
-    async def _run(self, **kwargs) -> PandasDataFrame:
+    async def _run(self, **kwargs) -> TResult:
         """
         Core logic for this algorithm. Implementing this method is mandatory.
         """
 
-    async def run(self, **kwargs) -> PandasDataFrame:
+    async def run(self, **kwargs) -> TResult:
         """
         Coroutine that executes the algorithm logic.
         """
 
-        async def _process(processor: InputProcessor) -> dict[str, PandasDataFrame]:
+        async def _process(processor: InputProcessor) -> dict[str, TResult]:
             async with processor as instance:
                 return await instance.process_input(**kwargs)
 

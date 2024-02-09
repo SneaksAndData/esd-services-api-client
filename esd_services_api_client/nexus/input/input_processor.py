@@ -22,18 +22,16 @@ from typing import Dict
 
 from adapta.metrics import MetricsProvider
 
-from pandas import DataFrame as PandasDataFrame
-
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
-    TPayload,
+    TPayload, TResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input._functions import resolve_readers
 from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
-class InputProcessor(NexusObject[TPayload]):
+class InputProcessor(NexusObject[TPayload, TResult]):
     """
     Base class for raw data processing into algorithm input.
     """
@@ -49,11 +47,11 @@ class InputProcessor(NexusObject[TPayload]):
         self._readers = readers
         self._payload = payload
 
-    async def _read_input(self) -> Dict[str, PandasDataFrame]:
+    async def _read_input(self) -> Dict[str, TResult]:
         return await resolve_readers(*self._readers)
 
     @abstractmethod
-    async def process_input(self, **kwargs) -> Dict[str, PandasDataFrame]:
+    async def process_input(self, **kwargs) -> Dict[str, TResult]:
         """
         Input processing logic. Implement this method to prepare data for your algorithm code.
         """
