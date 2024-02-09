@@ -29,9 +29,9 @@ from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFact
 
 
 TPayload = TypeVar("TPayload")  # pylint: disable=C0103
-TResult = TypeVar(
+TResult = TypeVar(  # pylint: disable=C0103
     "TResult", pandas.DataFrame, polars.DataFrame
-)  # pylint: disable=C0103
+)
 
 
 class NexusObject(Generic[TPayload, TResult], ABC):
