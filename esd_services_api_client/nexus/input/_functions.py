@@ -45,7 +45,9 @@ def resolve_reader_exc_type(
             return FatalInputReaderError
 
 
-async def resolve_readers(*readers: InputReader[TPayload, TResult]) -> Dict[str, TResult]:
+async def resolve_readers(
+    *readers: InputReader[TPayload, TResult]
+) -> Dict[str, TResult]:
     """
     Concurrently resolve `data` property of all readers by invoking their `read` method.
     """

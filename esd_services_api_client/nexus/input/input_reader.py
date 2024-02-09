@@ -30,7 +30,8 @@ from adapta.utils.decorators import run_time_metrics_async
 
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
-    TPayload, TResult,
+    TPayload,
+    TResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 

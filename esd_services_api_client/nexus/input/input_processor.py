@@ -24,7 +24,8 @@ from adapta.metrics import MetricsProvider
 
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
-    TPayload, TResult,
+    TPayload,
+    TResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input._functions import resolve_readers
