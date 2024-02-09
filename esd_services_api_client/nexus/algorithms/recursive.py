@@ -22,16 +22,16 @@ from abc import abstractmethod
 
 from adapta.metrics import MetricsProvider
 from injector import inject
-from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
 from esd_services_api_client.nexus.input import InputProcessor
 
 
-class RecursiveAlgorithm(BaselineAlgorithm):
+class RecursiveAlgorithm(BaselineAlgorithm[TPayload, TResult]):
     """
     Recursive algorithm base class.
     """
@@ -49,7 +49,7 @@ class RecursiveAlgorithm(BaselineAlgorithm):
     async def _is_finished(self, **kwargs) -> bool:
         """ """
 
-    async def run(self, **kwargs) -> PandasDataFrame:
+    async def run(self, **kwargs) -> TResult:
         result = await self._run(**kwargs)
         if self._is_finished(**result):
             return result

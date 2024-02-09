@@ -26,18 +26,17 @@ from typing import Optional
 from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from adapta.utils.decorators._logging import run_time_metrics_async
-
-from pandas import DataFrame as PandasDataFrame
+from adapta.utils.decorators import run_time_metrics_async
 
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
+    TResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
 
-class InputReader(NexusObject[TPayload]):
+class InputReader(NexusObject[TPayload, TResult]):
     """
     Base class for a raw data reader.
     """
@@ -54,7 +53,7 @@ class InputReader(NexusObject[TPayload]):
         super().__init__(metrics_provider, logger_factory)
         self.socket = socket
         self._store = store
-        self._data: Optional[PandasDataFrame] = None
+        self._data: Optional[TResult] = None
         self._readers = readers
         self._payload = payload
 
@@ -69,14 +68,14 @@ class InputReader(NexusObject[TPayload]):
         return self._metric_name
 
     @functools.cached_property
-    def data(self) -> Optional[PandasDataFrame]:
+    def data(self) -> Optional[TResult]:
         """
         Data read by this reader.
         """
         return self._data
 
     @abstractmethod
-    async def _read_input(self) -> PandasDataFrame:
+    async def _read_input(self) -> TResult:
         """
         Actual data reader logic. Implementing this method is mandatory for the reader to work
         """
@@ -93,7 +92,7 @@ class InputReader(NexusObject[TPayload]):
     def _metric_tags(self) -> dict[str, str]:
         return {"entity": self._metric_name}
 
-    async def read(self) -> PandasDataFrame:
+    async def read(self) -> TResult:
         """
         Coroutine that reads the data from external store and converts it to a dataframe.
         """
@@ -108,7 +107,7 @@ class InputReader(NexusObject[TPayload]):
             if self.socket
             else {},
         )
-        async def _read(**_) -> PandasDataFrame:
+        async def _read(**_) -> TResult:
             if not self._data:
                 self._data = await self._read_input()
 

@@ -21,13 +21,13 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from pandas import DataFrame as PandasDataFrame
+from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
 
 
-class DistributedAlgorithm(BaselineAlgorithm, ABC):
+class DistributedAlgorithm(BaselineAlgorithm[TPayload, TResult], ABC):
     """
     Distributed algorithm base class.
     """
@@ -39,12 +39,12 @@ class DistributedAlgorithm(BaselineAlgorithm, ABC):
         """
 
     @abstractmethod
-    async def _fold(self, *split_tasks: asyncio.Task) -> PandasDataFrame:
+    async def _fold(self, *split_tasks: asyncio.Task) -> TResult:
         """
         Sub-problem result aggregator.
         """
 
-    async def _run(self, **kwargs) -> PandasDataFrame:
+    async def _run(self, **kwargs) -> TResult:
         splits = await self._split(**kwargs)
         tasks = [asyncio.create_task(split.run(**kwargs)) for split in splits]
 

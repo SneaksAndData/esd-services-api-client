@@ -21,8 +21,8 @@ import asyncio
 from typing import Dict, Union, Type
 import azure.core.exceptions
 import deltalake
-from pandas import DataFrame as PandasDataFrame
 
+from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
 from esd_services_api_client.nexus.exceptions.input_reader_error import (
     FatalInputReaderError,
     TransientInputReaderError,
@@ -45,12 +45,14 @@ def resolve_reader_exc_type(
             return FatalInputReaderError
 
 
-async def resolve_readers(*readers: InputReader) -> Dict[str, PandasDataFrame]:
+async def resolve_readers(
+    *readers: InputReader[TPayload, TResult]
+) -> Dict[str, TResult]:
     """
     Concurrently resolve `data` property of all readers by invoking their `read` method.
     """
 
-    def get_result(alias: str, completed_task: asyncio.Task) -> PandasDataFrame:
+    def get_result(alias: str, completed_task: asyncio.Task) -> TResult:
         reader_exc = completed_task.exception()
         if reader_exc:
             raise resolve_reader_exc_type(reader_exc)(alias, reader_exc)

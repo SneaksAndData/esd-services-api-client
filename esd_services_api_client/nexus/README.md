@@ -38,7 +38,6 @@ from esd_services_api_client.nexus.configurations.algorithm_configuration import
 from esd_services_api_client.nexus.core.app_core import Nexus
 from esd_services_api_client.nexus.algorithms import MinimalisticAlgorithm
 from esd_services_api_client.nexus.input import InputReader, InputProcessor
-from pandas import DataFrame as PandasDataFrame
 
 from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
 
@@ -126,7 +125,7 @@ class MockRequestHandler(BaseHTTPRequestHandler):
         pass
 
 
-class XReader(InputReader[MyAlgorithmPayload]):
+class XReader(InputReader[MyAlgorithmPayload, pandas.DataFrame]):
     async def _context_open(self):
         pass
 
@@ -152,7 +151,7 @@ class XReader(InputReader[MyAlgorithmPayload]):
             *readers
         )
 
-    async def _read_input(self) -> PandasDataFrame:
+    async def _read_input(self) -> pandas.DataFrame:
         self._logger.info(
             "Payload: {payload}; Socket path: {socket_path}",
             payload=self._payload.to_json(),
@@ -161,7 +160,7 @@ class XReader(InputReader[MyAlgorithmPayload]):
         return pandas.DataFrame([{"a": 1, "b": 2}, {"a": 2, "b": 3}])
 
 
-class YReader(InputReader[MyAlgorithmPayload2]):
+class YReader(InputReader[MyAlgorithmPayload2, pandas.DataFrame]):
     async def _context_open(self):
         pass
 
@@ -187,7 +186,7 @@ class YReader(InputReader[MyAlgorithmPayload2]):
             *readers
         )
 
-    async def _read_input(self) -> PandasDataFrame:
+    async def _read_input(self) -> pandas.DataFrame:
         self._logger.info(
             "Payload: {payload}; Socket path: {socket_path}",
             payload=self._payload.to_json(),
@@ -222,7 +221,7 @@ class MyInputProcessor(InputProcessor):
 
         self.conf = my_conf
 
-    async def process_input(self, **_) -> Dict[str, PandasDataFrame]:
+    async def process_input(self, **_) -> Dict[str, pandas.DataFrame]:
         self._logger.info("Config: {config}", config=self.conf.to_json())
         inputs = await self._read_input()
         return {
@@ -231,7 +230,7 @@ class MyInputProcessor(InputProcessor):
         }
 
 
-class MyAlgorithm(MinimalisticAlgorithm):
+class MyAlgorithm(MinimalisticAlgorithm[MyAlgorithmPayload, pandas.DataFrame]):
     async def _context_open(self):
         pass
 
@@ -242,7 +241,7 @@ class MyAlgorithm(MinimalisticAlgorithm):
     def __init__(self, metrics_provider: MetricsProvider, logger_factory: LoggerFactory, input_processor: MyInputProcessor):
         super().__init__(metrics_provider, logger_factory, input_processor)
 
-    async def _run(self, x_ready: PandasDataFrame, y_ready: PandasDataFrame, **kwargs) -> PandasDataFrame:
+    async def _run(self, x_ready: pandas.DataFrame, y_ready: pandas.DataFrame, **kwargs) -> pandas.DataFrame:
         return pandas.concat([x_ready, y_ready])
 
 
