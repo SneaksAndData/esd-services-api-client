@@ -1,6 +1,7 @@
 """
  Base classes for all objects used by Nexus.
 """
+import re
 
 #  Copyright (c) 2023. ECCO Sneaks & Data
 #
@@ -67,3 +68,14 @@ class NexusObject(Generic[TPayload, TResult], ABC):
         """
         Optional actions to perform on context closure.
         """
+
+    @classmethod
+    def alias(cls) -> str:
+        """
+        Alias to identify this reader's output
+        """
+        return re.sub(
+            r"(?<!^)(?=[A-Z])",
+            "_",
+            cls.__name__.lower().replace("reader", "").replace("processor", ""),
+        )
