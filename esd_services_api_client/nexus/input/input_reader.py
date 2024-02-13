@@ -18,7 +18,6 @@ import functools
 #  limitations under the License.
 #
 
-import re
 from abc import abstractmethod
 from functools import partial
 from typing import Optional
