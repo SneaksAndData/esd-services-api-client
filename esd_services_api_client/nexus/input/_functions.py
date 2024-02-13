@@ -64,7 +64,8 @@ async def resolve_readers(
             return await instance.read()
 
     read_tasks: dict[str, asyncio.Task] = {
-        reader.alias: asyncio.create_task(_read(reader)) for reader in readers
+        reader.__class__.alias(): asyncio.create_task(_read(reader))
+        for reader in readers
     }
     await asyncio.wait(fs=read_tasks.values())
 

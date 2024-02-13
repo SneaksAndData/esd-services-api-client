@@ -57,16 +57,6 @@ class InputReader(NexusObject[TPayload, TResult]):
         self._readers = readers
         self._payload = payload
 
-    @property
-    def alias(self) -> str:
-        """
-        Alias to identify this reader's output
-        """
-        if self.socket:
-            return self.socket.alias
-
-        return self._metric_name
-
     @functools.cached_property
     def data(self) -> Optional[TResult]:
         """
@@ -81,16 +71,8 @@ class InputReader(NexusObject[TPayload, TResult]):
         """
 
     @property
-    def _metric_name(self) -> str:
-        return re.sub(
-            r"(?<!^)(?=[A-Z])",
-            "_",
-            self.__class__.__name__.lower().replace("reader", ""),
-        )
-
-    @property
     def _metric_tags(self) -> dict[str, str]:
-        return {"entity": self._metric_name}
+        return {"entity": self.__class__.alias()}
 
     async def read(self) -> TResult:
         """
@@ -101,7 +83,7 @@ class InputReader(NexusObject[TPayload, TResult]):
             metric_name="read_input",
             on_finish_message_template="Finished reading {entity} from path {data_path} in {elapsed:.2f}s seconds",
             template_args={
-                "entity": self._metric_name.upper(),
+                "entity": self.__class__.alias().upper(),
             }
             | {"data_path": self.socket.data_path}
             if self.socket
