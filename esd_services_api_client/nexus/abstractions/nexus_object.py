@@ -30,6 +30,9 @@ from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFact
 
 
 class AlgorithmResult(ABC):
+    """
+     Interface for algorithm run result. You can store arbitrary data here, but `dataframe` method must be implemented.
+    """
     @abstractmethod
     def dataframe(self) -> Union[pandas.DataFrame, polars.DataFrame]:
         """
