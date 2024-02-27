@@ -48,7 +48,7 @@ class AlgorithmResult(ABC):
 
 TPayload = TypeVar("TPayload")  # pylint: disable=C0103
 TResult = TypeVar(  # pylint: disable=C0103
-    "TResult", pandas.DataFrame, polars.DataFrame, AlgorithmResult
+    "TResult", pandas.DataFrame, polars.DataFrame
 )
 
 
