@@ -28,12 +28,13 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
     TResult,
+    AlgorithmResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 
 
-class BaselineAlgorithm(NexusObject[TPayload, TResult]):
+class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
     """
     Base class for all algorithm implementations.
     """
@@ -48,17 +49,19 @@ class BaselineAlgorithm(NexusObject[TPayload, TResult]):
         self._input_processors = input_processors
 
     @abstractmethod
-    async def _run(self, **kwargs) -> TResult:
+    async def _run(self, **kwargs) -> AlgorithmResult:
         """
         Core logic for this algorithm. Implementing this method is mandatory.
         """
 
-    async def run(self, **kwargs) -> TResult:
+    async def run(self, **kwargs) -> AlgorithmResult:
         """
         Coroutine that executes the algorithm logic.
         """
 
-        async def _process(processor: InputProcessor) -> dict[str, TResult]:
+        async def _process(
+            processor: InputProcessor[TPayload, TResult]
+        ) -> dict[str, TResult]:
             async with processor as instance:
                 return await instance.process_input(**kwargs)
 

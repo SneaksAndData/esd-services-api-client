@@ -24,14 +24,17 @@ from adapta.metrics import MetricsProvider
 from injector import inject
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
+from esd_services_api_client.nexus.abstractions.nexus_object import (
+    TPayload,
+    AlgorithmResult,
+)
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
 from esd_services_api_client.nexus.input import InputProcessor
 
 
-class RecursiveAlgorithm(BaselineAlgorithm[TPayload, TResult]):
+class RecursiveAlgorithm(BaselineAlgorithm[TPayload]):
     """
     Recursive algorithm base class.
     """
@@ -49,8 +52,8 @@ class RecursiveAlgorithm(BaselineAlgorithm[TPayload, TResult]):
     async def _is_finished(self, **kwargs) -> bool:
         """ """
 
-    async def run(self, **kwargs) -> TResult:
+    async def run(self, **kwargs) -> AlgorithmResult:
         result = await self._run(**kwargs)
-        if self._is_finished(**result):
+        if self._is_finished(**result.to_kwargs()):
             return result
-        return await self.run(**result)
+        return await self.run(**result.to_kwargs())

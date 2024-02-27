@@ -20,7 +20,7 @@ import re
 
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Union, Any
 
 import pandas
 import polars
@@ -29,9 +29,23 @@ from adapta.metrics import MetricsProvider
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
 
+class AlgorithmResult(ABC):
+    @abstractmethod
+    def dataframe(self) -> Union[pandas.DataFrame, polars.DataFrame]:
+        """
+        Returns the main result dataframe. This will be written to the linked output storage.
+        """
+
+    @abstractmethod
+    def to_kwargs(self) -> dict[str, Any]:
+        """
+        Convert result to kwargs for the next iteration (for recursive algorithms)
+        """
+
+
 TPayload = TypeVar("TPayload")  # pylint: disable=C0103
 TResult = TypeVar(  # pylint: disable=C0103
-    "TResult", pandas.DataFrame, polars.DataFrame
+    "TResult", pandas.DataFrame, polars.DataFrame, AlgorithmResult
 )
 
 
