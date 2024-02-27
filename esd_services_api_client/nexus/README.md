@@ -20,7 +20,7 @@ import socketserver
 import threading
 from dataclasses import dataclass
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import pandas
 from adapta.metrics import MetricsProvider
@@ -36,6 +36,7 @@ from esd_services_api_client.nexus.configurations.algorithm_configuration import
     NexusConfiguration,
 )
 from esd_services_api_client.nexus.core.app_core import Nexus
+from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
 from esd_services_api_client.nexus.algorithms import MinimalisticAlgorithm
 from esd_services_api_client.nexus.input import InputReader, InputProcessor
 
@@ -229,8 +230,19 @@ class MyInputProcessor(InputProcessor):
             "y_ready": inputs["y"].assign(c=[-1, 1]),
         }
 
+@dataclass
+class MyResult(AlgorithmResult):
+    x: pandas.DataFrame
+    y: pandas.DataFrame
 
-class MyAlgorithm(MinimalisticAlgorithm[MyAlgorithmPayload, pandas.DataFrame]):
+    def dataframe(self) -> pandas.DataFrame:
+        return pandas.concat([self.x, self.y])
+
+    def to_kwargs(self) -> dict[str, Any]:
+        pass
+    
+    
+class MyAlgorithm(MinimalisticAlgorithm[MyAlgorithmPayload]):
     async def _context_open(self):
         pass
 
@@ -241,8 +253,8 @@ class MyAlgorithm(MinimalisticAlgorithm[MyAlgorithmPayload, pandas.DataFrame]):
     def __init__(self, metrics_provider: MetricsProvider, logger_factory: LoggerFactory, input_processor: MyInputProcessor):
         super().__init__(metrics_provider, logger_factory, input_processor)
 
-    async def _run(self, x_ready: pandas.DataFrame, y_ready: pandas.DataFrame, **kwargs) -> pandas.DataFrame:
-        return pandas.concat([x_ready, y_ready])
+    async def _run(self, x_ready: pandas.DataFrame, y_ready: pandas.DataFrame, **kwargs) -> MyResult:
+        return MyResult(x_ready, y_ready)
 
 
 async def main():

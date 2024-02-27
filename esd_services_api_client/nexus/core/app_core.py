@@ -33,8 +33,6 @@ from adapta.storage.blob.base import StorageClient
 from adapta.storage.models.format import DataFrameJsonSerializationFormat
 from injector import Injector
 
-from pandas import DataFrame as PandasDataFrame
-
 import esd_services_api_client.nexus.exceptions
 from esd_services_api_client.crystal import (
     add_crystal_args,
@@ -43,7 +41,8 @@ from esd_services_api_client.crystal import (
     AlgorithmRunResult,
     CrystalEntrypointArguments,
 )
-from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
+from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
+from esd_services_api_client.nexus.algorithms import (
     BaselineAlgorithm,
 )
 from esd_services_api_client.nexus.configurations.algorithm_configuration import (
@@ -181,7 +180,7 @@ class Nexus:
 
     async def _submit_result(
         self,
-        result: Optional[PandasDataFrame] = None,
+        result: Optional[AlgorithmResult] = None,
         ex: Optional[BaseException] = None,
     ) -> None:
         @backoff.on_exception(
@@ -193,7 +192,7 @@ class Nexus:
             max_time=10,
             raise_on_giveup=True,
         )
-        def save_result(data: PandasDataFrame) -> str:
+        def save_result(data: AlgorithmResult) -> str:
             """
             Saves blob and returns the uri
 
@@ -209,7 +208,7 @@ class Nexus:
                 data_path=output_path, alias="output", data_format="null"
             ).parse_data_path()
             storage_client.save_data_as_blob(
-                data=data,
+                data=data.dataframe(),
                 blob_path=blob_path,
                 serialization_format=DataFrameJsonSerializationFormat,
                 overwrite=True,

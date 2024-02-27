@@ -21,13 +21,16 @@
 import asyncio
 from abc import ABC, abstractmethod
 
-from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
+from esd_services_api_client.nexus.abstractions.nexus_object import (
+    TPayload,
+    AlgorithmResult,
+)
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
 
 
-class DistributedAlgorithm(BaselineAlgorithm[TPayload, TResult], ABC):
+class DistributedAlgorithm(BaselineAlgorithm[TPayload], ABC):
     """
     Distributed algorithm base class.
     """
@@ -39,12 +42,12 @@ class DistributedAlgorithm(BaselineAlgorithm[TPayload, TResult], ABC):
         """
 
     @abstractmethod
-    async def _fold(self, *split_tasks: asyncio.Task) -> TResult:
+    async def _fold(self, *split_tasks: asyncio.Task) -> AlgorithmResult:
         """
         Sub-problem result aggregator.
         """
 
-    async def _run(self, **kwargs) -> TResult:
+    async def _run(self, **kwargs) -> AlgorithmResult:
         splits = await self._split(**kwargs)
         tasks = [asyncio.create_task(split.run(**kwargs)) for split in splits]
 

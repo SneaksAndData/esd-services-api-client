@@ -23,14 +23,14 @@ from adapta.metrics import MetricsProvider
 from injector import inject
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
+from esd_services_api_client.nexus.abstractions.nexus_object import TPayload
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import (
     BaselineAlgorithm,
 )
 from esd_services_api_client.nexus.input import InputProcessor
 
 
-class MinimalisticAlgorithm(BaselineAlgorithm[TPayload, TResult], ABC):
+class MinimalisticAlgorithm(BaselineAlgorithm[TPayload], ABC):
     """
     Simple algorithm base class.
     """
