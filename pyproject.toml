@@ -43,8 +43,6 @@ azure = [
 
 nexus = [
     'injector',
-    'httpx'
-]
-nexus-polars = [
-    "polars"
+    'httpx',
+    'polars'
 ]
