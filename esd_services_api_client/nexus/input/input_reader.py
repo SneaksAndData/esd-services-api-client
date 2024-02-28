@@ -82,7 +82,7 @@ class InputReader(NexusObject[TPayload, TResult]):
             metric_name="read_input",
             on_finish_message_template="Finished reading {entity} from path {data_path} in {elapsed:.2f}s seconds"
             if self.socket
-            else "Finished reading {entity} from path {data_path} in {elapsed:.2f}s seconds",
+            else "Finished reading {entity} in {elapsed:.2f}s seconds",
             template_args={
                 "entity": self.__class__.alias().upper(),
             }
