@@ -55,7 +55,7 @@ async def resolve_readers(
     def get_result(alias: str, completed_task: asyncio.Task) -> TResult:
         reader_exc = completed_task.exception()
         if reader_exc:
-            raise resolve_reader_exc_type(reader_exc)(alias, reader_exc)
+            raise resolve_reader_exc_type(reader_exc)(alias, reader_exc) from reader_exc
 
         return completed_task.result()
 
