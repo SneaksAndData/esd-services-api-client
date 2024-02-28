@@ -84,9 +84,7 @@ class InputReader(NexusObject[TPayload, TResult]):
             template_args={
                 "entity": self.__class__.alias().upper(),
             }
-            | {"data_path": self.socket.data_path}
-            if self.socket
-            else {},
+            | ({"data_path": self.socket.data_path} if self.socket else {}),
         )
         async def _read(**_) -> TResult:
             if not self._data:
