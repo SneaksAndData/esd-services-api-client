@@ -18,7 +18,7 @@
 #
 
 import asyncio
-from typing import Dict, Union, Type
+from typing import Union, Type
 import azure.core.exceptions
 import deltalake
 
@@ -47,7 +47,7 @@ def resolve_reader_exc_type(
 
 async def resolve_readers(
     *readers: InputReader[TPayload, TResult]
-) -> Dict[str, TResult]:
+) -> dict[str, TResult]:
     """
     Concurrently resolve `data` property of all readers by invoking their `read` method.
     """

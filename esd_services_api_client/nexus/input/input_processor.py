@@ -18,7 +18,6 @@
 #
 
 from abc import abstractmethod
-from typing import Dict
 
 from adapta.metrics import MetricsProvider
 
@@ -48,11 +47,11 @@ class InputProcessor(NexusObject[TPayload, TResult]):
         self._readers = readers
         self._payload = payload
 
-    async def _read_input(self) -> Dict[str, TResult]:
+    async def _read_input(self) -> dict[str, TResult]:
         return await resolve_readers(*self._readers)
 
     @abstractmethod
-    async def process_input(self, **kwargs) -> Dict[str, TResult]:
+    async def process_input(self, **kwargs) -> dict[str, TResult]:
         """
         Input processing logic. Implement this method to prepare data for your algorithm code.
         """
