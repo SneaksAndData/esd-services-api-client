@@ -89,7 +89,7 @@ class InputReader(NexusObject[TPayload, TResult]):
             | ({"data_path": self.socket.data_path} if self.socket else {}),
         )
         async def _read(**_) -> TResult:
-            if not self._data:
+            if self._data is None:
                 self._data = await self._read_input()
 
             return self._data
