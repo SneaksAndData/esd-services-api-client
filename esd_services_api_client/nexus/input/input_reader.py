@@ -1,7 +1,6 @@
 """
  Input reader.
 """
-import functools
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
