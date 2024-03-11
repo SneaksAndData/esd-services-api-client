@@ -1,7 +1,6 @@
 """
  Input reader.
 """
-import functools
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
@@ -56,13 +55,6 @@ class InputReader(NexusObject[TPayload, TResult]):
         self._readers = readers
         self._payload = payload
 
-    @functools.cached_property
-    def data(self) -> Optional[TResult]:
-        """
-        Data read by this reader.
-        """
-        return self._data
-
     @abstractmethod
     async def _read_input(self) -> TResult:
         """
@@ -89,14 +81,14 @@ class InputReader(NexusObject[TPayload, TResult]):
             | ({"data_path": self.socket.data_path} if self.socket else {}),
         )
         async def _read(**_) -> TResult:
-            if self._data is None:
-                self._data = await self._read_input()
+            return await self._read_input()
 
-            return self._data
+        if self._data is None:
+            self._data = await partial(
+                _read,
+                metric_tags=self._metric_tags,
+                metrics_provider=self._metrics_provider,
+                logger=self._logger,
+            )()
 
-        return await partial(
-            _read,
-            metric_tags=self._metric_tags,
-            metrics_provider=self._metrics_provider,
-            logger=self._logger,
-        )()
+        return self._data
