@@ -30,6 +30,9 @@ from esd_services_api_client.nexus.exceptions.input_reader_error import (
 from esd_services_api_client.nexus.input.input_reader import InputReader
 
 
+_reader_cache = {}
+
+
 def resolve_reader_exc_type(
     ex: BaseException,
 ) -> Union[Type[FatalInputReaderError], Type[TransientInputReaderError]]:
@@ -61,12 +64,26 @@ async def resolve_readers(
 
     async def _read(input_reader: InputReader):
         async with input_reader as instance:
-            return await instance.read()
+            result = await instance.read()
+            _reader_cache[input_reader.__class__.alias()] = result
+        return result
+
+    cached = {
+        reader.__class__.alias(): reader.data
+        for reader in readers
+        if reader.__class__.alias() in _reader_cache
+    }
+    if len(cached) == len(readers):
+        return cached
 
     read_tasks: dict[str, asyncio.Task] = {
         reader.__class__.alias(): asyncio.create_task(_read(reader))
         for reader in readers
+        if reader.__class__.alias() not in _reader_cache
     }
-    await asyncio.wait(fs=read_tasks.values())
+    if len(read_tasks) > 0:
+        await asyncio.wait(fs=read_tasks.values())
 
-    return {alias: get_result(alias, task) for alias, task in read_tasks.items()}
+    return {
+        alias: get_result(alias, task) for alias, task in read_tasks.items()
+    } | cached

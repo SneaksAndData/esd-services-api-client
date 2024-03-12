@@ -1,7 +1,6 @@
 """
  Base algorithm
 """
-import asyncio
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
@@ -20,18 +19,21 @@ import asyncio
 
 
 from abc import abstractmethod
-from functools import reduce
+from functools import reduce, partial
 
 from adapta.metrics import MetricsProvider
+from adapta.utils.decorators import run_time_metrics_async
 
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
-    TResult,
     AlgorithmResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.input.input_processor import InputProcessor
+from esd_services_api_client.nexus.input.input_processor import (
+    InputProcessor,
+    resolve_processors,
+)
 
 
 class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
@@ -54,24 +56,31 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         Core logic for this algorithm. Implementing this method is mandatory.
         """
 
+    @property
+    def _metric_tags(self) -> dict[str, str]:
+        return {"algorithm": self.__class__.alias()}
+
     async def run(self, **kwargs) -> AlgorithmResult:
         """
         Coroutine that executes the algorithm logic.
         """
 
-        async def _process(
-            processor: InputProcessor[TPayload, TResult]
-        ) -> dict[str, TResult]:
-            async with processor as instance:
-                return await instance.process_input(**kwargs)
+        @run_time_metrics_async(
+            metric_name="algorthm_run",
+            on_finish_message_template="Finished running {algorithm} in {elapsed:.2f}s seconds",
+            template_args={
+                "algorithm": self.__class__.alias().upper(),
+            },
+        )
+        async def _measured_run(**run_args):
+            return await self._run(**run_args)
 
-        process_tasks: dict[str, asyncio.Task] = {
-            input_processor.__class__.__name__.lower(): asyncio.create_task(
-                _process(input_processor)
-            )
-            for input_processor in self._input_processors
-        }
-        await asyncio.wait(fs=process_tasks.values())
-        results = [task.result() for task in process_tasks.values()]
+        results = await resolve_processors(*self._input_processors, **kwargs)
 
-        return await self._run(**reduce(lambda a, b: a | b, results))
+        return await partial(
+            _measured_run,
+            **reduce(lambda a, b: a | b, [result for _, result in results.items()]),
+            metric_tags=self._metric_tags,
+            metrics_provider=self._metrics_provider,
+            logger=self._logger,
+        )()

@@ -1,7 +1,6 @@
 """
  Socket provider for all data sockets used by algorithms.
 """
-import json
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
@@ -18,9 +17,14 @@ import json
 #  limitations under the License.
 #
 
-from typing import final, Optional
+import json
+from typing import final
 
 from adapta.process_communication import DataSocket
+
+from esd_services_api_client.nexus.exceptions.startup_error import (
+    FatalStartupConfigurationError,
+)
 
 
 @final
@@ -32,11 +36,16 @@ class ExternalSocketProvider:
     def __init__(self, *sockets: DataSocket):
         self._sockets = {socket.alias: socket for socket in sockets}
 
-    def socket(self, name: str) -> Optional[DataSocket]:
+    def socket(self, name: str) -> DataSocket:
         """
         Retrieve a socket if it exists.
         """
-        return self._sockets.get(name, None)
+        if name in self._sockets:
+            return self._sockets[name]
+
+        raise FatalStartupConfigurationError(
+            missing_entry=f"socket with alias `{name}`"
+        )
 
     @classmethod
     def from_serialized(cls, socket_list_ser: str) -> "ExternalSocketProvider":

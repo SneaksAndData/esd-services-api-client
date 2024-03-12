@@ -1,5 +1,5 @@
 """
- Custom exceptions.
+ App startup exceptions.
 """
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
