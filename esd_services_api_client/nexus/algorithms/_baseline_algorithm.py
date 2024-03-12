@@ -27,11 +27,13 @@ from adapta.metrics import MetricsProvider
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
-    TResult,
     AlgorithmResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.input.input_processor import InputProcessor
+from esd_services_api_client.nexus.input.input_processor import (
+    InputProcessor,
+    resolve_processors,
+)
 
 
 class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
@@ -59,19 +61,8 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         Coroutine that executes the algorithm logic.
         """
 
-        async def _process(
-            processor: InputProcessor[TPayload, TResult]
-        ) -> dict[str, TResult]:
-            async with processor as instance:
-                return await instance.process_input(**kwargs)
+        results = await resolve_processors(*self._input_processors, **kwargs)
 
-        process_tasks: dict[str, asyncio.Task] = {
-            input_processor.__class__.__name__.lower(): asyncio.create_task(
-                _process(input_processor)
-            )
-            for input_processor in self._input_processors
-        }
-        await asyncio.wait(fs=process_tasks.values())
-        results = [task.result() for task in process_tasks.values()]
-
-        return await self._run(**reduce(lambda a, b: a | b, results))
+        return await self._run(
+            **reduce(lambda a, b: a | b, [result for _, result in results.items()])
+        )

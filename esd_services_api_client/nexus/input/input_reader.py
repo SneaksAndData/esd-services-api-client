@@ -55,6 +55,10 @@ class InputReader(NexusObject[TPayload, TResult]):
         self._readers = readers
         self._payload = payload
 
+    @property
+    def data(self) -> Optional[TResult]:
+        return self._data
+
     @abstractmethod
     async def _read_input(self) -> TResult:
         """
@@ -71,7 +75,7 @@ class InputReader(NexusObject[TPayload, TResult]):
         """
 
         @run_time_metrics_async(
-            metric_name="read_input",
+            metric_name="input_read",
             on_finish_message_template="Finished reading {entity} from path {data_path} in {elapsed:.2f}s seconds"
             if self.socket
             else "Finished reading {entity} in {elapsed:.2f}s seconds",
