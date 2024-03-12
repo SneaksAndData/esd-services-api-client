@@ -20,9 +20,10 @@ import asyncio
 
 
 from abc import abstractmethod
-from functools import reduce
+from functools import reduce, partial
 
 from adapta.metrics import MetricsProvider
+from adapta.utils.decorators import run_time_metrics_async
 
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
@@ -56,13 +57,31 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         Core logic for this algorithm. Implementing this method is mandatory.
         """
 
+    @property
+    def _metric_tags(self) -> dict[str, str]:
+        return {"algorithm": self.__class__.alias()}
+
     async def run(self, **kwargs) -> AlgorithmResult:
         """
         Coroutine that executes the algorithm logic.
         """
 
+        @run_time_metrics_async(
+            metric_name="algorthm_run",
+            on_finish_message_template="Finished running {algorithm} in {elapsed:.2f}s seconds",
+            template_args={
+                "algorithm": self.__class__.alias().upper(),
+            },
+        )
+        async def _measured_run(**run_args):
+            return await self._run(**run_args)
+
         results = await resolve_processors(*self._input_processors, **kwargs)
 
-        return await self._run(
-            **reduce(lambda a, b: a | b, [result for _, result in results.items()])
-        )
+        return await partial(
+            _measured_run,
+            **reduce(lambda a, b: a | b, [result for _, result in results.items()]),
+            metric_tags=self._metric_tags,
+            metrics_provider=self._metrics_provider,
+            logger=self._logger,
+        )()

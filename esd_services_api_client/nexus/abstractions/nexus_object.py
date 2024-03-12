@@ -95,5 +95,8 @@ class NexusObject(Generic[TPayload, TResult], ABC):
         return re.sub(
             r"(?<!^)(?=[A-Z])",
             "_",
-            cls.__name__.lower().replace("reader", "").replace("processor", ""),
+            cls.__name__.lower()
+            .replace("reader", "")
+            .replace("processor", "")
+            .replace("algorithm", ""),
         )
