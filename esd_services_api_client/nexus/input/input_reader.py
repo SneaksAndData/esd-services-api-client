@@ -57,6 +57,9 @@ class InputReader(NexusObject[TPayload, TResult]):
 
     @property
     def data(self) -> Optional[TResult]:
+        """
+        Data returned by this reader
+        """
         return self._data
 
     @abstractmethod
@@ -71,7 +74,7 @@ class InputReader(NexusObject[TPayload, TResult]):
 
     async def read(self) -> TResult:
         """
-        Coroutine that reads the data from external store and converts it to a dataframe.
+        Coroutine that reads the data from external store and converts it to a dataframe, or generates data locally. Do not override this method.
         """
 
         @run_time_metrics_async(

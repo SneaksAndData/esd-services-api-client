@@ -1,7 +1,6 @@
 """
  Base algorithm
 """
-import asyncio
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #

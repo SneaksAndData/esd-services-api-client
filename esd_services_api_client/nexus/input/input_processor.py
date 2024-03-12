@@ -62,6 +62,9 @@ class InputProcessor(NexusObject[TPayload, TResult]):
 
     @property
     def result(self) -> dict[str, TResult]:
+        """
+        Data returned by this processor
+        """
         return self._result
 
     @abstractmethod
@@ -76,10 +79,7 @@ class InputProcessor(NexusObject[TPayload, TResult]):
 
     async def process_input(self, **kwargs) -> dict[str, TResult]:
         """
-        Input processing logic. Implement this method to prepare data for your algorithm code.
-        """
-        """
-        Coroutine that reads the data from external store and converts it to a dataframe.
+        Input processing coroutine. Do not override this method.
         """
 
         @run_time_metrics_async(

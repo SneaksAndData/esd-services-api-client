@@ -1,7 +1,6 @@
 """
  Socket provider for all data sockets used by algorithms.
 """
-import json
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
@@ -18,7 +17,8 @@ import json
 #  limitations under the License.
 #
 
-from typing import final, Optional
+import json
+from typing import final
 
 from adapta.process_communication import DataSocket
 
