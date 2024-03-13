@@ -25,7 +25,7 @@ from typing import final, Type
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import Module, singleton, provider, Injector
+from injector import Module, singleton, provider
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
