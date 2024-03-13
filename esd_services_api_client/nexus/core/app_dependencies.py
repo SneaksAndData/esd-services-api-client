@@ -111,7 +111,9 @@ class QueryEnabledStoreModule(Module):
         """
         DI factory method.
         """
-        return QueryEnabledStore.from_string(os.getenv("NEXUS__QES_CONNECTION_STRING"))
+        return QueryEnabledStore.from_string(
+            os.getenv("NEXUS__QES_CONNECTION_STRING"), lazy_init=False
+        )
 
 
 @final
