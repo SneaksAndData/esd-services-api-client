@@ -25,7 +25,7 @@ from typing import final, Type
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import Module, singleton, provider
+from injector import Module, singleton, provider, Injector
 
 from esd_services_api_client.crystal import CrystalConnector
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
@@ -111,7 +111,9 @@ class QueryEnabledStoreModule(Module):
         """
         DI factory method.
         """
-        return QueryEnabledStore.from_string(os.getenv("NEXUS__QES_CONNECTION_STRING"))
+        return QueryEnabledStore.from_string(
+            os.getenv("NEXUS__QES_CONNECTION_STRING"), lazy_init=False
+        )
 
 
 @final

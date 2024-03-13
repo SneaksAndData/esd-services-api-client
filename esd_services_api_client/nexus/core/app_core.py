@@ -31,6 +31,7 @@ import azure.core.exceptions
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.models.format import DataFrameJsonSerializationFormat
+from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Injector
 
 import esd_services_api_client.nexus.exceptions
@@ -264,6 +265,10 @@ class Nexus:
             )
             if len(on_complete_tasks) > 0:
                 await asyncio.wait(on_complete_tasks)
+
+            # dispose of QES instance gracefully as it might hold open connections
+            qes = self._injector.get(QueryEnabledStore)
+            qes.close()
 
     @classmethod
     def create(cls) -> "Nexus":
