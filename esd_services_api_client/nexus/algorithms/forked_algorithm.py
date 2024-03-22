@@ -46,6 +46,21 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
     with different configurations as specified in fork class implementation.
 
     Forked algorithm only awaits scheduling of forked runs, but never their results.
+
+     Q: How do I spawn a ForkedAlgorithm run as a remote algorithm w/o ending in an infinite loop?
+     A: Provide class names for forks from your algorithm configuration and construct forks with locate(fork_class)(**kwargs) calls.
+
+     Q: Can I build execution trees with this?
+     A: Yes, they will look like this (F(N) - Forked with N forks):
+
+     graph TB
+        F3["F(3)"] --> F2["F(2)"]
+        F3 --> F0["F(0)"]
+        F3 --> F1["F(1)"]
+        F2 --> F1_1["F(1)"]
+        F2 --> F0_1["F(0)"]
+        F1 --> F0_2["F(0)"]
+        F1_1 --> F0_3["F(0)"]
     """
 
     def __init__(
@@ -57,11 +72,6 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
     ):
         super().__init__(metrics_provider, logger_factory)
         self._input_processors = input_processors
-        if len(forks) > 0:
-            raise FatalAlgorithmConfigurationError(
-                message="Forked algorithm must define one or more forks",
-                algorithm_class=self.__class__,
-            )
         self._forks = forks
 
     @abstractmethod
@@ -88,6 +98,16 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         )
         async def _measured_run(**run_args) -> AlgorithmResult:
             return await self._run(**run_args)
+
+        if len(self._forks) > 0:
+            self._logger.info(
+                "This algorithm has forks attached: {forks}. They will be executed after the main run",
+                forks=",".join([fork.alias() for fork in self._forks]),
+            )
+        else:
+            self._logger.info(
+                "This algorithm supports forks but none were injected. Proceeding with a main run only"
+            )
 
         results = await resolve_processors(*self._input_processors, **kwargs)
 
