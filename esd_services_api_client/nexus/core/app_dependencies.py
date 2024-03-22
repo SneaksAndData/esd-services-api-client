@@ -28,6 +28,7 @@ from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Module, singleton, provider
 
 from esd_services_api_client.crystal import CrystalConnector
+from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.abstractions.socket_provider import (
     ExternalSocketProvider,
@@ -166,6 +167,21 @@ class ExternalSocketsModule(Module):
 
 
 @final
+class CacheModule(Module):
+    """
+    Storage client module.
+    """
+
+    @singleton
+    @provider
+    def provide(self) -> InputCache:
+        """
+        Dependency provider.
+        """
+        return InputCache()
+
+
+@final
 class ServiceConfigurator:
     """
     Runtime DI support.
@@ -178,6 +194,7 @@ class ServiceConfigurator:
             QueryEnabledStoreModule(),
             StorageClientModule(),
             ExternalSocketsModule(),
+            CacheModule(),
         ]
 
     @property
