@@ -1,8 +1,6 @@
 """
  Base classes for all objects used by Nexus.
 """
-import re
-
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +18,7 @@ import re
 
 
 from abc import ABC, abstractmethod
+import re
 from typing import Generic, TypeVar, Union, Any
 
 import pandas

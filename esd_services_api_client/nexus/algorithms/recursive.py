@@ -23,6 +23,7 @@ from abc import abstractmethod
 from adapta.metrics import MetricsProvider
 from injector import inject
 
+from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     TPayload,
@@ -45,8 +46,11 @@ class RecursiveAlgorithm(BaselineAlgorithm[TPayload]):
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
         *input_processors: InputProcessor,
+        cache: InputCache,
     ):
-        super().__init__(metrics_provider, logger_factory, *input_processors)
+        super().__init__(
+            metrics_provider, logger_factory, *input_processors, cache=cache
+        )
 
     @abstractmethod
     async def _is_finished(self, **kwargs) -> bool:

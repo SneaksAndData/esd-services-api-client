@@ -24,6 +24,7 @@ from functools import reduce, partial
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
 
+from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
@@ -32,7 +33,6 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input.input_processor import (
     InputProcessor,
-    resolve_processors,
 )
 
 
@@ -46,9 +46,11 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
         *input_processors: InputProcessor,
+        cache: InputCache,
     ):
         super().__init__(metrics_provider, logger_factory)
         self._input_processors = input_processors
+        self._cache = cache
 
     @abstractmethod
     async def _run(self, **kwargs) -> AlgorithmResult:
@@ -75,7 +77,7 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         async def _measured_run(**run_args):
             return await self._run(**run_args)
 
-        results = await resolve_processors(*self._input_processors, **kwargs)
+        results = await self._cache.resolve(*self._input_processors, **kwargs)
 
         return await partial(
             _measured_run,
