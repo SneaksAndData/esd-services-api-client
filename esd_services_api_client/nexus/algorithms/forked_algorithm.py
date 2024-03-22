@@ -19,11 +19,12 @@
 
 import asyncio
 from abc import abstractmethod
-from functools import reduce, partial
+from functools import partial
 
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
 
+from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
@@ -33,7 +34,6 @@ from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFact
 from esd_services_api_client.nexus.algorithms._remote_algorithm import RemoteAlgorithm
 from esd_services_api_client.nexus.input.input_processor import (
     InputProcessor,
-    resolve_processors,
 )
 
 
@@ -66,10 +66,12 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         logger_factory: LoggerFactory,
         forks: list[RemoteAlgorithm],
         *input_processors: InputProcessor,
+        cache: InputCache,
     ):
         super().__init__(metrics_provider, logger_factory)
         self._input_processors = input_processors
         self._forks = forks
+        self._cache = cache
 
     @abstractmethod
     async def _run(self, **kwargs) -> AlgorithmResult:
@@ -106,11 +108,11 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
                 "This algorithm supports forks but none were injected. Proceeding with a main run only"
             )
 
-        results = await resolve_processors(*self._input_processors, **kwargs)
+        results = await self._cache.resolve(*self._input_processors, **kwargs)
 
         run_result = await partial(
             _measured_run,
-            **reduce(lambda a, b: a | b, [result for _, result in results.items()]),
+            **results,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
             logger=self._logger,

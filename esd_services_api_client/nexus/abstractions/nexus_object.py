@@ -92,11 +92,13 @@ class NexusObject(Generic[TPayload, TResult], ABC):
         """
         Alias to identify this reader's output
         """
-        return snakecase(re.sub(
-            r"(?<!^)(?=[A-Z])",
-            "_",
-            cls.__name__.lower()
-            .replace("reader", "")
-            .replace("processor", "")
-            .replace("algorithm", ""),
-        ))
+        return snakecase(
+            re.sub(
+                r"(?<!^)(?=[A-Z])",
+                "_",
+                cls.__name__.lower()
+                .replace("reader", "")
+                .replace("processor", "")
+                .replace("algorithm", ""),
+            )
+        )

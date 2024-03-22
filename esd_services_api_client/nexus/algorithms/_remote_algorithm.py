@@ -19,12 +19,13 @@
 
 
 from abc import abstractmethod
-from functools import reduce, partial
+from functools import partial
 
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
 
 from esd_services_api_client.crystal import CrystalConnector, AlgorithmConfiguration
+from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
 from esd_services_api_client.nexus.abstractions.nexus_object import (
     NexusObject,
     TPayload,
@@ -33,7 +34,6 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.input.input_processor import (
     InputProcessor,
-    resolve_processors,
 )
 from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
 
@@ -51,12 +51,14 @@ class RemoteAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         remote_name: str,
         remote_config: AlgorithmConfiguration,
         *input_processors: InputProcessor,
+        cache: InputCache,
     ):
         super().__init__(metrics_provider, logger_factory)
         self._input_processors = input_processors
         self._remote_client = remote_client
         self._remote_name = remote_name
         self._remote_config = remote_config
+        self._cache = cache
 
     @abstractmethod
     def _generate_tag(self) -> str:
@@ -105,11 +107,11 @@ class RemoteAlgorithm(NexusObject[TPayload, AlgorithmResult]):
             )
             return self._transform_submission_result(request_id, tag)
 
-        results = await resolve_processors(*self._input_processors, **kwargs)
+        results = await self._cache.resolve(*self._input_processors, **kwargs)
 
         return await partial(
             _measured_run,
-            **reduce(lambda a, b: a | b, [result for _, result in results.items()]),
+            **results,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
             logger=self._logger,
