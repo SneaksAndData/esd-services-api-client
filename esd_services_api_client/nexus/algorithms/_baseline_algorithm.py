@@ -81,7 +81,7 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
         return await partial(
             _measured_run,
-            **reduce(lambda a, b: a | b, [result for _, result in results.items()]),
+            **results,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
             logger=self._logger,

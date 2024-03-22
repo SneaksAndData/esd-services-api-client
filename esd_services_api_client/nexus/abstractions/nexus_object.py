@@ -24,6 +24,7 @@ from typing import Generic, TypeVar, Union, Any
 import pandas
 import polars
 from adapta.metrics import MetricsProvider
+from dataclasses_json.stringcase import snakecase
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
@@ -91,11 +92,11 @@ class NexusObject(Generic[TPayload, TResult], ABC):
         """
         Alias to identify this reader's output
         """
-        return re.sub(
+        return snakecase(re.sub(
             r"(?<!^)(?=[A-Z])",
             "_",
             cls.__name__.lower()
             .replace("reader", "")
             .replace("processor", "")
             .replace("algorithm", ""),
-        )
+        ))
