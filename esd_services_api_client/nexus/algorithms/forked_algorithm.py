@@ -31,9 +31,6 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.algorithms._remote_algorithm import RemoteAlgorithm
-from esd_services_api_client.nexus.exceptions.startup_error import (
-    FatalAlgorithmConfigurationError,
-)
 from esd_services_api_client.nexus.input.input_processor import (
     InputProcessor,
     resolve_processors,
