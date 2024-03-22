@@ -1,7 +1,6 @@
 """
  Remotely executed algorithm
 """
-import asyncio
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
@@ -18,7 +17,7 @@ import asyncio
 #  limitations under the License.
 #
 
-
+import asyncio
 from abc import abstractmethod
 from functools import reduce, partial
 
@@ -32,6 +31,9 @@ from esd_services_api_client.nexus.abstractions.nexus_object import (
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.algorithms._remote_algorithm import RemoteAlgorithm
+from esd_services_api_client.nexus.exceptions.startup_error import (
+    FatalAlgorithmConfigurationError,
+)
 from esd_services_api_client.nexus.input.input_processor import (
     InputProcessor,
     resolve_processors,
@@ -55,7 +57,11 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
     ):
         super().__init__(metrics_provider, logger_factory)
         self._input_processors = input_processors
-        assert len(forks) > 0, "Forked algorithm must define one or more forks"
+        if len(forks) > 0:
+            raise FatalAlgorithmConfigurationError(
+                message="Forked algorithm must define one or more forks",
+                algorithm_class=self.__class__,
+            )
         self._forks = forks
 
     @abstractmethod
@@ -75,7 +81,7 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
         @run_time_metrics_async(
             metric_name="algorthm_run",
-            on_finish_message_template="Launched a new remote {algorithm} in {elapsed:.2f}s seconds",
+            on_finish_message_template="Finished running algorithm {algorithm} in {elapsed:.2f}s seconds",
             template_args={
                 "algorithm": self.__class__.alias().upper(),
             },
