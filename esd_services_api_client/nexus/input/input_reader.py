@@ -26,15 +26,16 @@ from adapta.process_communication import DataSocket
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from adapta.utils.decorators import run_time_metrics_async
 
+from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
+from esd_services_api_client.nexus.abstractions.input_object import InputObject
 from esd_services_api_client.nexus.abstractions.nexus_object import (
-    NexusObject,
     TPayload,
     TResult,
 )
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
 
-class InputReader(NexusObject[TPayload, TResult]):
+class InputReader(InputObject[TPayload, TResult]):
     """
     Base class for a raw data reader.
     """
@@ -47,6 +48,7 @@ class InputReader(NexusObject[TPayload, TResult]):
         payload: TPayload,
         *readers: "InputReader",
         socket: Optional[DataSocket] = None,
+        cache: InputCache
     ):
         super().__init__(metrics_provider, logger_factory)
         self.socket = socket
@@ -54,6 +56,7 @@ class InputReader(NexusObject[TPayload, TResult]):
         self._data: Optional[TResult] = None
         self._readers = readers
         self._payload = payload
+        self._cache = cache
 
     @property
     def data(self) -> Optional[TResult]:
@@ -63,7 +66,7 @@ class InputReader(NexusObject[TPayload, TResult]):
         return self._data
 
     @abstractmethod
-    async def _read_input(self) -> TResult:
+    async def _read_input(self, **kwargs) -> TResult:
         """
         Actual data reader logic. Implementing this method is mandatory for the reader to work
         """
@@ -72,7 +75,7 @@ class InputReader(NexusObject[TPayload, TResult]):
     def _metric_tags(self) -> dict[str, str]:
         return {"entity": self.__class__.alias()}
 
-    async def read(self) -> TResult:
+    async def process(self, **_) -> TResult:
         """
         Coroutine that reads the data from external store and converts it to a dataframe, or generates data locally. Do not override this method.
         """
@@ -88,7 +91,8 @@ class InputReader(NexusObject[TPayload, TResult]):
             | ({"data_path": self.socket.data_path} if self.socket else {}),
         )
         async def _read(**_) -> TResult:
-            return await self._read_input()
+            readers = await self._cache.resolve(*self._readers)
+            return await self._read_input(**readers)
 
         if self._data is None:
             self._data = await partial(

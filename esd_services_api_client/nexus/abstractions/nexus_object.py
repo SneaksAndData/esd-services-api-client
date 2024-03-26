@@ -1,8 +1,6 @@
 """
  Base classes for all objects used by Nexus.
 """
-import re
-
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +18,13 @@ import re
 
 
 from abc import ABC, abstractmethod
+import re
 from typing import Generic, TypeVar, Union, Any
 
 import pandas
 import polars
 from adapta.metrics import MetricsProvider
+from dataclasses_json.stringcase import snakecase
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 
@@ -92,11 +92,13 @@ class NexusObject(Generic[TPayload, TResult], ABC):
         """
         Alias to identify this reader's output
         """
-        return re.sub(
-            r"(?<!^)(?=[A-Z])",
-            "_",
-            cls.__name__.lower()
-            .replace("reader", "")
-            .replace("processor", "")
-            .replace("algorithm", ""),
+        return snakecase(
+            re.sub(
+                r"(?<!^)(?=[A-Z])",
+                "_",
+                cls.__name__.lower()
+                .replace("reader", "")
+                .replace("processor", "")
+                .replace("algorithm", ""),
+            )
         )
