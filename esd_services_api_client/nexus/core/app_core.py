@@ -58,6 +58,7 @@ from esd_services_api_client.nexus.input.payload_reader import (
     AlgorithmPayloadReader,
     AlgorithmPayload,
 )
+from esd_services_api_client.nexus.telemetry.recorder import TelemetryRecorder
 
 
 def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]:
@@ -244,9 +245,11 @@ class Nexus:
         """
         Activates the run sequence.
         """
+
         self._injector = Injector(self._configurator.injection_binds)
 
         algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
+        telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
 
         async with algorithm as instance:
             self._algorithm_run_task = asyncio.create_task(
@@ -265,6 +268,12 @@ class Nexus:
             )
             if len(on_complete_tasks) > 0:
                 await asyncio.wait(on_complete_tasks)
+
+            # record telemetry
+            async with telemetry_recorder as recorder:
+                await recorder.record(
+                    run_id=self._run_args.request_id, **algorithm.inputs
+                )
 
             # dispose of QES instance gracefully as it might hold open connections
             qes = self._injector.get(QueryEnabledStore)
