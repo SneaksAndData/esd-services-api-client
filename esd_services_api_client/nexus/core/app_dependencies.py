@@ -44,6 +44,7 @@ from esd_services_api_client.nexus.input.input_reader import InputReader
 from esd_services_api_client.nexus.input.payload_reader import (
     AlgorithmPayload,
 )
+from esd_services_api_client.nexus.telemetry.recorder import TelemetryRecorder
 
 
 @final
@@ -195,6 +196,7 @@ class ServiceConfigurator:
             StorageClientModule(),
             ExternalSocketsModule(),
             CacheModule(),
+            type(f"{TelemetryRecorder.__name__}Module", (Module,), {})(),
         ]
 
     @property

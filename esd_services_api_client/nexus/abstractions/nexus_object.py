@@ -53,7 +53,7 @@ TResult = TypeVar(  # pylint: disable=C0103
 )
 
 
-class NexusObject(Generic[TPayload, TResult], ABC):
+class NexusCoreObject(ABC):
     """
     Base class for all Nexus objects.
     """
@@ -86,6 +86,12 @@ class NexusObject(Generic[TPayload, TResult], ABC):
         """
         Optional actions to perform on context closure.
         """
+
+
+class NexusObject(Generic[TPayload, TResult], NexusCoreObject, ABC):
+    """
+    Base class for all Nexus objects.
+    """
 
     @classmethod
     def alias(cls) -> str:

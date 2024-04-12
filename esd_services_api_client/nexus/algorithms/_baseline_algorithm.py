@@ -1,7 +1,6 @@
 """
  Base algorithm
 """
-
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +15,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
 
 from abc import abstractmethod
 from functools import partial
@@ -51,6 +49,14 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         super().__init__(metrics_provider, logger_factory)
         self._input_processors = input_processors
         self._cache = cache
+        self._inputs: dict = {}
+
+    @property
+    def inputs(self) -> dict:
+        """
+        Inputs generated for this algorithm run.
+        """
+        return self._inputs
 
     @abstractmethod
     async def _run(self, **kwargs) -> AlgorithmResult:
@@ -77,11 +83,11 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         async def _measured_run(**run_args):
             return await self._run(**run_args)
 
-        results = await self._cache.resolve(*self._input_processors, **kwargs)
+        self._inputs = await self._cache.resolve(*self._input_processors, **kwargs)
 
         return await partial(
             _measured_run,
-            **results,
+            **self._inputs,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
             logger=self._logger,

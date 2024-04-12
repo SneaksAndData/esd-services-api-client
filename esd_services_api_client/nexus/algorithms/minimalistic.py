@@ -45,5 +45,8 @@ class MinimalisticAlgorithm(BaselineAlgorithm[TPayload], ABC):
         cache: InputCache,
     ):
         super().__init__(
-            metrics_provider, logger_factory, *input_processors, cache=cache
+            metrics_provider,
+            logger_factory,
+            *input_processors,
+            cache=cache,
         )
