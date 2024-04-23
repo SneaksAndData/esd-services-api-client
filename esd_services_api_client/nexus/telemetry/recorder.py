@@ -59,18 +59,26 @@ class TelemetryRecorder(NexusCoreObject):
                 entity_name=entity_name,
                 run_id=run_id,
             )
-            self._storage_client.save_data_as_blob(
-                data=entity_to_record,
-                blob_path=DataSocket(
-                    alias="telemetry",
-                    data_path=f"{self._telemetry_base_path}/{entity_name}/{run_id}",
-                    data_format="null",
-                ).parse_data_path(),
-                serialization_format=DictJsonSerializationFormat
-                if isinstance(entity_to_record, dict)
-                else DataFrameParquetSerializationFormat,
-                overwrite=True,
-            )
+            if not isinstance(entity_to_record, dict) and not isinstance(
+                entity_to_record, pd.DataFrame
+            ):
+                self._logger.warning(
+                    "Unsupported data type: {telemetry_entity_type}. Telemetry recording skipped.",
+                    telemetry_entity_type=type(entity_to_record),
+                )
+            else:
+                self._storage_client.save_data_as_blob(
+                    data=entity_to_record,
+                    blob_path=DataSocket(
+                        alias="telemetry",
+                        data_path=f"{self._telemetry_base_path}/{entity_name}/{run_id}",
+                        data_format="null",
+                    ).parse_data_path(),
+                    serialization_format=DictJsonSerializationFormat
+                    if isinstance(entity_to_record, dict)
+                    else DataFrameParquetSerializationFormat,
+                    overwrite=True,
+                )
 
         telemetry_tasks = [
             asyncio.create_task(
