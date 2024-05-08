@@ -37,6 +37,7 @@ from esd_services_api_client.crystal._models import (
     AlgorithmRequest,
     AlgorithmConfiguration,
     RequestLifeCycleStage,
+    ParentJob
 )
 
 T = TypeVar("T")  # pylint: disable=C0103
@@ -83,26 +84,26 @@ class CrystalConnector:
     """
 
     def __init__(
-        self,
-        *,
-        scheduler_base_url: Optional[str] = None,
-        receiver_base_url: Optional[str] = None,
-        logger: Optional[SemanticLogger] = None,
-        auth: Optional[AuthBase] = None,
-        api_version: ApiVersion = ApiVersion.V1_2,
-        default_timeout: timedelta = timedelta(seconds=300),
-        default_retry_count: int = 10,
+            self,
+            *,
+            scheduler_base_url: Optional[str] = None,
+            receiver_base_url: Optional[str] = None,
+            logger: Optional[SemanticLogger] = None,
+            auth: Optional[AuthBase] = None,
+            api_version: ApiVersion = ApiVersion.V1_2,
+            default_timeout: timedelta = timedelta(seconds=300),
+            default_retry_count: int = 10,
     ):
         # keeping CRYSTAL_URL for backwards-compatibility
         self._scheduler_base_url = (
-            scheduler_base_url
-            or os.getenv("ESDAPI__CRYSTAL_SCHEDULER_URL")
-            or os.getenv("CRYSTAL_URL")
+                scheduler_base_url
+                or os.getenv("ESDAPI__CRYSTAL_SCHEDULER_URL")
+                or os.getenv("CRYSTAL_URL")
         )
         self._receiver_base_url = (
-            receiver_base_url
-            or os.getenv("ESDAPI__CRYSTAL_RECEIVER_URL")
-            or os.getenv("CRYSTAL_URL")
+                receiver_base_url
+                or os.getenv("ESDAPI__CRYSTAL_RECEIVER_URL")
+                or os.getenv("CRYSTAL_URL")
         )
         self._http = session_with_retries(
             status_list=(400, 429, 500, 502, 503, 504, 404),
@@ -115,7 +116,7 @@ class CrystalConnector:
         self._logger = logger
         if isinstance(auth, BoxerTokenAuth):
             assert (
-                api_version == ApiVersion.V1_2
+                    api_version == ApiVersion.V1_2
             ), "Cannot use BoxerTokenAuth with Crystal API versions prior to 1.2."
 
         self._http.auth = auth
@@ -128,11 +129,11 @@ class CrystalConnector:
 
     @classmethod
     def create_anonymous(
-        cls,
-        scheduler_base_url: Optional[str] = None,
-        receiver_base_url: Optional[str] = None,
-        logger: Optional[SemanticLogger] = None,
-        api_version: ApiVersion = ApiVersion.V1_2,
+            cls,
+            scheduler_base_url: Optional[str] = None,
+            receiver_base_url: Optional[str] = None,
+            logger: Optional[SemanticLogger] = None,
+            api_version: ApiVersion = ApiVersion.V1_2,
     ) -> "CrystalConnector":
         """Creates Crystal connector with no authentication.
         This should be use for accessing Crystal from inside a hosting cluster."""
@@ -150,11 +151,12 @@ class CrystalConnector:
         self.dispose()
 
     def create_run(
-        self,
-        algorithm: str,
-        payload: Dict,
-        custom_config: Optional[AlgorithmConfiguration] = None,
-        tag: Optional[str] = None,
+            self,
+            algorithm: str,
+            payload: Dict,
+            custom_config: Optional[AlgorithmConfiguration] = None,
+            parent_job: Optional[ParentJob] = None,
+            tag: Optional[str] = None,
     ) -> str:
         """
           Creates a Crystal job run against the latest API version.
@@ -162,6 +164,7 @@ class CrystalConnector:
         :param algorithm: Name of a connected algorithm.
         :param payload: Algorithm payload.
         :param custom_config: Customized config for this run.
+        :param parent_job: Parent job for this run.
         :param tag: Client-side submission identifier.
         :return: Request identifier assigned to the job by Crystal.
         """
@@ -176,6 +179,7 @@ class CrystalConnector:
             algorithm_name=algorithm,
             algorithm_parameters=payload,
             custom_configuration=custom_config,
+            parent_job=parent_job,
             tag=tag,
         ).to_dict()
 
@@ -196,7 +200,7 @@ class CrystalConnector:
         return run_id
 
     def retrieve_run(
-        self, run_id: str, algorithm: Optional[str] = None
+            self, run_id: str, algorithm: Optional[str] = None
     ) -> RequestResult:
         """
         Retrieves a submitted Crystal job.
@@ -208,7 +212,7 @@ class CrystalConnector:
         return self._retrieve_run(run_id=run_id, algorithm=algorithm)
 
     def _retrieve_run(
-        self, run_id: str, algorithm: Optional[str] = None
+            self, run_id: str, algorithm: Optional[str] = None
     ) -> RequestResult:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
@@ -226,7 +230,7 @@ class CrystalConnector:
         return crystal_result
 
     def retrieve_runs(
-        self, tag: str, algorithm: Optional[str] = None
+            self, tag: str, algorithm: Optional[str] = None
     ) -> List[RequestResult]:
         """
         Retrieves all submitted Crystal jobs with matching tags.
@@ -238,7 +242,7 @@ class CrystalConnector:
         return self._retrieve_runs(tag=tag, algorithm=algorithm)
 
     def _retrieve_runs(
-        self, tag: str, algorithm: Optional[str] = None
+            self, tag: str, algorithm: Optional[str] = None
     ) -> List[RequestResult]:
         def get_api_path() -> str:
             if self._api_version == ApiVersion.V1_2:
@@ -254,11 +258,11 @@ class CrystalConnector:
         return [RequestResult.from_dict(run_result) for run_result in response.json()]
 
     def submit_result(
-        self,
-        result: AlgorithmRunResult,
-        run_id: str,
-        algorithm: Optional[str] = None,
-        debug: bool = False,
+            self,
+            result: AlgorithmRunResult,
+            run_id: str,
+            algorithm: Optional[str] = None,
+            debug: bool = False,
     ) -> None:
         """
         Submit a result of an algorithm back to Crystal.
@@ -297,9 +301,9 @@ class CrystalConnector:
 
     @staticmethod
     def read_input(
-        *,
-        crystal_arguments: CrystalEntrypointArguments,
-        serialization_format: Type[SerializationFormat[T]],
+            *,
+            crystal_arguments: CrystalEntrypointArguments,
+            serialization_format: Type[SerializationFormat[T]],
     ) -> T:
         """
         Read Crystal input given in the SAS URI provided in the CrystalEntrypointArguments
@@ -320,7 +324,7 @@ class CrystalConnector:
         self._http.close()
 
     def await_tagged_runs(
-        self, algorithm: str, tags: List[str]
+            self, algorithm: str, tags: List[str]
     ) -> Dict[str, RequestResult]:
         """
         Await for a list of tagged Crystal jobs to finish.
@@ -345,7 +349,7 @@ class CrystalConnector:
         }
 
     def await_runs(
-        self, algorithm: str, run_ids: List[str]
+            self, algorithm: str, run_ids: List[str]
     ) -> Dict[str, RequestResult]:
         """
         Await for a list of submitted Crystal jobs to finish.
@@ -356,7 +360,7 @@ class CrystalConnector:
         return self._await_runs(algorithm=algorithm, run_ids=run_ids)
 
     def _await_runs(
-        self, algorithm: str, run_ids: List[str]
+            self, algorithm: str, run_ids: List[str]
     ) -> Dict[str, RequestResult]:
         def await_run(run_id: str) -> RequestResult:
             while True:
