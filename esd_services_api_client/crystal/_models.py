@@ -140,7 +140,7 @@ class ParentJob(DataClassJsonMixin):
     Used to specify crystal parent job for a new crystal job.
     """
 
-    crystal_job_id: Optional[str] = None
+    request_id: Optional[str] = None
     algorithm_name: Optional[str] = None
 
 
@@ -154,5 +154,5 @@ class AlgorithmRequest(DataClassJsonMixin):
     algorithm_parameters: Dict
     algorithm_name: Optional[str] = None
     custom_configuration: Optional[AlgorithmConfiguration] = None
-    parent_job: Optional[ParentJob] = None
+    parent_request: Optional[ParentJob] = None
     tag: Optional[str] = None
