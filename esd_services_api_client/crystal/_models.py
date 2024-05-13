@@ -135,6 +135,17 @@ class AlgorithmConfiguration(DataClassJsonMixin):
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
+class ParentRequest(DataClassJsonMixin):
+    """
+    Used to specify crystal parent job for a new crystal job.
+    """
+
+    request_id: Optional[str] = None
+    algorithm_name: Optional[str] = None
+
+
+@dataclass_json(letter_case=LetterCase.CAMEL)
+@dataclass
 class AlgorithmRequest(DataClassJsonMixin):
     """
     Crystal algorthm request.
@@ -143,4 +154,5 @@ class AlgorithmRequest(DataClassJsonMixin):
     algorithm_parameters: Dict
     algorithm_name: Optional[str] = None
     custom_configuration: Optional[AlgorithmConfiguration] = None
+    parent_request: Optional[ParentRequest] = None
     tag: Optional[str] = None

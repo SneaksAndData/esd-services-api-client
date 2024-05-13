@@ -37,6 +37,7 @@ from esd_services_api_client.crystal._models import (
     AlgorithmRequest,
     AlgorithmConfiguration,
     RequestLifeCycleStage,
+    ParentRequest,
 )
 
 T = TypeVar("T")  # pylint: disable=C0103
@@ -154,6 +155,7 @@ class CrystalConnector:
         algorithm: str,
         payload: Dict,
         custom_config: Optional[AlgorithmConfiguration] = None,
+        parent_request: Optional[ParentRequest] = None,
         tag: Optional[str] = None,
     ) -> str:
         """
@@ -162,6 +164,7 @@ class CrystalConnector:
         :param algorithm: Name of a connected algorithm.
         :param payload: Algorithm payload.
         :param custom_config: Customized config for this run.
+        :param parent_request: Parent request for this run.
         :param tag: Client-side submission identifier.
         :return: Request identifier assigned to the job by Crystal.
         """
@@ -176,6 +179,7 @@ class CrystalConnector:
             algorithm_name=algorithm,
             algorithm_parameters=payload,
             custom_configuration=custom_config,
+            parent_request=parent_request,
             tag=tag,
         ).to_dict()
 
