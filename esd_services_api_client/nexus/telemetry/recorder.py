@@ -67,6 +67,10 @@ class TelemetryRecorder(NexusCoreObject):
                     telemetry_entity_type=type(entity_to_record),
                 )
             else:
+                serializers = {
+                    dict: DictJsonSerializationFormat,
+                    pd.DataFrame: DataFrameParquetSerializationFormat,
+                }
                 self._storage_client.save_data_as_blob(
                     data=entity_to_record,
                     blob_path=DataSocket(
@@ -74,9 +78,7 @@ class TelemetryRecorder(NexusCoreObject):
                         data_path=f"{self._telemetry_base_path}/{entity_name}/{run_id}",
                         data_format="null",
                     ).parse_data_path(),
-                    serialization_format=DictJsonSerializationFormat
-                    if isinstance(entity_to_record, dict)
-                    else DataFrameParquetSerializationFormat,
+                    serialization_format=serializers[type(entity_to_record)],
                     overwrite=True,
                 )
 
