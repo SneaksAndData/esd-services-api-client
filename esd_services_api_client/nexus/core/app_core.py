@@ -30,10 +30,8 @@ import urllib3.exceptions
 import azure.core.exceptions
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
-from adapta.storage.models.format import DataFrameJsonSerializationFormat
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Injector
-import pandas as pd
 
 import esd_services_api_client.nexus.exceptions
 from esd_services_api_client.crystal import (
@@ -52,6 +50,9 @@ from esd_services_api_client.nexus.configurations.algorithm_configuration import
 )
 from esd_services_api_client.nexus.core.app_dependencies import (
     ServiceConfigurator,
+)
+from esd_services_api_client.nexus.core.serialization_format import (
+    ResultSerializationFormat,
 )
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 from esd_services_api_client.nexus.input.input_reader import InputReader
@@ -206,9 +207,7 @@ class Nexus:
             :return: blob uri
             """
             dataframe_data = data.dataframe()
-            serializers = {
-                pd.DataFrame: DataFrameJsonSerializationFormat,
-            }
+            serializer = self._injector.get(ResultSerializationFormat)
             storage_client = self._injector.get(StorageClient)
             output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
             blob_path = DataSocket(
@@ -217,7 +216,7 @@ class Nexus:
             storage_client.save_data_as_blob(
                 data=dataframe_data,
                 blob_path=blob_path,
-                serialization_format=serializers[type(dataframe_data)],
+                serialization_format=serializer,
                 overwrite=True,
             )
             return storage_client.get_blob_uri(blob_path=blob_path)
