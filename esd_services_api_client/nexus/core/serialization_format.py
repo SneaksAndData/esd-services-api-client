@@ -21,6 +21,9 @@ class SerializationFormatContainer(SerializationFormat):
             else default_serialization_formats
         )
 
+    def __call__(self):
+        return self
+
     def get_serialization_format(self, data) -> SerializationFormat:
         """
         Get the serializer for the data.
@@ -40,9 +43,9 @@ class SerializationFormatContainer(SerializationFormat):
                 f"A serialization format for objects of type {serialization_target_type} already exists."
                 f"Replacing the current serializer {self._serialization_formats[serialization_target_type]} with {serialization_format.__class__.__name__}"
             )
-            self._serialization_formats[
-                serialization_target_type
-            ] = serialization_format
+        self._serialization_formats[
+            serialization_target_type
+        ] = serialization_format
 
     def serialize(self, data) -> bytes:
         """
@@ -59,7 +62,8 @@ class SerializationFormatContainer(SerializationFormat):
 
 
 class TelemetrySerializationFormat(SerializationFormatContainer):
-    """Telmetry serialization format"""
+    """Telemetry serialization format"""
+
     def __init__(self):
         super().__init__(
             default_serialization_formats={
@@ -71,6 +75,7 @@ class TelemetrySerializationFormat(SerializationFormatContainer):
 
 class ResultSerializationFormat(SerializationFormatContainer):
     """Result serialization format"""
+
     def __init__(self):
         super().__init__(
             default_serialization_formats={

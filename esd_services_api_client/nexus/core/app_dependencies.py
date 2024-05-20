@@ -188,12 +188,10 @@ class ResultSerializationFormatModule(Module):
         DI factory method.
         """
         serialization_format = ResultSerializationFormat()
-        map(
-            serialization_format.add_serialization_format,
-            locate_classes(
-                re.compile(r"NEXUS__RESULT_SERIALIZATION_FORMAT_(.+)_CLASS")
-            ),
-        )
+        for format_ in locate_classes(
+            re.compile(r"NEXUS__RESULT_SERIALIZATION_FORMAT_(.+)_CLASS")
+        ):
+            serialization_format.add_serialization_format(format_)
 
         return serialization_format
 
@@ -213,12 +211,10 @@ class TelemetrySerializationFormatModule(Module):
         DI factory method.
         """
         serialization_format = TelemetrySerializationFormat()
-        map(
-            serialization_format.add_serialization_format,
-            locate_classes(
-                re.compile(r"NEXUS__TELEMETRY_SERIALIZATION_FORMAT_(.+)_CLASS")
-            ),
-        )
+        for format_ in locate_classes(
+            re.compile(r"NEXUS__TELEMETRY_SERIALIZATION_FORMAT_(.+)_CLASS")
+        ):
+            serialization_format.add_serialization_format(format_)
 
         return serialization_format
 
