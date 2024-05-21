@@ -172,6 +172,7 @@ class ExternalSocketsModule(Module):
         )
 
 
+@final
 class ResultSerializerModule(Module):
     """
     Serialization format module for results.
