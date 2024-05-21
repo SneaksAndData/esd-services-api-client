@@ -11,7 +11,7 @@ from adapta.storage.models.format import (
 
 class SerializationFormatContainer(SerializationFormat):
     """
-    Magic serialization format.
+    Serialization format containing multiple formats. The format to use is determined at runtime by the type of the data.
     """
 
     def __init__(self, default_serialization_formats: dict = None):

@@ -175,7 +175,7 @@ class ExternalSocketsModule(Module):
 
 class ResultSerializationFormatModule(Module):
     """
-    Storage client module.
+    Serialization format module for results.
     """
 
     def __init__(self, default_seralization_formats: dict = None):
@@ -198,7 +198,7 @@ class ResultSerializationFormatModule(Module):
 
 class TelemetrySerializationFormatModule(Module):
     """
-    Storage client module.
+    Serialization format module for telemetry.
     """
 
     def __init__(self, default_seralization_formats: dict = None):
