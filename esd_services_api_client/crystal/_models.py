@@ -36,6 +36,7 @@ class RequestLifeCycleStage(Enum):
     SCHEDULING_TIMEOUT = "SCHEDULING_TIMEOUT"
     DEADLINE_EXCEEDED = "DEADLINE_EXCEEDED"
     THROTTLED = "THROTTLED"
+    CANCELLED = "CANCELLED"
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)

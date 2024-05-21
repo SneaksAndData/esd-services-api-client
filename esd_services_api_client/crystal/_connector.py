@@ -125,6 +125,7 @@ class CrystalConnector:
             RequestLifeCycleStage.FAILED,
             RequestLifeCycleStage.SCHEDULING_TIMEOUT,
             RequestLifeCycleStage.DEADLINE_EXCEEDED,
+            RequestLifeCycleStage.CANCELLED,
         ]
 
     @classmethod

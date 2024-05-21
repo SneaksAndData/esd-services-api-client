@@ -122,6 +122,13 @@ def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data:
         [
             RequestLifeCycleStage.DEADLINE_EXCEEDED,
         ],
+        [
+            RequestLifeCycleStage.CANCELLED,
+        ],
+        [
+            RequestLifeCycleStage.RUNNING,
+            RequestLifeCycleStage.CANCELLED,
+        ],
     ],
 )
 def test_await_runs_request_id(mocker, request_statuses):
