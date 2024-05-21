@@ -1,5 +1,5 @@
 """Serialization format module."""
-from typing import final, Any
+from typing import final, Any, TypeVar
 
 import pandas
 from adapta.storage.models.format import (
@@ -8,6 +8,8 @@ from adapta.storage.models.format import (
     SerializationFormat,
 )
 
+T = TypeVar("T")  # pylint: disable=C0103
+
 
 class Serializer:
     """
@@ -15,7 +17,10 @@ class Serializer:
     by the type of the data.
     """
 
-    def __init__(self, default_serialization_formats: dict = None):
+    def __init__(
+        self,
+        default_serialization_formats: dict[type[T], SerializationFormat[T]] = None,
+    ):
         self._serialization_formats = (
             {}
             if default_serialization_formats is None

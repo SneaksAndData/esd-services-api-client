@@ -177,9 +177,6 @@ class ResultSerializerModule(Module):
     Serialization format module for results.
     """
 
-    def __init__(self, default_seralization_formats: dict = None):
-        self.default_serialization_formats = default_seralization_formats
-
     @singleton
     @provider
     def provide(self) -> ResultSerializer:
@@ -200,9 +197,6 @@ class TelemetrySerializerModule(Module):
     """
     Serialization format module for telemetry.
     """
-
-    def __init__(self, default_seralization_formats: dict = None):
-        self.default_serialization_formats = default_seralization_formats
 
     @singleton
     @provider
