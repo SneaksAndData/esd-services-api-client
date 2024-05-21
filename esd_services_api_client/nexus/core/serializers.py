@@ -1,5 +1,5 @@
 """Serialization format module."""
-from _warnings import warn
+from typing import final, Any
 
 import pandas
 from adapta.storage.models.format import (
@@ -9,7 +9,7 @@ from adapta.storage.models.format import (
 )
 
 
-class SerializationFormatContainer(SerializationFormat):
+class Serializer:
     """
     Serialization format containing multiple formats. The format to use is determined at runtime by the type of the data.
     """
@@ -21,45 +21,30 @@ class SerializationFormatContainer(SerializationFormat):
             else default_serialization_formats
         )
 
-    def __call__(self):
-        return self
-
-    def get_serialization_format(self, data) -> SerializationFormat:
+    def get_serialization_format(self, data: Any) -> type[SerializationFormat]:
         """
         Get the serializer for the data.
         """
-        return self._serialization_formats[type(data)]()
+        return self._serialization_formats[type(data)]
 
-    def add_serialization_format(
-        self, serialization_format: SerializationFormat
-    ) -> None:
+    def with_format(self, serialization_format: SerializationFormat) -> "Serializer":
         """Add a serialization format to the supported formats. Note that only 1 serialization format is allowed per
         type."""
 
         serialization_target_type = serialization_format.__orig_bases__[0].__args__[0]
-
-        if serialization_target_type in self._serialization_formats.keys():
-            warn(
-                f"A serialization format for objects of type {serialization_target_type} already exists."
-                f"Replacing the current serializer {self._serialization_formats[serialization_target_type]} with {serialization_format.__class__.__name__}"
-            )
         self._serialization_formats[serialization_target_type] = serialization_format
+
+        return self
 
     def serialize(self, data) -> bytes:
         """
         Serialize data.
         """
-        serializer = self.get_serialization_format(data)
-        return serializer.serialize(data)
-
-    def deserialize(self, data: bytes):
-        """
-        Deserialize data.
-        """
-        raise NotImplementedError("Not supported")
+        return self.get_serialization_format(data)().serialize(data)
 
 
-class TelemetrySerializationFormat(SerializationFormatContainer):
+@final
+class TelemetrySerializer(Serializer):
     """Telemetry serialization format"""
 
     def __init__(self):
@@ -71,7 +56,8 @@ class TelemetrySerializationFormat(SerializationFormatContainer):
         )
 
 
-class ResultSerializationFormat(SerializationFormatContainer):
+@final
+class ResultSerializer(Serializer):
     """Result serialization format"""
 
     def __init__(self):

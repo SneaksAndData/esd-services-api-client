@@ -51,8 +51,8 @@ from esd_services_api_client.nexus.configurations.algorithm_configuration import
 from esd_services_api_client.nexus.core.app_dependencies import (
     ServiceConfigurator,
 )
-from esd_services_api_client.nexus.core.serialization_format import (
-    ResultSerializationFormat,
+from esd_services_api_client.nexus.core.serializers import (
+    ResultSerializer,
 )
 from esd_services_api_client.nexus.input.input_processor import InputProcessor
 from esd_services_api_client.nexus.input.input_reader import InputReader
@@ -206,16 +206,19 @@ class Nexus:
 
             :return: blob uri
             """
-            serializer = self._injector.get(ResultSerializationFormat)
+            dataframe_data = data.dataframe()
+            serializer = self._injector.get(ResultSerializer)
             storage_client = self._injector.get(StorageClient)
             output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
             blob_path = DataSocket(
                 data_path=output_path, alias="output", data_format="null"
             ).parse_data_path()
             storage_client.save_data_as_blob(
-                data=data.dataframe(),
+                data=dataframe_data,
                 blob_path=blob_path,
-                serialization_format=serializer,
+                serialization_format=serializer.get_serialization_format(
+                    dataframe_data
+                ),
                 overwrite=True,
             )
             return storage_client.get_blob_uri(blob_path=blob_path)

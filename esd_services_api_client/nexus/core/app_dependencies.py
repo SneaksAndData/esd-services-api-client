@@ -21,7 +21,7 @@ import json
 import os
 import re
 from pydoc import locate
-from typing import final, Type, List
+from typing import final, Type
 
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
@@ -47,9 +47,9 @@ from esd_services_api_client.nexus.input.payload_reader import (
     AlgorithmPayload,
 )
 from esd_services_api_client.nexus.telemetry.recorder import TelemetryRecorder
-from esd_services_api_client.nexus.core.serialization_format import (
-    TelemetrySerializationFormat,
-    ResultSerializationFormat,
+from esd_services_api_client.nexus.core.serializers import (
+    TelemetrySerializer,
+    ResultSerializer,
 )
 
 
@@ -173,7 +173,7 @@ class ExternalSocketsModule(Module):
         )
 
 
-class ResultSerializationFormatModule(Module):
+class ResultSerializerModule(Module):
     """
     Serialization format module for results.
     """
@@ -183,20 +183,21 @@ class ResultSerializationFormatModule(Module):
 
     @singleton
     @provider
-    def provide(self) -> ResultSerializationFormat:
+    def provide(self) -> ResultSerializer:
         """
         DI factory method.
         """
-        serialization_format = ResultSerializationFormat()
+        serialization_format = ResultSerializer()
         for format_ in locate_classes(
             re.compile(r"NEXUS__RESULT_SERIALIZATION_FORMAT_(.+)_CLASS")
         ):
-            serialization_format.add_serialization_format(format_)
+            serialization_format.with_format(format_)
 
         return serialization_format
 
 
-class TelemetrySerializationFormatModule(Module):
+@final
+class TelemetrySerializerModule(Module):
     """
     Serialization format module for telemetry.
     """
@@ -206,15 +207,15 @@ class TelemetrySerializationFormatModule(Module):
 
     @singleton
     @provider
-    def provide(self) -> TelemetrySerializationFormat:
+    def provide(self) -> TelemetrySerializer:
         """
         DI factory method.
         """
-        serialization_format = TelemetrySerializationFormat()
+        serialization_format = TelemetrySerializer()
         for format_ in locate_classes(
             re.compile(r"NEXUS__TELEMETRY_SERIALIZATION_FORMAT_(.+)_CLASS")
         ):
-            serialization_format.add_serialization_format(format_)
+            serialization_format.with_format(format_)
 
         return serialization_format
 
@@ -247,8 +248,8 @@ class ServiceConfigurator:
             QueryEnabledStoreModule(),
             StorageClientModule(),
             ExternalSocketsModule(),
-            TelemetrySerializationFormatModule(),
-            ResultSerializationFormatModule(),
+            TelemetrySerializerModule(),
+            ResultSerializerModule(),
             CacheModule(),
             type(f"{TelemetryRecorder.__name__}Module", (Module,), {})(),
         ]
@@ -297,7 +298,7 @@ class ServiceConfigurator:
         return self
 
 
-def locate_classes(pattern: re.Pattern) -> List[SerializationFormat]:
+def locate_classes(pattern: re.Pattern) -> list[SerializationFormat]:
     """
     Locates all classes matching the pattern in the environment.
     """
