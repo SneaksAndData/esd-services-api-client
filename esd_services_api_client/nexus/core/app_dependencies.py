@@ -21,11 +21,10 @@ import json
 import os
 import re
 from pydoc import locate
-from typing import final, Type
+from typing import final, Type, Any
 
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
-from adapta.storage.models.format import SerializationFormat
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Module, singleton, provider
 
@@ -187,13 +186,13 @@ class ResultSerializerModule(Module):
         """
         DI factory method.
         """
-        serialization_format = ResultSerializer()
+        serializer = ResultSerializer()
         for format_ in locate_classes(
             re.compile(r"NEXUS__RESULT_SERIALIZATION_FORMAT_(.+)_CLASS")
         ):
-            serialization_format.with_format(format_)
+            serializer.with_format(format_)
 
-        return serialization_format
+        return serializer
 
 
 @final
@@ -211,13 +210,13 @@ class TelemetrySerializerModule(Module):
         """
         DI factory method.
         """
-        serialization_format = TelemetrySerializer()
+        serializer = TelemetrySerializer()
         for format_ in locate_classes(
             re.compile(r"NEXUS__TELEMETRY_SERIALIZATION_FORMAT_(.+)_CLASS")
         ):
-            serialization_format.with_format(format_)
+            serializer.with_format(format_)
 
-        return serialization_format
+        return serializer
 
 
 @final
@@ -298,8 +297,12 @@ class ServiceConfigurator:
         return self
 
 
-def locate_classes(pattern: re.Pattern) -> list[SerializationFormat]:
+def locate_classes(pattern: re.Pattern) -> list[Type[Any]]:
     """
     Locates all classes matching the pattern in the environment.
     """
-    return [locate(class_) for key, class_ in os.environ.items() if pattern.match(key)]
+    return [
+        locate(class_)
+        for key, class_ in os.environ.items()
+        if pattern.match(key) and locate(class_) is not None
+    ]

@@ -30,7 +30,6 @@ class Serializer:
     def with_format(self, serialization_format: SerializationFormat) -> "Serializer":
         """Add a serialization format to the supported formats. Note that only 1 serialization format is allowed per
         type."""
-
         serialization_target_type = serialization_format.__orig_bases__[0].__args__[0]
         self._serialization_formats[serialization_target_type] = serialization_format
 
