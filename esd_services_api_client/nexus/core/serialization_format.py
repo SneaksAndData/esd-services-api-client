@@ -43,9 +43,7 @@ class SerializationFormatContainer(SerializationFormat):
                 f"A serialization format for objects of type {serialization_target_type} already exists."
                 f"Replacing the current serializer {self._serialization_formats[serialization_target_type]} with {serialization_format.__class__.__name__}"
             )
-        self._serialization_formats[
-            serialization_target_type
-        ] = serialization_format
+        self._serialization_formats[serialization_target_type] = serialization_format
 
     def serialize(self, data) -> bytes:
         """
