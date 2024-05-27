@@ -185,10 +185,10 @@ class ResultSerializerModule(Module):
         DI factory method.
         """
         serializer = ResultSerializer()
-        for format_ in locate_classes(
+        for serialization_format in locate_classes(
             re.compile(r"NEXUS__RESULT_SERIALIZATION_FORMAT_(.+)_CLASS")
         ):
-            serializer.with_format(format_)
+            serializer = serializer.with_format(serialization_format)
 
         return serializer
 
@@ -206,10 +206,10 @@ class TelemetrySerializerModule(Module):
         DI factory method.
         """
         serializer = TelemetrySerializer()
-        for format_ in locate_classes(
+        for serialization_format in locate_classes(
             re.compile(r"NEXUS__TELEMETRY_SERIALIZATION_FORMAT_(.+)_CLASS")
         ):
-            serializer.with_format(format_)
+            serializer = serializer.with_format(serialization_format)
 
         return serializer
 
@@ -294,10 +294,20 @@ class ServiceConfigurator:
 
 def locate_classes(pattern: re.Pattern) -> list[Type[Any]]:
     """
-    Locates all classes matching the pattern in the environment.
+    Locates all classes matching the pattern in the environment. Throws a start-up error if any class is not found.
     """
-    return [
-        locate(class_)
-        for key, class_ in os.environ.items()
-        if pattern.match(key) and locate(class_) is not None
+    classes = {
+        (var_name, class_path): locate(class_path)
+        for var_name, class_path in os.environ.items()
+        if pattern.match(var_name)
+    }
+
+    non_located_classes = [
+        name_and_path for name_and_path, class_ in classes.items() if class_ is None
     ]
+    if non_located_classes:
+        raise FatalStartupConfigurationError(
+            f"Failed to locate classes: {non_located_classes}"
+        )
+
+    return list(classes.values())
