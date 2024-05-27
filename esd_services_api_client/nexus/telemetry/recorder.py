@@ -10,14 +10,13 @@ import pandas as pd
 from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
-from adapta.storage.models.format import (
-    DictJsonSerializationFormat,
-    DataFrameParquetSerializationFormat,
-)
 from injector import inject, singleton
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.abstractions.nexus_object import NexusCoreObject
+from esd_services_api_client.nexus.core.serializers import (
+    TelemetrySerializer,
+)
 
 
 @final
@@ -37,12 +36,14 @@ class TelemetryRecorder(NexusCoreObject):
     def __init__(
         self,
         storage_client: StorageClient,
+        serializer: TelemetrySerializer,
         metrics_provider: MetricsProvider,
         logger_factory: LoggerFactory,
     ):
         super().__init__(metrics_provider, logger_factory)
         self._storage_client = storage_client
         self._telemetry_base_path = os.getenv("NEXUS__TELEMETRY_PATH")
+        self._serializer = serializer
 
     async def record(self, run_id: str, **telemetry_args):
         """
@@ -74,9 +75,9 @@ class TelemetryRecorder(NexusCoreObject):
                         data_path=f"{self._telemetry_base_path}/{entity_name}/{run_id}",
                         data_format="null",
                     ).parse_data_path(),
-                    serialization_format=DictJsonSerializationFormat
-                    if isinstance(entity_to_record, dict)
-                    else DataFrameParquetSerializationFormat,
+                    serialization_format=self._serializer.get_serialization_format(
+                        entity_to_record
+                    ),
                     overwrite=True,
                 )
 

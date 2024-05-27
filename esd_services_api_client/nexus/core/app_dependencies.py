@@ -19,8 +19,9 @@
 
 import json
 import os
+import re
 from pydoc import locate
-from typing import final, Type
+from typing import final, Type, Any
 
 from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
@@ -45,6 +46,10 @@ from esd_services_api_client.nexus.input.payload_reader import (
     AlgorithmPayload,
 )
 from esd_services_api_client.nexus.telemetry.recorder import TelemetryRecorder
+from esd_services_api_client.nexus.core.serializers import (
+    TelemetrySerializer,
+    ResultSerializer,
+)
 
 
 @final
@@ -168,6 +173,48 @@ class ExternalSocketsModule(Module):
 
 
 @final
+class ResultSerializerModule(Module):
+    """
+    Serialization format module for results.
+    """
+
+    @singleton
+    @provider
+    def provide(self) -> ResultSerializer:
+        """
+        DI factory method.
+        """
+        serializer = ResultSerializer()
+        for serialization_format in locate_classes(
+            re.compile(r"NEXUS__RESULT_SERIALIZATION_FORMAT_(.+)_CLASS")
+        ):
+            serializer = serializer.with_format(serialization_format)
+
+        return serializer
+
+
+@final
+class TelemetrySerializerModule(Module):
+    """
+    Serialization format module for telemetry.
+    """
+
+    @singleton
+    @provider
+    def provide(self) -> TelemetrySerializer:
+        """
+        DI factory method.
+        """
+        serializer = TelemetrySerializer()
+        for serialization_format in locate_classes(
+            re.compile(r"NEXUS__TELEMETRY_SERIALIZATION_FORMAT_(.+)_CLASS")
+        ):
+            serializer = serializer.with_format(serialization_format)
+
+        return serializer
+
+
+@final
 class CacheModule(Module):
     """
     Storage client module.
@@ -195,6 +242,8 @@ class ServiceConfigurator:
             QueryEnabledStoreModule(),
             StorageClientModule(),
             ExternalSocketsModule(),
+            TelemetrySerializerModule(),
+            ResultSerializerModule(),
             CacheModule(),
             type(f"{TelemetryRecorder.__name__}Module", (Module,), {})(),
         ]
@@ -241,3 +290,24 @@ class ServiceConfigurator:
             lambda binder: binder.bind(config.__class__, to=config, scope=singleton)
         )
         return self
+
+
+def locate_classes(pattern: re.Pattern) -> list[Type[Any]]:
+    """
+    Locates all classes matching the pattern in the environment. Throws a start-up error if any class is not found.
+    """
+    classes = {
+        (var_name, class_path): locate(class_path)
+        for var_name, class_path in os.environ.items()
+        if pattern.match(var_name)
+    }
+
+    non_located_classes = [
+        name_and_path for name_and_path, class_ in classes.items() if class_ is None
+    ]
+    if non_located_classes:
+        raise FatalStartupConfigurationError(
+            f"Failed to locate classes: {non_located_classes}"
+        )
+
+    return list(classes.values())
