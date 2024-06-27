@@ -92,6 +92,8 @@ class TelemetryRecorder(NexusCoreObject):
             )
             for telemetry_key, telemetry_value in telemetry_args.items()
         ]
+        if not telemetry_tasks:
+            return
 
         done, pending = await asyncio.wait(telemetry_tasks)
         if len(pending) > 0:
