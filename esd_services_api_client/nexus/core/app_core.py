@@ -216,9 +216,7 @@ class Nexus:
             storage_client.save_data_as_blob(
                 data=result_,
                 blob_path=blob_path,
-                serialization_format=serializer.get_serialization_format(
-                    result_
-                ),
+                serialization_format=serializer.get_serialization_format(result_),
                 overwrite=True,
             )
             return storage_client.get_blob_uri(blob_path=blob_path)
