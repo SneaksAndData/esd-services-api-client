@@ -206,7 +206,7 @@ class Nexus:
 
             :return: blob uri
             """
-            dataframe_data = data.dataframe()
+            result_ = data.result()
             serializer = self._injector.get(ResultSerializer)
             storage_client = self._injector.get(StorageClient)
             output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
@@ -214,11 +214,9 @@ class Nexus:
                 data_path=output_path, alias="output", data_format="null"
             ).parse_data_path()
             storage_client.save_data_as_blob(
-                data=dataframe_data,
+                data=result_,
                 blob_path=blob_path,
-                serialization_format=serializer.get_serialization_format(
-                    dataframe_data
-                ),
+                serialization_format=serializer.get_serialization_format(result_),
                 overwrite=True,
             )
             return storage_client.get_blob_uri(blob_path=blob_path)
