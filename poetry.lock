@@ -2,13 +2,13 @@
 
 [[package]]
 name = "adapta"
-version = "2.11.1a442.dev6"
+version = "2.11.2"
 description = "Logging, data connectors, monitoring, secret handling and general lifehacks to make data people lives easier."
 optional = false
 python-versions = "<3.12,>=3.9"
 files = [
-    {file = "adapta-2.11.1a442.dev6-py3-none-any.whl", hash = "sha256:99d953e149c76a14e0234561e185db9c200ea5437fd909f30a52c2d161e80b52"},
-    {file = "adapta-2.11.1a442.dev6.tar.gz", hash = "sha256:253d3bad9d98f8add6d5d28f05e06efeca4dcb9c9de41efad96b5644ed80f45e"},
+    {file = "adapta-2.11.2-py3-none-any.whl", hash = "sha256:e6315fed015106ccbe43a091598878e3419ad02900acbfc53e370ab83ecbe5ec"},
+    {file = "adapta-2.11.2.tar.gz", hash = "sha256:c1ca4de3b7118e82064247521efa0fd93920df346157faeabe933b4c592f5dbc"},
 ]
 
 [package.dependencies]
@@ -23,7 +23,7 @@ cryptography = ">=36.0,<36.1"
 dataclasses-json = ">=0.6,<0.7"
 datadog = {version = ">=0.49.1,<0.50.0", optional = true, markers = "extra == \"datadog\""}
 datadog-api-client = {version = ">=2.18.0,<2.19.0", optional = true, markers = "extra == \"datadog\""}
-deltalake = {version = ">=0.17,<0.18", optional = true, markers = "extra == \"storage\""}
+deltalake = {version = ">=0.18.1,<0.19.0", optional = true, markers = "extra == \"storage\""}
 fsspec = ">=2024,<2025"
 limits = ">=3.7,<3.8"
 pandas = {version = ">=2.0.0,<3.0", extras = ["performance"]}
@@ -41,7 +41,7 @@ datadog = ["datadog (>=0.49.1,<0.50.0)", "datadog-api-client (>=2.18.0,<2.19.0)"
 hashicorp = ["hvac (>=0.11.2,<0.12.0)"]
 ml = ["mlflow-skinny (>=2.4.1,<2.5.0)"]
 snowflake = ["snowflake-connector-python (>=3.4.0,<4.0.0)"]
-storage = ["cassandra-driver (>=3.29.1,<3.30.0)", "deltalake (>=0.17,<0.18)"]
+storage = ["cassandra-driver (>=3.29.1,<3.30.0)", "deltalake (>=0.18.1,<0.19.0)"]
 trino = ["trino[sqlalchemy] (>=0.327.0,<0.328.0)"]
 
 [[package]]
@@ -1014,17 +1014,17 @@ zstandard = ["zstandard"]
 
 [[package]]
 name = "deltalake"
-version = "0.17.4"
+version = "0.18.1"
 description = "Native Delta Lake Python binding based on delta-rs with Pandas integration"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "deltalake-0.17.4-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:3f048bd4cdd3500fbb0d1b34046966ca4b7cefd1e9df71460b881ee8ad7f844a"},
-    {file = "deltalake-0.17.4-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:b539265d8293794872e1dc3b2daad50abe05ab425e961824b3ac1155bb294604"},
-    {file = "deltalake-0.17.4-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:55e6be5f5ab8d5d34d2ea58d86e93eec2da5d2476e3c15e9520239457618bca4"},
-    {file = "deltalake-0.17.4-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:94dde6c2d0a07e9ce47be367d016541d3a499839350852205819353441e1a9c1"},
-    {file = "deltalake-0.17.4-cp38-abi3-win_amd64.whl", hash = "sha256:f51f499d50dad88bdc18c5ed7c2319114759f3220f83aa2d32166c19accee4ce"},
-    {file = "deltalake-0.17.4.tar.gz", hash = "sha256:c3c10577afc46d4b10ed16246d814a8c40b3663099066681eeba89f908373814"},
+    {file = "deltalake-0.18.1-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:eea574f2f755a8378d75d33461d30ae562aad9d511f567aec6000904f67d13b4"},
+    {file = "deltalake-0.18.1-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:74b89e3b8cdfdd23d0f17465ab008b9f19882dc7497c6a8ea3d78d8be2bf893f"},
+    {file = "deltalake-0.18.1-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:52c636137e77172b6ace4c916857678e2e88a4782cfac7a21e7fc4f0f45519b1"},
+    {file = "deltalake-0.18.1-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:aa049c74979e7905c6631d9df6d419cbaf37cd07de3f0b3e3733d3f835930f5f"},
+    {file = "deltalake-0.18.1-cp38-abi3-win_amd64.whl", hash = "sha256:b8d7648fac6b4f0165173b516b3f43c0ae550bce6d6492d6016c3700c52dcb31"},
+    {file = "deltalake-0.18.1.tar.gz", hash = "sha256:aa49822a4d559d138aee5bae3e529b231dd2dc2f1fcc6272f32853c99597c867"},
 ]
 
 [package.dependencies]
@@ -3375,4 +3375,4 @@ nexus = ["httpx", "injector"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "f2796291ddad9fc86b5fb37c4a3c63de2f6b8ac80ce4ea2f6d7bc42620cd8d3a"
+content-hash = "7cdb8b0a62428faa3edf2706006d4be2b35308bc912ecf9ecbe749b5a40ba3d7"
