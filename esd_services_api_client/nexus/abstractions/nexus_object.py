@@ -19,7 +19,7 @@
 
 from abc import ABC, abstractmethod
 import re
-from typing import Generic, TypeVar, Union, Any
+from typing import Generic, TypeVar, Union, Any, Dict
 
 import pandas
 import polars
@@ -35,7 +35,7 @@ class AlgorithmResult(ABC):
     """
 
     @abstractmethod
-    def result(self) -> Union[pandas.DataFrame, polars.DataFrame, dict]:
+    def result(self) -> Union[pandas.DataFrame, polars.DataFrame, Dict]:
         """
         Returns the main result. This will be written to the linked output storage.
         """
