@@ -46,8 +46,16 @@ class InputCache:
         """
         Resolve base exception into a specific Nexus exception.
         """
+
         match type(ex):
-            case azure.core.exceptions.HttpResponseError, deltalake.exceptions.DeltaError:
+            case (
+                azure.core.exceptions.HttpResponseError
+                | deltalake.exceptions.TableNotFoundError
+                | deltalake.exceptions.DeltaProtocolError
+                | deltalake.exceptions.CommitFailedError
+                | deltalake.exceptions.DeltaProtocolError
+                | deltalake.exceptions.SchemaMismatchError
+            ):
                 return TransientCachingError
             case azure.core.exceptions.AzureError, azure.core.exceptions.ClientAuthenticationError:
                 return FatalCachingError
