@@ -35,9 +35,9 @@ class AlgorithmResult(ABC):
     """
 
     @abstractmethod
-    def dataframe(self) -> Union[pandas.DataFrame, polars.DataFrame]:
+    def to_data_structure(self) -> Union[pandas.DataFrame, polars.DataFrame, dict]:
         """
-        Returns the main result dataframe. This will be written to the linked output storage.
+        Returns the main result. This will be written to the linked output storage.
         """
 
     @abstractmethod

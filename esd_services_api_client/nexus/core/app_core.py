@@ -206,7 +206,7 @@ class Nexus:
 
             :return: blob uri
             """
-            dataframe_data = data.dataframe()
+            dataframe_data = data.to_data_structure()
             serializer = self._injector.get(ResultSerializer)
             storage_client = self._injector.get(StorageClient)
             output_path = f"{os.getenv('NEXUS__ALGORITHM_OUTPUT_PATH')}/{self._run_args.request_id}.json"
