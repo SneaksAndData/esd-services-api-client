@@ -57,7 +57,7 @@ class InputCache:
                 | deltalake.exceptions.SchemaMismatchError
             ):
                 return TransientCachingError
-            case azure.core.exceptions.AzureError, azure.core.exceptions.ClientAuthenticationError:
+            case azure.core.exceptions.AzureError | azure.core.exceptions.ClientAuthenticationError:
                 return FatalCachingError
             case _:
                 return FatalCachingError
