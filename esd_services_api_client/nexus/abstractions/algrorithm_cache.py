@@ -21,7 +21,7 @@ import asyncio
 from typing import final, Type
 
 import azure.core.exceptions
-import deltalake
+import deltalake.exceptions
 
 from esd_services_api_client.nexus.abstractions.input_object import InputObject
 from esd_services_api_client.nexus.abstractions.nexus_object import TResult, TPayload
@@ -46,10 +46,18 @@ class InputCache:
         """
         Resolve base exception into a specific Nexus exception.
         """
+
         match type(ex):
-            case azure.core.exceptions.HttpResponseError, deltalake.PyDeltaTableError:
+            case (
+                azure.core.exceptions.HttpResponseError
+                | deltalake.exceptions.TableNotFoundError
+                | deltalake.exceptions.DeltaProtocolError
+                | deltalake.exceptions.CommitFailedError
+                | deltalake.exceptions.DeltaProtocolError
+                | deltalake.exceptions.SchemaMismatchError
+            ):
                 return TransientCachingError
-            case azure.core.exceptions.AzureError, azure.core.exceptions.ClientAuthenticationError:
+            case azure.core.exceptions.AzureError | azure.core.exceptions.ClientAuthenticationError:
                 return FatalCachingError
             case _:
                 return FatalCachingError
