@@ -3375,4 +3375,4 @@ nexus = ["httpx", "injector"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "7cdb8b0a62428faa3edf2706006d4be2b35308bc912ecf9ecbe749b5a40ba3d7"
+content-hash = "b3eee0910c190df6f204fd29b7215d4ecb290019b6467523f7c2633a182b4c28"
