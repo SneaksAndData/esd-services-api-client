@@ -106,7 +106,9 @@ class BeastConnector:
             f"{self.base_url}/job/submit/{spark_job_name}", json=request_json
         )
 
-        if submission_result.status_code == 202 and (submission_json := submission_result.json()):
+        if submission_result.status_code == 202 and (
+            submission_json := submission_result.json()
+        ):
             print(
                 f"Beast has accepted the request, stage: {submission_json['lifeCycleStage']}, id: {submission_json['id']}"
             )
