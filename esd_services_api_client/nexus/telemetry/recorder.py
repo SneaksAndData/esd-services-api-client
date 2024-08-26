@@ -4,7 +4,7 @@
 import asyncio
 import os
 from functools import partial
-from typing import final
+from typing import final, Coroutine, Callable
 
 import pandas as pd
 from adapta.metrics import MetricsProvider
@@ -106,3 +106,17 @@ class TelemetryRecorder(NexusCoreObject):
                 self._logger.warning(
                     "Telemetry recoding failed", exception=telemetry_exc
                 )
+
+    async def record_user_telemetry(
+        self,
+        run_id: str,
+        user_recorder_name: str,
+        user_recorder: Callable[..., Coroutine],
+        **user_recorder_args,
+    ):
+        self._logger.info(
+            "Executing user telemetry recorder {recorder_name} for run {run_id}",
+            user_recorder_name=user_recorder_name,
+            run_id=run_id,
+        )
+        await asyncio.create_task(user_recorder(**user_recorder_args))

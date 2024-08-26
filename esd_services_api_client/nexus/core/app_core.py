@@ -23,7 +23,7 @@ import platform
 import signal
 import sys
 import traceback
-from typing import final, Type, Optional, Coroutine
+from typing import final, Type, Optional, Coroutine, Callable
 
 import backoff
 import urllib3.exceptions
@@ -112,7 +112,7 @@ class Nexus:
         self._algorithm_class: Optional[Type[BaselineAlgorithm]] = None
         self._run_args = args
         self._algorithm_run_task: Optional[asyncio.Task] = None
-        self._on_complete_tasks: list[Coroutine] = []
+        self._on_complete_tasks: dict[str, Callable[..., Coroutine]] = {}
 
         attach_signal_handlers()
 
@@ -123,11 +123,11 @@ class Nexus:
         """
         return self._algorithm_class
 
-    def on_complete(self, coro: Coroutine) -> "Nexus":
+    def on_complete(self, func_name: str, func: Callable[..., Coroutine]) -> "Nexus":
         """
         Attaches a coroutine to run on algorithm completion.
         """
-        self._on_complete_tasks.append(coro)
+        self._on_complete_tasks = self._on_complete_tasks | {func_name: func}
         return self
 
     def add_reader(self, reader: Type[InputReader]) -> "Nexus":
@@ -261,23 +261,35 @@ class Nexus:
             )
             await self._algorithm_run_task
             ex = self._algorithm_run_task.exception()
-            on_complete_tasks = [
-                asyncio.create_task(on_complete_task)
-                for on_complete_task in self._on_complete_tasks
-            ]
 
             await self._submit_result(
                 self._algorithm_run_task.result() if not ex else None,
                 self._algorithm_run_task.exception(),
             )
-            if len(on_complete_tasks) > 0:
-                await asyncio.wait(on_complete_tasks)
 
             # record telemetry
             async with telemetry_recorder as recorder:
                 await recorder.record(
                     run_id=self._run_args.request_id, **algorithm.inputs
                 )
+                on_complete_tasks = [
+                    asyncio.create_task(
+                        recorder.record_user_telemetry(
+                            run_id=self._run_args.request_id,
+                            **(
+                                algorithm.inputs
+                                | {
+                                    "result": self._algorithm_run_task.result(),
+                                    "user_recorder_name": on_complete_task_name,
+                                    "user_recorder": on_complete_task_func,
+                                }
+                            ),
+                        )
+                    )
+                    for on_complete_task_name, on_complete_task_func in self._on_complete_tasks.items()
+                ]
+                if len(on_complete_tasks) > 0:
+                    await asyncio.wait(on_complete_tasks)
 
             # dispose of QES instance gracefully as it might hold open connections
             qes = self._injector.get(QueryEnabledStore)
