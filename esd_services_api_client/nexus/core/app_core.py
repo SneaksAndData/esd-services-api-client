@@ -23,11 +23,12 @@ import platform
 import signal
 import sys
 import traceback
-from typing import final, Type, Optional, Coroutine, Callable
+from typing import final, Type, Optional
 
 import backoff
 import urllib3.exceptions
 import azure.core.exceptions
+from adapta.logs import LoggerInterface
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
@@ -41,6 +42,7 @@ from esd_services_api_client.crystal import (
     AlgorithmRunResult,
     CrystalEntrypointArguments,
 )
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
 from esd_services_api_client.nexus.algorithms import (
     BaselineAlgorithm,
@@ -61,6 +63,10 @@ from esd_services_api_client.nexus.input.payload_reader import (
     AlgorithmPayload,
 )
 from esd_services_api_client.nexus.telemetry.recorder import TelemetryRecorder
+from esd_services_api_client.nexus.telemetry.user_telemetry_recorder import (
+    UserTelemetryRecorder,
+)
+from esd_services_api_client._version import __version__
 
 
 def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]:
@@ -112,7 +118,7 @@ class Nexus:
         self._algorithm_class: Optional[Type[BaselineAlgorithm]] = None
         self._run_args = args
         self._algorithm_run_task: Optional[asyncio.Task] = None
-        self._on_complete_tasks: dict[str, Callable[..., Coroutine]] = {}
+        self._on_complete_tasks: list[type[UserTelemetryRecorder]] = []
 
         attach_signal_handlers()
 
@@ -123,11 +129,11 @@ class Nexus:
         """
         return self._algorithm_class
 
-    def on_complete(self, func_name: str, func: Callable[..., Coroutine]) -> "Nexus":
+    def on_complete(self, post_processor: type[UserTelemetryRecorder]) -> "Nexus":
         """
         Attaches a coroutine to run on algorithm completion.
         """
-        self._on_complete_tasks = self._on_complete_tasks | {func_name: func}
+        self._on_complete_tasks.append(post_processor)
         return self
 
     def add_reader(self, reader: Type[InputReader]) -> "Nexus":
@@ -254,6 +260,15 @@ class Nexus:
 
         algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
         telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
+        root_logger: LoggerInterface = self._injector.get(LoggerFactory).create_logger(
+            logger_type=self.__class__,
+        )
+
+        root_logger.info(
+            "Running algorithm {algorithm} on Nexus version {version}",
+            algorithm=algorithm.__class__.__name__,
+            version=__version__,
+        )
 
         async with algorithm as instance:
             self._algorithm_run_task = asyncio.create_task(
@@ -268,28 +283,40 @@ class Nexus:
             )
 
             # record telemetry
+            root_logger.info(
+                "Recording telemetry for the run {request_id}",
+                request_id=self._run_args.request_id,
+            )
             async with telemetry_recorder as recorder:
                 await recorder.record(
                     run_id=self._run_args.request_id, **algorithm.inputs
                 )
                 on_complete_tasks = [
-                    asyncio.create_task(
-                        recorder.record_user_telemetry(
-                            run_id=self._run_args.request_id,
-                            **(
-                                algorithm.inputs
-                                | {
-                                    "result": self._algorithm_run_task.result(),
-                                    "user_recorder_name": on_complete_task_name,
-                                    "user_recorder": on_complete_task_func,
-                                }
-                            ),
-                        )
+                    recorder.record_user_telemetry(
+                        user_recorder_type=on_complete_task_class,
+                        run_id=self._run_args.request_id,
+                        result=self._algorithm_run_task.result(),
+                        **algorithm.inputs,
                     )
-                    for on_complete_task_name, on_complete_task_func in self._on_complete_tasks.items()
+                    for on_complete_task_class in self._on_complete_tasks
                 ]
                 if len(on_complete_tasks) > 0:
-                    await asyncio.wait(on_complete_tasks)
+                    done, pending = await asyncio.wait(on_complete_tasks)
+                    if len(pending) > 0:
+                        root_logger.warning(
+                            "Some post-processing operations did not complete or failed. Please review application logs for more information"
+                        )
+                    for done_on_complete_task in done:
+                        on_complete_task_exc = done_on_complete_task.exception()
+                        if on_complete_task_exc:
+                            root_logger.warning(
+                                "Post processing task failed",
+                                exception=on_complete_task_exc,
+                            )
+                else:
+                    root_logger.info(
+                        "No post processing tasks were defined for this run."
+                    )
 
             # dispose of QES instance gracefully as it might hold open connections
             qes = self._injector.get(QueryEnabledStore)

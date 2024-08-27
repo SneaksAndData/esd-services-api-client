@@ -3,9 +3,11 @@
 """
 import asyncio
 import os
+from asyncio import Task
 from functools import partial
 from typing import final, Coroutine, Callable
 
+import pandas
 import pandas as pd
 from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
@@ -13,7 +15,10 @@ from adapta.storage.blob.base import StorageClient
 from injector import inject, singleton
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.abstractions.nexus_object import NexusCoreObject
+from esd_services_api_client.nexus.abstractions.nexus_object import (
+    NexusCoreObject,
+    AlgorithmResult,
+)
 from esd_services_api_client.nexus.core.serializers import (
     TelemetrySerializer,
 )
@@ -75,7 +80,12 @@ class TelemetryRecorder(NexusCoreObject):
                     data=entity_to_record,
                     blob_path=DataSocket(
                         alias="telemetry",
-                        data_path=f"{self._telemetry_base_path}/entity_name={entity_name}/request_id={run_id}",
+                        data_path=os.path.join(
+                            self._telemetry_base_path,
+                            "telemetry_group=inputs",
+                            f"entity_name={entity_name}",
+                            f"request_id={run_id}",
+                        ),
                         data_format="null",
                     ).parse_data_path(),
                     serialization_format=self._serializer.get_serialization_format(
@@ -110,11 +120,20 @@ class TelemetryRecorder(NexusCoreObject):
                     "Telemetry recoding failed", exception=telemetry_exc
                 )
 
-    async def record_user_telemetry(
+    def record_user_telemetry(
         self,
         user_recorder_type: type[UserTelemetryRecorder],
         run_id: str,
-        **telemetry_args,
-    ):
-        recorder = user_recorder_type(run_id=run_id, **telemetry_args)
-        await asyncio.create_task(recorder.record())
+        result: AlgorithmResult,
+        **inputs: pandas.DataFrame,
+    ) -> Task:
+        return asyncio.create_task(
+            user_recorder_type(
+                run_id=run_id,
+                metrics_provider=self._metrics_provider,
+                logger=self._logger,
+                storage_client=self._storage_client,
+                serializer=self._serializer,
+                telemetry_base_path=self._telemetry_base_path,
+            ).record(run_id=run_id, algorithm_result=result, **inputs)
+        )
