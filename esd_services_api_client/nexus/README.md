@@ -279,6 +279,9 @@ class MyAlgorithm(MinimalisticAlgorithm[MyAlgorithmPayload]):
         self, x: pandas.DataFrame, y: pandas.DataFrame, **kwargs
     ) -> MyResult:
         return MyResult(x, y)
+    
+async def analytics(result: AlgorithmResult, payload: AlgorithmPayload, **inputs):
+    pass
 
 
 async def main():
@@ -297,6 +300,8 @@ async def main():
             .use_processor(XProcessor)
             .use_processor(YProcessor)
             .use_algorithm(MyAlgorithm)
+            .on_complete(ObjectiveAnalytics)
+            .on_complete(PersistMipOutput)
             .inject_configuration(MyAlgorithmConfiguration)
             .inject_payload(MyAlgorithmPayload, MyAlgorithmPayload2)
         )

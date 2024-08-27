@@ -17,6 +17,9 @@ from esd_services_api_client.nexus.abstractions.nexus_object import NexusCoreObj
 from esd_services_api_client.nexus.core.serializers import (
     TelemetrySerializer,
 )
+from esd_services_api_client.nexus.telemetry.user_telemetry_recorder import (
+    UserTelemetryRecorder,
+)
 
 
 @final
@@ -72,7 +75,7 @@ class TelemetryRecorder(NexusCoreObject):
                     data=entity_to_record,
                     blob_path=DataSocket(
                         alias="telemetry",
-                        data_path=f"{self._telemetry_base_path}/{entity_name}/{run_id}",
+                        data_path=f"{self._telemetry_base_path}/entity_name={entity_name}/request_id={run_id}",
                         data_format="null",
                     ).parse_data_path(),
                     serialization_format=self._serializer.get_serialization_format(
@@ -109,14 +112,9 @@ class TelemetryRecorder(NexusCoreObject):
 
     async def record_user_telemetry(
         self,
+        user_recorder_type: type[UserTelemetryRecorder],
         run_id: str,
-        user_recorder_name: str,
-        user_recorder: Callable[..., Coroutine],
-        **user_recorder_args,
+        **telemetry_args,
     ):
-        self._logger.info(
-            "Executing user telemetry recorder {recorder_name} for run {run_id}",
-            user_recorder_name=user_recorder_name,
-            run_id=run_id,
-        )
-        await asyncio.create_task(user_recorder(**user_recorder_args))
+        recorder = user_recorder_type(run_id=run_id, **telemetry_args)
+        await asyncio.create_task(recorder.record())
