@@ -66,7 +66,7 @@ from esd_services_api_client.nexus.telemetry.recorder import TelemetryRecorder
 from esd_services_api_client.nexus.telemetry.user_telemetry_recorder import (
     UserTelemetryRecorder,
 )
-from esd_services_api_client._version import __version__
+from esd_services_api_client import __version__
 
 
 def is_transient_exception(exception: Optional[BaseException]) -> Optional[bool]:
