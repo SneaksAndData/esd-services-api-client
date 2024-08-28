@@ -1,12 +1,15 @@
+"""
+ User-defined telemetry.
+"""
 import os.path
 import re
 from abc import ABC, abstractmethod
 from functools import partial
 
-from adapta.process_communication import DataSocket
-from adapta.storage.blob.base import StorageClient
 from pandas import DataFrame
 
+from adapta.process_communication import DataSocket
+from adapta.storage.blob.base import StorageClient
 from adapta.logs import LoggerInterface
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
@@ -19,6 +22,10 @@ from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
 
 
 class UserTelemetryRecorder(ABC):
+    """
+    Base class for user-defined telemetry recorders.
+    """
+
     @inject
     def __init__(
         self,
@@ -55,6 +62,10 @@ class UserTelemetryRecorder(ABC):
     async def record(
         self, algorithm_result: AlgorithmResult, run_id: str, **inputs: DataFrame
     ):
+        """
+        Record user-defined telemetry data.
+        """
+
         @run_time_metrics_async(
             metric_name="user_telemetry_recording",
             on_finish_message_template="Finished recording telemetry from {recorder} in {elapsed:.2f}s seconds",

@@ -5,10 +5,9 @@ import asyncio
 import os
 from asyncio import Task
 from functools import partial
-from typing import final, Coroutine, Callable
+from typing import final
 
-import pandas
-import pandas as pd
+from pandas import DataFrame
 from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
@@ -59,7 +58,7 @@ class TelemetryRecorder(NexusCoreObject):
         """
 
         async def _record(
-            entity_to_record: pd.DataFrame | dict,
+            entity_to_record: DataFrame | dict,
             entity_name: str,
             **_,
         ) -> None:
@@ -69,7 +68,7 @@ class TelemetryRecorder(NexusCoreObject):
                 run_id=run_id,
             )
             if not isinstance(entity_to_record, dict) and not isinstance(
-                entity_to_record, pd.DataFrame
+                entity_to_record, DataFrame
             ):
                 self._logger.warning(
                     "Unsupported data type: {telemetry_entity_type}. Telemetry recording skipped.",
@@ -125,8 +124,16 @@ class TelemetryRecorder(NexusCoreObject):
         user_recorder_type: type[UserTelemetryRecorder],
         run_id: str,
         result: AlgorithmResult,
-        **inputs: pandas.DataFrame,
+        **inputs: DataFrame,
     ) -> Task:
+        """
+        Creates an awaitable task that records user telemetry using provided recorder type.
+
+        :param user_recorder_type: Recorder type to record user telemetry.
+        :param run_id: The request_id to record user telemetry for.
+        :param result: Result of the algorithm.
+        :param inputs: Algorithm input data.
+        """
         return asyncio.create_task(
             user_recorder_type(
                 run_id=run_id,
