@@ -3,19 +3,26 @@
 """
 import asyncio
 import os
+from asyncio import Task
 from functools import partial
 from typing import final
 
-import pandas as pd
+from pandas import DataFrame
 from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from injector import inject, singleton
 
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
-from esd_services_api_client.nexus.abstractions.nexus_object import NexusCoreObject
+from esd_services_api_client.nexus.abstractions.nexus_object import (
+    NexusCoreObject,
+    AlgorithmResult,
+)
 from esd_services_api_client.nexus.core.serializers import (
     TelemetrySerializer,
+)
+from esd_services_api_client.nexus.telemetry.user_telemetry_recorder import (
+    UserTelemetryRecorder,
 )
 
 
@@ -51,7 +58,7 @@ class TelemetryRecorder(NexusCoreObject):
         """
 
         async def _record(
-            entity_to_record: pd.DataFrame | dict,
+            entity_to_record: DataFrame | dict,
             entity_name: str,
             **_,
         ) -> None:
@@ -61,7 +68,7 @@ class TelemetryRecorder(NexusCoreObject):
                 run_id=run_id,
             )
             if not isinstance(entity_to_record, dict) and not isinstance(
-                entity_to_record, pd.DataFrame
+                entity_to_record, DataFrame
             ):
                 self._logger.warning(
                     "Unsupported data type: {telemetry_entity_type}. Telemetry recording skipped.",
@@ -72,7 +79,13 @@ class TelemetryRecorder(NexusCoreObject):
                     data=entity_to_record,
                     blob_path=DataSocket(
                         alias="telemetry",
-                        data_path=f"{self._telemetry_base_path}/{entity_name}/{run_id}",
+                        data_path=os.path.join(
+                            self._telemetry_base_path,
+                            "telemetry_group=inputs",
+                            f"entity_name={entity_name}",
+                            f"request_id={run_id}",
+                            run_id,
+                        ),
                         data_format="null",
                     ).parse_data_path(),
                     serialization_format=self._serializer.get_serialization_format(
@@ -106,3 +119,29 @@ class TelemetryRecorder(NexusCoreObject):
                 self._logger.warning(
                     "Telemetry recoding failed", exception=telemetry_exc
                 )
+
+    def record_user_telemetry(
+        self,
+        user_recorder_type: type[UserTelemetryRecorder],
+        run_id: str,
+        result: AlgorithmResult,
+        **inputs: DataFrame,
+    ) -> Task:
+        """
+        Creates an awaitable task that records user telemetry using provided recorder type.
+
+        :param user_recorder_type: Recorder type to record user telemetry.
+        :param run_id: The request_id to record user telemetry for.
+        :param result: Result of the algorithm.
+        :param inputs: Algorithm input data.
+        """
+        return asyncio.create_task(
+            user_recorder_type(
+                run_id=run_id,
+                metrics_provider=self._metrics_provider,
+                logger=self._logger,
+                storage_client=self._storage_client,
+                serializer=self._serializer,
+                telemetry_base_path=self._telemetry_base_path,
+            ).record(run_id=run_id, algorithm_result=result, **inputs)
+        )

@@ -90,13 +90,13 @@ class NexusCoreObject(ABC):
 
 class NexusObject(Generic[TPayload, TResult], NexusCoreObject, ABC):
     """
-    Base class for all Nexus objects.
+    Base class for all Nexus objects that perform operations on the algorithm payload.
     """
 
     @classmethod
     def alias(cls) -> str:
         """
-        Alias to identify this reader's output
+        Alias to identify this class instances when passed through kwargs.
         """
         return snakecase(
             re.sub(
