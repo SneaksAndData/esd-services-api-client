@@ -1,3 +1,5 @@
+from pandas import DataFramefrom pandas import DataFramefrom pandas import DataFrame
+
 ## Nexus
 Set the following environment variables for Azure:
 ```
@@ -42,14 +44,7 @@ from esd_services_api_client.nexus.algorithms import MinimalisticAlgorithm
 from esd_services_api_client.nexus.input import InputReader, InputProcessor
 
 from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
-
-
-async def my_on_complete_func_1(**kwargs):
-    pass
-
-
-async def my_on_complete_func_2(**kwargs):
-    pass
+from esd_services_api_client.nexus.telemetry.user_telemetry_recorder import UserTelemetryRecorder, UserTelemetry
 
 
 @dataclass
@@ -81,10 +76,10 @@ class MockRequestHandler(BaseHTTPRequestHandler):
     """
 
     def __init__(
-        self,
-        request: bytes,
-        client_address: tuple[str, int],
-        server: socketserver.BaseServer,
+            self,
+            request: bytes,
+            client_address: tuple[str, int],
+            server: socketserver.BaseServer,
     ):
         """
          Initialize request handler
@@ -130,14 +125,14 @@ class MockRequestHandler(BaseHTTPRequestHandler):
 class XReader(InputReader[MyAlgorithmPayload, pandas.DataFrame]):
     @inject
     def __init__(
-        self,
-        store: QueryEnabledStore,
-        metrics_provider: MetricsProvider,
-        logger_factory: LoggerFactory,
-        payload: MyAlgorithmPayload,
-        socket_provider: ExternalSocketProvider,
-        *readers: "InputReader",
-        cache: InputCache
+            self,
+            store: QueryEnabledStore,
+            metrics_provider: MetricsProvider,
+            logger_factory: LoggerFactory,
+            payload: MyAlgorithmPayload,
+            socket_provider: ExternalSocketProvider,
+            *readers: "InputReader",
+            cache: InputCache
     ):
         super().__init__(
             socket=socket_provider.socket("x"),
@@ -161,14 +156,14 @@ class XReader(InputReader[MyAlgorithmPayload, pandas.DataFrame]):
 class YReader(InputReader[MyAlgorithmPayload2, pandas.DataFrame]):
     @inject
     def __init__(
-        self,
-        store: QueryEnabledStore,
-        metrics_provider: MetricsProvider,
-        logger_factory: LoggerFactory,
-        payload: MyAlgorithmPayload2,
-        socket_provider: ExternalSocketProvider,
-        *readers: "InputReader",
-        cache: InputCache
+            self,
+            store: QueryEnabledStore,
+            metrics_provider: MetricsProvider,
+            logger_factory: LoggerFactory,
+            payload: MyAlgorithmPayload2,
+            socket_provider: ExternalSocketProvider,
+            *readers: "InputReader",
+            cache: InputCache
     ):
         super().__init__(
             socket=socket_provider.socket("y"),
@@ -192,12 +187,12 @@ class YReader(InputReader[MyAlgorithmPayload2, pandas.DataFrame]):
 class XProcessor(InputProcessor[MyAlgorithmPayload, pandas.DataFrame]):
     @inject
     def __init__(
-        self,
-        x: XReader,
-        metrics_provider: MetricsProvider,
-        logger_factory: LoggerFactory,
-        my_conf: MyAlgorithmConfiguration,
-        cache: InputCache,
+            self,
+            x: XReader,
+            metrics_provider: MetricsProvider,
+            logger_factory: LoggerFactory,
+            my_conf: MyAlgorithmConfiguration,
+            cache: InputCache,
     ):
         super().__init__(
             x,
@@ -210,7 +205,7 @@ class XProcessor(InputProcessor[MyAlgorithmPayload, pandas.DataFrame]):
         self.conf = my_conf
 
     async def _process_input(
-        self, x: pandas.DataFrame, **_
+            self, x: pandas.DataFrame, **_
     ) -> pandas.DataFrame:
         self._logger.info("Config: {config}", config=self.conf.to_json())
         return x.assign(c=[-1, 1])
@@ -219,12 +214,12 @@ class XProcessor(InputProcessor[MyAlgorithmPayload, pandas.DataFrame]):
 class YProcessor(InputProcessor[MyAlgorithmPayload, pandas.DataFrame]):
     @inject
     def __init__(
-        self,
-        y: YReader,
-        metrics_provider: MetricsProvider,
-        logger_factory: LoggerFactory,
-        my_conf: MyAlgorithmConfiguration,
-        cache: InputCache,
+            self,
+            y: YReader,
+            metrics_provider: MetricsProvider,
+            logger_factory: LoggerFactory,
+            my_conf: MyAlgorithmConfiguration,
+            cache: InputCache,
     ):
         super().__init__(
             y,
@@ -237,7 +232,7 @@ class YProcessor(InputProcessor[MyAlgorithmPayload, pandas.DataFrame]):
         self.conf = my_conf
 
     async def _process_input(
-        self, y: pandas.DataFrame, **_
+            self, y: pandas.DataFrame, **_
     ) -> pandas.DataFrame:
         self._logger.info("Config: {config}", config=self.conf.to_json())
         return y.assign(c=[-1, 1])
@@ -264,24 +259,32 @@ class MyAlgorithm(MinimalisticAlgorithm[MyAlgorithmPayload]):
 
     @inject
     def __init__(
-        self,
-        metrics_provider: MetricsProvider,
-        logger_factory: LoggerFactory,
-        x_processor: XProcessor,
-        y_processor: YProcessor,
-        cache: InputCache,
+            self,
+            metrics_provider: MetricsProvider,
+            logger_factory: LoggerFactory,
+            x_processor: XProcessor,
+            y_processor: YProcessor,
+            cache: InputCache,
     ):
         super().__init__(
             metrics_provider, logger_factory, x_processor, y_processor, cache=cache
         )
 
     async def _run(
-        self, x: pandas.DataFrame, y: pandas.DataFrame, **kwargs
+            self, x: pandas.DataFrame, y: pandas.DataFrame, **kwargs
     ) -> MyResult:
         return MyResult(x, y)
-    
-async def analytics(result: AlgorithmResult, payload: AlgorithmPayload, **inputs):
-    pass
+
+
+class ObjectiveAnalytics(UserTelemetryRecorder):
+
+    async def _compute(self, 
+                       algorithm_payload: 
+                       AlgorithmPayload, 
+                       algorithm_result: AlgorithmResult, 
+                       run_id: str, 
+                       **inputs: pandas.DataFrame) -> UserTelemetry:
+        pass
 
 
 async def main():
@@ -301,7 +304,6 @@ async def main():
             .use_processor(YProcessor)
             .use_algorithm(MyAlgorithm)
             .on_complete(ObjectiveAnalytics)
-            .on_complete(PersistMipOutput)
             .inject_configuration(MyAlgorithmConfiguration)
             .inject_payload(MyAlgorithmPayload, MyAlgorithmPayload2)
         )

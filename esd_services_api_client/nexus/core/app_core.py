@@ -129,11 +129,11 @@ class Nexus:
         """
         return self._algorithm_class
 
-    def on_complete(self, post_processor: type[UserTelemetryRecorder]) -> "Nexus":
+    def on_complete(self, *post_processors: type[UserTelemetryRecorder]) -> "Nexus":
         """
         Attaches a coroutine to run on algorithm completion.
         """
-        self._on_complete_tasks.append(post_processor)
+        self._on_complete_tasks.extend(post_processors)
         return self
 
     def add_reader(self, reader: Type[InputReader]) -> "Nexus":

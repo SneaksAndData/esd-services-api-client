@@ -4,7 +4,9 @@
 import os.path
 import re
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from functools import partial
+from typing import final, Optional
 
 from pandas import DataFrame
 
@@ -19,6 +21,49 @@ from injector import inject
 from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
 from esd_services_api_client.nexus.core.serializers import TelemetrySerializer
 from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
+
+
+@final
+@dataclass
+class UserTelemetryPathSegment:
+    """
+    Path segment for user telemetry.
+    """
+
+    segment: str
+    segment_header: str
+
+    def __str__(self):
+        return "=".join([self.segment_header, self.segment])
+
+
+@final
+class UserTelemetry:
+    """
+    Base class for user-defined telemetry types.
+    """
+
+    def __init__(
+        self, telemetry: DataFrame, *telemetry_path_segments: UserTelemetryPathSegment
+    ):
+        self._telemetry = telemetry
+        self._telemetry_path_segments = telemetry_path_segments
+
+    @property
+    def telemetry(self) -> DataFrame:
+        """
+        User telemetry data
+        """
+        return self._telemetry
+
+    @property
+    def telemetry_path(self) -> str:
+        """
+        Path segment for user telemetry data to include when writing it out.
+        """
+        if len(self._telemetry_path_segments) == 0:
+            return ""
+        return "/".join([str(t_path) for t_path in self._telemetry_path_segments])
 
 
 class UserTelemetryRecorder(ABC):
@@ -54,7 +99,7 @@ class UserTelemetryRecorder(ABC):
         algorithm_result: AlgorithmResult,
         run_id: str,
         **inputs: DataFrame,
-    ) -> DataFrame:
+    ) -> UserTelemetry:
         """
         Produces the dataframe to record as user-level telemetry data.
         """
@@ -73,10 +118,10 @@ class UserTelemetryRecorder(ABC):
                 "recorder": self.__class__.alias().upper(),
             },
         )
-        async def _measured_recording(**run_args):
+        async def _measured_recording(**run_args) -> UserTelemetry:
             return await self._compute(**run_args)
 
-        telemetry = await partial(
+        telemetry: UserTelemetry = await partial(
             _measured_recording,
             **(
                 {
@@ -92,14 +137,16 @@ class UserTelemetryRecorder(ABC):
         )()
 
         self._storage_client.save_data_as_blob(
-            data=telemetry,
+            data=telemetry.telemetry,
             blob_path=DataSocket(
                 alias="user_telemetry",
                 data_path=os.path.join(
                     self._telemetry_base_path,
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
+                    telemetry.telemetry_path,  # path join eliminates empty segments
                     f"request_id={run_id}",
+                    run_id,
                 ),
                 data_format="null",
             ).parse_data_path(),
