@@ -12,13 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.ref != 'refs/heads/main' }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9.x'
           architecture: 'x64'
       - name: Install Poetry and dependencies
-        uses: SneaksAndData/github-actions/install_poetry@v0.1.0
+        uses: SneaksAndData/github-actions/install_poetry@v0.1.9
         with:
           install_extras: all
       - name: Unit test
@@ -36,13 +38,15 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.ref != 'refs/heads/main' }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11.x'
           architecture: 'x64'
       - name: Install Poetry and dependencies
-        uses: SneaksAndData/github-actions/install_poetry@v0.1.0
+        uses: SneaksAndData/github-actions/install_poetry@v0.1.9
         with:
           install_extras: all
       - name: Unit test

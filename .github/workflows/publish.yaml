@@ -24,7 +24,7 @@ jobs:
           
           version=$(git describe --tags --abbrev=7)
           sed -i "s/version = \"0.0.0\"/version = \"${version:1}\"/" pyproject.toml
-          echo "__version__ = '${version:1}'" > ./esd_services_api_client/_version.py
+          sed -i "s/__version__ = \"0.0.0\"/__version__ = \"${version:1}\"/" ./esd_services_api_client/__init__.py
 
       - name: Configure Test PyPi
         if: ${{ github.ref == 'refs/heads/main' }}
