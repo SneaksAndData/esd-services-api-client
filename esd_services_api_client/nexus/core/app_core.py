@@ -293,7 +293,7 @@ class Nexus:
                 )
                 on_complete_tasks = [
                     recorder.record_user_telemetry(
-                        user_recorder_type=on_complete_task_class,
+                        user_recorder=self._injector.get(on_complete_task_class),
                         run_id=self._run_args.request_id,
                         result=self._algorithm_run_task.result(),
                         **algorithm.inputs,
