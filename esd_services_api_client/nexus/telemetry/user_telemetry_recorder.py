@@ -80,6 +80,7 @@ class UserTelemetryRecorder(ABC):
         storage_client: StorageClient,
         serializer: TelemetrySerializer,
         telemetry_base_path: str,
+        run_id: str,
     ):
         self._metrics_provider = metrics_provider
         self._logger = logger
@@ -87,6 +88,7 @@ class UserTelemetryRecorder(ABC):
         self._storage_client = storage_client
         self._serializer = serializer
         self._telemetry_base_path = telemetry_base_path
+        self._run_id = run_id
 
     @property
     def _metric_tags(self) -> dict[str, str]:
@@ -97,7 +99,6 @@ class UserTelemetryRecorder(ABC):
         self,
         algorithm_payload: AlgorithmPayload,
         algorithm_result: AlgorithmResult,
-        run_id: str,
         **inputs: DataFrame,
     ) -> UserTelemetry:
         """
@@ -105,7 +106,7 @@ class UserTelemetryRecorder(ABC):
         """
 
     async def record(
-        self, algorithm_result: AlgorithmResult, run_id: str, **inputs: DataFrame
+        self, algorithm_result: AlgorithmResult, **inputs: DataFrame
     ):
         """
         Record user-defined telemetry data.
@@ -127,7 +128,7 @@ class UserTelemetryRecorder(ABC):
                 {
                     "algorithm_payload": self._payload,
                     "algorithm_result": algorithm_result,
-                    "run_id": run_id,
+                    "run_id": self._run_id,
                 }
                 | inputs
             ),
@@ -145,8 +146,8 @@ class UserTelemetryRecorder(ABC):
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
                     telemetry.telemetry_path,  # path join eliminates empty segments
-                    f"request_id={run_id}",
-                    run_id,
+                    f"request_id={self._run_id}",
+                    self._run_id,
                 ),
                 data_format="null",
             ).parse_data_path(),
