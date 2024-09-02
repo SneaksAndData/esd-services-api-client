@@ -137,7 +137,6 @@ class TelemetryRecorder(NexusCoreObject):
         """
         return asyncio.create_task(
             user_recorder_type(
-                run_id=run_id,
                 metrics_provider=self._metrics_provider,
                 logger=self._logger,
                 storage_client=self._storage_client,
