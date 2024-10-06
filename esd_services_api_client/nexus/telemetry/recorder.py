@@ -75,7 +75,7 @@ class TelemetryRecorder(NexusCoreObject):
             except KeyError:
                 self._logger.warning(
                     "No telemetry serialization format injected for data type: {telemetry_entity_type}. Telemetry recording skipped.",
-                    telemetry_entity_type=type(entity_to_record),
+                    telemetry_entity_type=str(type(entity_to_record)),
                 )
                 return
 
