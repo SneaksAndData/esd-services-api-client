@@ -67,32 +67,34 @@ class TelemetryRecorder(NexusCoreObject):
                 entity_name=entity_name,
                 run_id=run_id,
             )
-            if not isinstance(entity_to_record, dict) and not isinstance(
-                entity_to_record, DataFrame
-            ):
+
+            try:
+                serialization_format = self._serializer.get_serialization_format(
+                    entity_to_record
+                )
+            except KeyError:
                 self._logger.warning(
-                    "Unsupported data type: {telemetry_entity_type}. Telemetry recording skipped.",
-                    telemetry_entity_type=type(entity_to_record),
+                    "No telemetry serialization format injected for data type: {telemetry_entity_type}. Telemetry recording skipped.",
+                    telemetry_entity_type=str(type(entity_to_record)),
                 )
-            else:
-                self._storage_client.save_data_as_blob(
-                    data=entity_to_record,
-                    blob_path=DataSocket(
-                        alias="telemetry",
-                        data_path=os.path.join(
-                            self._telemetry_base_path,
-                            "telemetry_group=inputs",
-                            f"entity_name={entity_name}",
-                            f"request_id={run_id}",
-                            run_id,
-                        ),
-                        data_format="null",
-                    ).parse_data_path(),
-                    serialization_format=self._serializer.get_serialization_format(
-                        entity_to_record
+                return
+
+            self._storage_client.save_data_as_blob(
+                data=entity_to_record,
+                blob_path=DataSocket(
+                    alias="telemetry",
+                    data_path=os.path.join(
+                        self._telemetry_base_path,
+                        "telemetry_group=inputs",
+                        f"entity_name={entity_name}",
+                        f"request_id={run_id}",
+                        run_id,
                     ),
-                    overwrite=True,
-                )
+                    data_format="null",
+                ).parse_data_path(),
+                serialization_format=serialization_format,
+                overwrite=True,
+            )
 
         telemetry_tasks = [
             asyncio.create_task(
