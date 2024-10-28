@@ -151,7 +151,9 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
                 ),
                 data_format="null",
             ).parse_data_path(),
-            serialization_format=self._serializer.get_serialization_format(telemetry.telemetry),
+            serialization_format=self._serializer.get_serialization_format(
+                telemetry.telemetry
+            ),
             overwrite=True,
         )
 
