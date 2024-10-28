@@ -12,12 +12,12 @@ from pandas import DataFrame
 
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
-from adapta.logs import LoggerInterface
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
 from dataclasses_json.stringcase import snakecase
 from injector import inject
 
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.abstractions.nexus_object import TPayload, TResult
 from esd_services_api_client.nexus.core.serializers import TelemetrySerializer
 
@@ -75,12 +75,12 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
         self,
         algorithm_payload: TPayload,
         metrics_provider: MetricsProvider,
-        logger: LoggerInterface,
+        logger_factory: LoggerFactory,
         storage_client: StorageClient,
         serializer: TelemetrySerializer,
     ):
         self._metrics_provider = metrics_provider
-        self._logger = logger
+        self._logger = logger_factory.create_logger(logger_type=self.__class__)
         self._payload = algorithm_payload
         self._storage_client = storage_client
         self._serializer = serializer
