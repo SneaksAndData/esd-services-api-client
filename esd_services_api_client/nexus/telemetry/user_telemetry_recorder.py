@@ -6,21 +6,20 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import partial
-from typing import final
+from typing import final, Generic
 
 from pandas import DataFrame
 
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
-from adapta.logs import LoggerInterface
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
 from dataclasses_json.stringcase import snakecase
 from injector import inject
 
-from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
+from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.abstractions.nexus_object import TPayload, TResult
 from esd_services_api_client.nexus.core.serializers import TelemetrySerializer
-from esd_services_api_client.nexus.input.payload_reader import AlgorithmPayload
 
 
 @final
@@ -66,7 +65,7 @@ class UserTelemetry:
         return "/".join([str(t_path) for t_path in self._telemetry_path_segments])
 
 
-class UserTelemetryRecorder(ABC):
+class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
     """
     Base class for user-defined telemetry recorders.
     """
@@ -74,19 +73,17 @@ class UserTelemetryRecorder(ABC):
     @inject
     def __init__(
         self,
-        algorithm_payload: AlgorithmPayload,
+        algorithm_payload: TPayload,
         metrics_provider: MetricsProvider,
-        logger: LoggerInterface,
+        logger_factory: LoggerFactory,
         storage_client: StorageClient,
         serializer: TelemetrySerializer,
-        telemetry_base_path: str,
     ):
         self._metrics_provider = metrics_provider
-        self._logger = logger
+        self._logger = logger_factory.create_logger(logger_type=self.__class__)
         self._payload = algorithm_payload
         self._storage_client = storage_client
         self._serializer = serializer
-        self._telemetry_base_path = telemetry_base_path
 
     @property
     def _metric_tags(self) -> dict[str, str]:
@@ -95,8 +92,8 @@ class UserTelemetryRecorder(ABC):
     @abstractmethod
     async def _compute(
         self,
-        algorithm_payload: AlgorithmPayload,
-        algorithm_result: AlgorithmResult,
+        algorithm_payload: TPayload,
+        algorithm_result: TResult,
         run_id: str,
         **inputs: DataFrame,
     ) -> UserTelemetry:
@@ -105,7 +102,11 @@ class UserTelemetryRecorder(ABC):
         """
 
     async def record(
-        self, algorithm_result: AlgorithmResult, run_id: str, **inputs: DataFrame
+        self,
+        algorithm_result: TResult,
+        telemetry_base_path: str,
+        run_id: str,
+        **inputs: DataFrame,
     ):
         """
         Record user-defined telemetry data.
@@ -141,7 +142,7 @@ class UserTelemetryRecorder(ABC):
             blob_path=DataSocket(
                 alias="user_telemetry",
                 data_path=os.path.join(
-                    self._telemetry_base_path,
+                    telemetry_base_path,
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
                     telemetry.telemetry_path,  # path join eliminates empty segments
@@ -150,7 +151,9 @@ class UserTelemetryRecorder(ABC):
                 ),
                 data_format="null",
             ).parse_data_path(),
-            serialization_format=self._serializer.get_serialization_format(telemetry),
+            serialization_format=self._serializer.get_serialization_format(
+                telemetry.telemetry
+            ),
             overwrite=True,
         )
 

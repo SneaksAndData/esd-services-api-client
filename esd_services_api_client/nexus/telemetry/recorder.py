@@ -124,7 +124,7 @@ class TelemetryRecorder(NexusCoreObject):
 
     def record_user_telemetry(
         self,
-        user_recorder_type: type[UserTelemetryRecorder],
+        user_recorder: UserTelemetryRecorder,
         run_id: str,
         result: AlgorithmResult,
         **inputs: DataFrame,
@@ -132,18 +132,16 @@ class TelemetryRecorder(NexusCoreObject):
         """
         Creates an awaitable task that records user telemetry using provided recorder type.
 
-        :param user_recorder_type: Recorder type to record user telemetry.
+        :param user_recorder: Recorder type to record user telemetry.
         :param run_id: The request_id to record user telemetry for.
         :param result: Result of the algorithm.
         :param inputs: Algorithm input data.
         """
         return asyncio.create_task(
-            user_recorder_type(
+            user_recorder.record(
                 run_id=run_id,
-                metrics_provider=self._metrics_provider,
-                logger=self._logger,
-                storage_client=self._storage_client,
-                serializer=self._serializer,
                 telemetry_base_path=self._telemetry_base_path,
-            ).record(run_id=run_id, algorithm_result=result, **inputs)
+                algorithm_result=result,
+                **inputs,
+            )
         )
