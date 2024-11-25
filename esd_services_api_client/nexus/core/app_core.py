@@ -264,6 +264,8 @@ class Nexus:
             logger_type=self.__class__,
         )
 
+        root_logger.start()
+
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
             algorithm=algorithm.__class__.__name__,
@@ -321,6 +323,8 @@ class Nexus:
             # dispose of QES instance gracefully as it might hold open connections
             qes = self._injector.get(QueryEnabledStore)
             qes.close()
+
+        root_logger.stop()
 
     @classmethod
     def create(cls) -> "Nexus":
