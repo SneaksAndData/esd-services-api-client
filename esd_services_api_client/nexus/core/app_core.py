@@ -320,11 +320,11 @@ class Nexus:
                         "No post processing tasks were defined for this run."
                     )
 
-            root_logger.stop()
-
             # dispose of QES instance gracefully as it might hold open connections
             qes = self._injector.get(QueryEnabledStore)
             qes.close()
+
+        root_logger.stop()
 
     @classmethod
     def create(cls) -> "Nexus":
