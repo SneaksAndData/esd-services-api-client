@@ -264,6 +264,8 @@ class Nexus:
             logger_type=self.__class__,
         )
 
+        root_logger.start()
+
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
             algorithm=algorithm.__class__.__name__,
@@ -317,6 +319,8 @@ class Nexus:
                     root_logger.info(
                         "No post processing tasks were defined for this run."
                     )
+
+            root_logger.stop()
 
             # dispose of QES instance gracefully as it might hold open connections
             qes = self._injector.get(QueryEnabledStore)
