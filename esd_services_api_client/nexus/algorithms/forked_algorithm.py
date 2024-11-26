@@ -143,8 +143,13 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
             return await self._main_run(**run_args)
 
+        if self._is_forked(**kwargs):
+            self._inputs = await self._fork_inputs(**kwargs)
+        else:
+            self._inputs = await self._main_inputs(**kwargs)
+
         # evaluate if additional forks will be spawned
-        forks = await self._get_forks(**kwargs)
+        forks = await partial(self._get_forks, **self._inputs, **kwargs)()
 
         if len(forks) > 0:
             self._logger.info(
@@ -153,11 +158,6 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
             )
         else:
             self._logger.info("Leaf algorithm node: proceeding with this node run only")
-
-        if self._is_forked(**kwargs):
-            self._inputs = await self._fork_inputs(**kwargs)
-        else:
-            self._inputs = await self._main_inputs(**kwargs)
 
         run_result = await partial(
             _measured_run,
