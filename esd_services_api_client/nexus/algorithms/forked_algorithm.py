@@ -149,7 +149,9 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
             self._inputs = await self._main_inputs(**kwargs)
 
         # evaluate if additional forks will be spawned
-        forks: list[RemoteAlgorithm] = await partial(self._get_forks, **self._inputs, **kwargs)()
+        forks: list[RemoteAlgorithm] = await partial(
+            self._get_forks, **self._inputs, **kwargs
+        )()
 
         if len(forks) > 0:
             self._logger.info(
