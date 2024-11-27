@@ -23,6 +23,7 @@ from functools import partial
 
 from adapta.metrics import MetricsProvider
 from adapta.utils.decorators import run_time_metrics_async
+from injector import inject
 
 from esd_services_api_client.crystal import CrystalConnector, AlgorithmConfiguration
 from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
@@ -43,6 +44,7 @@ class RemoteAlgorithm(NexusObject[TPayload, AlgorithmResult]):
     Base class for all algorithm implementations.
     """
 
+    @inject
     def __init__(
         self,
         metrics_provider: MetricsProvider,

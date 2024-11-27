@@ -21,3 +21,4 @@ from esd_services_api_client.nexus.algorithms.minimalistic import *
 from esd_services_api_client.nexus.algorithms.recursive import *
 from esd_services_api_client.nexus.algorithms.distributed import *
 from esd_services_api_client.nexus.algorithms._baseline_algorithm import *
+from esd_services_api_client.nexus.algorithms._remote_algorithm import *
