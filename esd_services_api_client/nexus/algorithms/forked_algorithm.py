@@ -143,13 +143,15 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
             return await self._main_run(**run_args)
 
-        if self._is_forked(**kwargs):
+        if await self._is_forked(**kwargs):
             self._inputs = await self._fork_inputs(**kwargs)
         else:
             self._inputs = await self._main_inputs(**kwargs)
 
         # evaluate if additional forks will be spawned
-        forks = await partial(self._get_forks, **self._inputs, **kwargs)()
+        forks: list[RemoteAlgorithm] = await partial(
+            self._get_forks, **self._inputs, **kwargs
+        )()
 
         if len(forks) > 0:
             self._logger.info(
@@ -168,6 +170,6 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         )()
 
         # now await callback scheduling
-        await asyncio.wait([fork.run(**kwargs) for fork in forks])
+        await asyncio.wait([asyncio.create_task(fork.run(**kwargs)) for fork in forks])
 
         return run_result
