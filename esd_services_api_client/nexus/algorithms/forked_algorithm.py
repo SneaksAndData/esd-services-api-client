@@ -172,5 +172,4 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         else:
             self._logger.info("Leaf algorithm node: proceeding with this node run only")
 
-
         return run_result
