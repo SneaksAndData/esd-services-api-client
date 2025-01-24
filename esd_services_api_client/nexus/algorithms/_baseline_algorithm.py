@@ -87,6 +87,7 @@ class BaselineAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
         return await partial(
             _measured_run,
+            **kwargs,
             **self._inputs,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
