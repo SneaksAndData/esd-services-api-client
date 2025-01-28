@@ -153,14 +153,6 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
             self._get_forks, **self._inputs, **kwargs
         )()
 
-        if len(forks) > 0:
-            self._logger.info(
-                "Forking node with: {forks}, after the node run",
-                forks=",".join([fork.alias() for fork in forks]),
-            )
-        else:
-            self._logger.info("Leaf algorithm node: proceeding with this node run only")
-
         run_result = await partial(
             _measured_run,
             **kwargs,
@@ -170,7 +162,15 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
             logger=self._logger,
         )()
 
-        # now await callback scheduling
-        await asyncio.wait([asyncio.create_task(fork.run(**kwargs)) for fork in forks])
+        if len(forks) > 0:
+            self._logger.info(
+                "Forking node with: {forks}, after the node run",
+                forks=",".join([fork.alias() for fork in forks]),
+            )
+            await asyncio.wait(
+                [asyncio.create_task(fork.run(**kwargs)) for fork in forks]
+            )
+        else:
+            self._logger.info("Leaf algorithm node: proceeding with this node run only")
 
         return run_result
