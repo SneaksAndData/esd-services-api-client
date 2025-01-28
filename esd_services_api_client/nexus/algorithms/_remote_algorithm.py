@@ -113,6 +113,7 @@ class RemoteAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
         return await partial(
             _measured_run,
+            **kwargs,
             **results,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,

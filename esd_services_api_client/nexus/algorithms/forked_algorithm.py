@@ -155,6 +155,7 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
 
         run_result = await partial(
             _measured_run,
+            **kwargs,
             **self._inputs,
             metric_tags=self._metric_tags,
             metrics_provider=self._metrics_provider,
