@@ -188,11 +188,11 @@ class Nexus:
 
         return self
 
-    def inject_module(self, module: Type[Module]) -> "Nexus":
+    def with_module(self, module: Type[Module]) -> "Nexus":
         """
-        Injects a (custom) DI module into the DI container.
+        Adds a (custom) DI module into the DI container.
         """
-        self._configurator = self._configurator.inject_module(module)
+        self._configurator = self._configurator.with_module(module)
         return self
 
     async def _submit_result(
