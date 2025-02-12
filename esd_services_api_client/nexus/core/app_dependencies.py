@@ -255,6 +255,13 @@ class ServiceConfigurator:
         """
         return self._injection_binds
 
+    def inject_module(self, module: Type[Module]) -> "ServiceConfigurator":
+        """
+        Injects a (custom) module into the DI container.
+        """
+        self._injection_binds.append(module())
+        return self
+
     def with_input_reader(self, reader: Type[InputReader]) -> "ServiceConfigurator":
         """
         Adds the input reader implementation to the DI.
