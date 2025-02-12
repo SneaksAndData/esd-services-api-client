@@ -32,7 +32,7 @@ from adapta.logs import LoggerInterface
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import Injector
+from injector import Injector, Module
 
 import esd_services_api_client.nexus.exceptions
 from esd_services_api_client.crystal import (
@@ -186,6 +186,13 @@ class Nexus:
                 config_type.from_environment()
             )
 
+        return self
+
+    def with_module(self, module: Type[Module]) -> "Nexus":
+        """
+        Adds a (custom) DI module into the DI container.
+        """
+        self._configurator = self._configurator.with_module(module)
         return self
 
     async def _submit_result(
