@@ -146,7 +146,6 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
                     telemetry.telemetry_path,  # path join eliminates empty segments
-                    f"request_id={run_id}",
                     run_id,
                 ),
                 data_format="null",
