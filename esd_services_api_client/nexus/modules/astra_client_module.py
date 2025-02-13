@@ -23,7 +23,9 @@ from typing import final
 from adapta.storage.distributed_object_store import AstraClient
 from injector import Module, singleton, provider
 
-from esd_services_api_client.nexus.exceptions.startup_error import FatalStartupConfigurationError
+from esd_services_api_client.nexus.exceptions.startup_error import (
+    FatalStartupConfigurationError,
+)
 
 
 @final
@@ -56,7 +58,7 @@ class AstraClientModule(Module):
             missing_env_vars.append("PROTEUS__ASTRA_CLIENT_SECRET")
 
         if missing_env_vars:
-            raise FatalStartupConfigurationError(', '.join(missing_env_vars))
+            raise FatalStartupConfigurationError(", ".join(missing_env_vars))
 
         return AstraClient(
             client_name=os.getenv("CRYSTAL__ALGORITHM_NAME"),
