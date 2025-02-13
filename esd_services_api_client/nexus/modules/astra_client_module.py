@@ -56,7 +56,7 @@ class AstraClientModule(Module):
             missing_env_vars.append("PROTEUS__ASTRA_CLIENT_SECRET")
 
         if missing_env_vars:
-            FatalStartupConfigurationError(', '.join(missing_env_vars))
+            raise FatalStartupConfigurationError(', '.join(missing_env_vars))
 
         return AstraClient(
             client_name=os.getenv("CRYSTAL__ALGORITHM_NAME"),
