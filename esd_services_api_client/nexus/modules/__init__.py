@@ -17,5 +17,8 @@
  Import index.
 """
 
-from esd_services_api_client.nexus.modules.mlflow_module import MlflowModule
+try:
+    from esd_services_api_client.nexus.modules.mlflow_module import MlflowModule
+except ModuleNotFoundError:
+    pass
 from esd_services_api_client.nexus.modules.astra_client_module import AstraClientModule

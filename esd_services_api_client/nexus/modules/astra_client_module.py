@@ -40,30 +40,24 @@ class AstraClientModule(Module):
         """
         DI factory method.
         """
-        missing_env_vars = []
 
-        if "CRYSTAL__ALGORITHM_NAME" not in os.environ:
-            missing_env_vars.append("CRYSTAL__ALGORITHM_NAME")
+        required_env_vars = [
+            "NEXUS__ALGORITHM_NAME",
+            "NEXUS__ASTRA_KEYSPACE",
+            "NEXUS__ASTRA_BUNDLE_BYTES",
+            "NEXUS__ASTRA_CLIENT_ID",
+            "NEXUS__ASTRA_CLIENT_SECRET",
+        ]
 
-        if "CRYSTAL__ASTRA_KEYSPACE" not in os.environ:
-            missing_env_vars.append("CRYSTAL__ASTRA_KEYSPACE")
+        if all(map(lambda v: v in os.environ, required_env_vars)):
+            return AstraClient(
+                client_name=os.getenv("NEXUS__ALGORITHM_NAME"),
+                keyspace=os.getenv("NEXUS__ASTRA_KEYSPACE"),
+                secure_connect_bundle_bytes=os.getenv("NEXUS__ASTRA_BUNDLE_BYTES"),
+                client_id=os.getenv("NEXUS__ASTRA_CLIENT_ID"),
+                client_secret=os.getenv("NEXUS__ASTRA_CLIENT_SECRET"),
+            )
 
-        if "PROTEUS__ASTRA_BUNDLE_BYTES" not in os.environ:
-            missing_env_vars.append("PROTEUS__ASTRA_BUNDLE_BYTES")
-
-        if "PROTEUS__ASTRA_CLIENT_ID" not in os.environ:
-            missing_env_vars.append("PROTEUS__ASTRA_CLIENT_ID")
-
-        if "PROTEUS__ASTRA_CLIENT_SECRET" not in os.environ:
-            missing_env_vars.append("PROTEUS__ASTRA_CLIENT_SECRET")
-
-        if missing_env_vars:
-            raise FatalStartupConfigurationError(", ".join(missing_env_vars))
-
-        return AstraClient(
-            client_name=os.getenv("CRYSTAL__ALGORITHM_NAME"),
-            keyspace=os.getenv("CRYSTAL__ASTRA_KEYSPACE"),
-            secure_connect_bundle_bytes=os.getenv("PROTEUS__ASTRA_BUNDLE_BYTES"),
-            client_id=os.getenv("PROTEUS__ASTRA_CLIENT_ID"),
-            client_secret=os.getenv("PROTEUS__ASTRA_CLIENT_SECRET"),
+        raise FatalStartupConfigurationError(
+            f"Astra client requires these environment variables: {required_env_vars}"
         )
