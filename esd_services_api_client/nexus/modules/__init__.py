@@ -18,3 +18,4 @@
 """
 
 from esd_services_api_client.nexus.modules.mlflow_module import MlflowModule
+from esd_services_api_client.nexus.modules.astra_client_module import AstraClientModule
