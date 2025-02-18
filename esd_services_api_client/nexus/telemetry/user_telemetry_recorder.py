@@ -138,7 +138,9 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
         )()
 
         if telemetry is None:
-            self._logger.info(f'No telemetry to record for UserTelemetryRecorder {self.__class__.alias()}')
+            self._logger.info(
+                f"No telemetry to record for UserTelemetryRecorder {self.__class__.alias()}"
+            )
             return
 
         self._storage_client.save_data_as_blob(
