@@ -107,7 +107,7 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
         telemetry_base_path: str,
         run_id: str,
         **inputs: DataFrame,
-    ):
+    ) -> None:
         """
         Record user-defined telemetry data.
         """
@@ -136,6 +136,10 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
             metrics_provider=self._metrics_provider,
             logger=self._logger,
         )()
+
+        if telemetry is None:
+            self._logger.debug(f'No telemetry to record for recorder {self.__class__.alias()}')
+            return
 
         self._storage_client.save_data_as_blob(
             data=telemetry.telemetry,
