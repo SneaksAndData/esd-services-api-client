@@ -87,7 +87,6 @@ class TelemetryRecorder(NexusCoreObject):
                         self._telemetry_base_path,
                         "telemetry_group=inputs",
                         f"entity_name={entity_name}",
-                        f"request_id={run_id}",
                         run_id,
                     ),
                     data_format="null",
