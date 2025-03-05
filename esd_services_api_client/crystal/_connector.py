@@ -184,7 +184,7 @@ class CrystalConnector:
             tag=tag,
         ).to_dict()
 
-        run_response = self._http.post(get_api_path(), json=run_body)
+        run_response = self._http.post(get_api_path(), data=run_body)
 
         # raise if not successful
         run_response.raise_for_status()
