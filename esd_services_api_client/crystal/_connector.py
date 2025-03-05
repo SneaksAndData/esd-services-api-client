@@ -182,9 +182,9 @@ class CrystalConnector:
             custom_configuration=custom_config,
             parent_request=parent_request,
             tag=tag,
-        ).to_dict()
+        ).to_json()
 
-        run_response = self._http.post(get_api_path(), data=run_body)
+        run_response = self._http.post(get_api_path(), json=json.loads(run_body))
 
         # raise if not successful
         run_response.raise_for_status()
