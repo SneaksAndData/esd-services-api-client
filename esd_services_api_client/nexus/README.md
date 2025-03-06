@@ -297,7 +297,7 @@ async def main():
         server_thread.daemon = True
         server_thread.start()
         nexus = (
-            await Nexus.create()
+            Nexus.create()
             .add_reader(XReader)
             .add_reader(YReader)
             .use_processor(XProcessor)

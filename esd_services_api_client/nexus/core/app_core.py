@@ -23,7 +23,6 @@ import platform
 import signal
 import sys
 import traceback
-from asyncio import AbstractEventLoop
 from typing import final, Type, Optional
 
 import backoff
@@ -32,7 +31,7 @@ from adapta.logs import LoggerInterface
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import Injector, Module
+from injector import Injector, Module, singleton
 
 import esd_services_api_client.nexus.exceptions
 from esd_services_api_client.crystal import (
@@ -119,6 +118,7 @@ class Nexus:
         self._run_args = args
         self._algorithm_run_task: Optional[asyncio.Task] = None
         self._on_complete_tasks: list[type[UserTelemetryRecorder]] = []
+        self._payload_types: list[type[AlgorithmPayload]] = []
 
         attach_signal_handlers()
 
@@ -157,22 +157,11 @@ class Nexus:
         self._algorithm_class = algorithm
         return self
 
-    async def inject_payload(self, *payload_types: Type[AlgorithmPayload]) -> "Nexus":
+    def inject_payload(self, *payload_types: Type[AlgorithmPayload]) -> "Nexus":
         """
-        Adds payloads processed into the specified types to the DI container
+        Adds payload types to inject to the DI container. Payloads will be deserialized at runtime.
         """
-        for payload_type in payload_types:
-
-            async def get_payload() -> payload_type:  # pylint: disable=W0640
-                async with AlgorithmPayloadReader(
-                    payload_uri=self._run_args.sas_uri,
-                    payload_type=payload_type,  # pylint: disable=W0640
-                ) as reader:
-                    return reader.payload
-
-            # pylint warnings are silenced here because closure is called inside the same loop it is defined, thus each value of a loop variable is used
-
-            self._configurator = self._configurator.with_payload((await get_payload()))
+        self._payload_types = payload_types
         return self
 
     def inject_configuration(
@@ -202,9 +191,7 @@ class Nexus:
     ) -> None:
         @backoff.on_exception(
             wait_gen=backoff.expo,
-            exception=(
-                urllib3.exceptions.HTTPError,
-            ),
+            exception=(urllib3.exceptions.HTTPError,),
             max_time=10,
             raise_on_giveup=True,
         )
@@ -257,6 +244,15 @@ class Nexus:
             case _:
                 sys.exit(1)
 
+    async def _get_payload(
+        self, payload_type: type[AlgorithmPayload]
+    ) -> AlgorithmPayload:
+        async with AlgorithmPayloadReader(
+            payload_uri=self._run_args.sas_uri,
+            payload_type=payload_type,
+        ) as reader:
+            return reader.payload
+
     async def activate(self):
         """
         Activates the run sequence.
@@ -272,6 +268,16 @@ class Nexus:
 
         root_logger.start()
 
+        for payload_type in self._payload_types:
+            try:
+                payload = await self._get_payload(payload_type=payload_type)
+                self._injector.binder.bind(
+                    payload.__class__, to=payload, scope=singleton
+                )
+            except BaseException as ex:  # pylint: disable=broad-except
+                root_logger.error("Error reading algorithm payload", ex)
+                sys.exit(1)
+
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
             algorithm=algorithm.__class__.__name__,
@@ -286,7 +292,12 @@ class Nexus:
             ex = self._algorithm_run_task.exception()
 
             if ex is not None:
-                root_logger.error("Algorithm {algorithm} run failed on Nexus version {version}", ex, algorithm=self._algorithm_class, version=__version__)
+                root_logger.error(
+                    "Algorithm {algorithm} run failed on Nexus version {version}",
+                    ex,
+                    algorithm=self._algorithm_class,
+                    version=__version__,
+                )
 
             await self._submit_result(
                 self._algorithm_run_task.result() if not ex else None,

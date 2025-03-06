@@ -247,6 +247,7 @@ class ServiceConfigurator:
             CacheModule(),
             type(f"{TelemetryRecorder.__name__}Module", (Module,), {})(),
         ]
+        self._runtime_injection_binds = []
 
     @property
     def injection_binds(self) -> list:
@@ -254,6 +255,13 @@ class ServiceConfigurator:
         Currently configured injection bindings
         """
         return self._injection_binds
+
+    @property
+    def runtime_injection_binds(self) -> list:
+        """
+        Currently configured injection bindings that are added at runtime
+        """
+        return self._runtime_injection_binds
 
     def with_module(self, module: Type[Module]) -> "ServiceConfigurator":
         """
@@ -277,15 +285,6 @@ class ServiceConfigurator:
         """
         self._injection_binds.append(
             type(f"{input_processor.__name__}Module", (Module,), {})()
-        )
-        return self
-
-    def with_payload(self, payload: AlgorithmPayload) -> "ServiceConfigurator":
-        """
-        Adds the specified payload instance to the DI container.
-        """
-        self._injection_binds.append(
-            lambda binder: binder.bind(payload.__class__, to=payload, scope=singleton)
         )
         return self
 
