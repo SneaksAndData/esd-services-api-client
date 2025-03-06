@@ -23,11 +23,11 @@ import platform
 import signal
 import sys
 import traceback
+from asyncio import AbstractEventLoop
 from typing import final, Type, Optional
 
 import backoff
 import urllib3.exceptions
-import azure.core.exceptions
 from adapta.logs import LoggerInterface
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
@@ -203,7 +203,6 @@ class Nexus:
         @backoff.on_exception(
             wait_gen=backoff.expo,
             exception=(
-                azure.core.exceptions.HttpResponseError,
                 urllib3.exceptions.HTTPError,
             ),
             max_time=10,
@@ -285,6 +284,9 @@ class Nexus:
             )
             await self._algorithm_run_task
             ex = self._algorithm_run_task.exception()
+
+            if ex is not None:
+                root_logger.error("Algorithm {algorithm} run failed on Nexus version {version}", ex, algorithm=self._algorithm_class, version=__version__)
 
             await self._submit_result(
                 self._algorithm_run_task.result() if not ex else None,
