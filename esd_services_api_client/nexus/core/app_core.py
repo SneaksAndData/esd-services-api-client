@@ -305,7 +305,10 @@ class Nexus:
 
         bootstrap_logger: LoggerInterface = self._injector.get(
             BootstrapLoggerFactory
-        ).create_logger()
+        ).create_logger(
+            request_id=self._run_args.request_id,
+            algorithm_name=os.getenv("CRYSTAL__ALGORITHM_NAME"),
+        )
 
         bootstrap_logger.start()
 
@@ -322,8 +325,8 @@ class Nexus:
                         fixed_template=None
                         if not self._log_enricher
                         else self._log_enricher(payload, self._run_args),
-                        fixed_template_delimiter=self._log_enrichment_delimiter
-                        # TODO: add tag enricher here
+                        fixed_template_delimiter=self._log_enrichment_delimiter,
+                        global_tags=self._log_tagger(payload, self._run_args),
                     ),
                     scope=singleton,
                 )

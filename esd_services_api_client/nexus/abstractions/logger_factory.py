@@ -57,9 +57,7 @@ class BootstrapLoggerFactory:
                 )
             )
 
-    def create_logger(
-        self,
-    ) -> LoggerInterface:
+    def create_logger(self, request_id: str, algorithm_name: str) -> LoggerInterface:
         """
         Creates an async-safe logger for the provided class name.
         """
@@ -67,6 +65,10 @@ class BootstrapLoggerFactory:
             logger_type=BootstrapLogger.__class__,
             log_handlers=self._log_handlers,
             min_log_level=LogLevel(os.getenv("NEXUS__LOG_LEVEL", "INFO")),
+            global_tags={
+                "request_id": request_id,
+                "algorithm": algorithm_name,
+            },
         )
 
 
@@ -80,7 +82,9 @@ class LoggerFactory:
         self,
         fixed_template: dict[str, dict[str, str]] | None = None,
         fixed_template_delimiter: str = None,
+        global_tags: dict[str, str] | None = None,
     ):
+        self._global_tags = global_tags
         self._fixed_template = fixed_template
         self._fixed_template_delimiter = fixed_template_delimiter or ", "
         self._log_handlers = [
@@ -116,4 +120,5 @@ class LoggerFactory:
             min_log_level=LogLevel(os.getenv("NEXUS__LOG_LEVEL", "INFO")),
             fixed_template=self._fixed_template,
             fixed_template_delimiter=self._fixed_template_delimiter,
+            global_tags=self._global_tags,
         )
