@@ -23,7 +23,7 @@ import platform
 import signal
 import sys
 import traceback
-from typing import final, Type, Optional
+from typing import final, Type, Optional, Callable
 
 import backoff
 import urllib3.exceptions
@@ -41,7 +41,10 @@ from esd_services_api_client.crystal import (
     AlgorithmRunResult,
     CrystalEntrypointArguments,
 )
-from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
+from esd_services_api_client.nexus.abstractions.logger_factory import (
+    LoggerFactory,
+    BootstrapLoggerFactory,
+)
 from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
 from esd_services_api_client.nexus.algorithms import (
     BaselineAlgorithm,
@@ -119,6 +122,21 @@ class Nexus:
         self._algorithm_run_task: Optional[asyncio.Task] = None
         self._on_complete_tasks: list[type[UserTelemetryRecorder]] = []
         self._payload_types: list[type[AlgorithmPayload]] = []
+        self._log_enricher: Callable[
+            [
+                AlgorithmPayload,
+                CrystalEntrypointArguments,
+            ],
+            dict[str, dict[str, str]],
+        ] | None = None
+        self._log_tagger: Callable[
+            [
+                AlgorithmPayload,
+                CrystalEntrypointArguments,
+            ],
+            dict[str, str],
+        ] | None = None
+        self._log_enrichment_delimiter: str = ", "
 
         attach_signal_handlers()
 
@@ -175,6 +193,31 @@ class Nexus:
                 config_type.from_environment()
             )
 
+        return self
+
+    def with_log_enricher(
+        self,
+        tagger: Callable[
+            [
+                AlgorithmPayload,
+                CrystalEntrypointArguments,
+            ],
+            dict[str, str],
+        ]
+        | None,
+        enricher: Callable[
+            [
+                AlgorithmPayload,
+                CrystalEntrypointArguments,
+            ],
+            dict[str, dict[str, str]],
+        ]
+        | None = None,
+        delimiter: str = ", ",
+    ) -> "Nexus":
+        self._log_tagger = tagger
+        self._log_enricher = enricher
+        self._log_enrichment_delimiter = delimiter
         return self
 
     def with_module(self, module: Type[Module]) -> "Nexus":
@@ -260,11 +303,11 @@ class Nexus:
 
         self._injector = Injector(self._configurator.injection_binds)
 
-        root_logger: LoggerInterface = self._injector.get(LoggerFactory).create_logger(
-            logger_type=self.__class__,
-        )
+        bootstrap_logger: LoggerInterface = self._injector.get(
+            BootstrapLoggerFactory
+        ).create_logger()
 
-        root_logger.start()
+        bootstrap_logger.start()
 
         for payload_type in self._payload_types:
             try:
@@ -272,9 +315,29 @@ class Nexus:
                 self._injector.binder.bind(
                     payload.__class__, to=payload, scope=singleton
                 )
+                # bind app-level LoggerFactory now
+                self._injector.binder.bind(
+                    LoggerFactory.__class__,
+                    to=LoggerFactory(
+                        fixed_template=None
+                        if not self._log_enricher
+                        else self._log_enricher(payload, self._run_args),
+                        fixed_template_delimiter=self._log_enrichment_delimiter
+                        # TODO: add tag enricher here
+                    ),
+                    scope=singleton,
+                )
             except BaseException as ex:  # pylint: disable=broad-except
-                root_logger.error("Error reading algorithm payload", ex)
+                bootstrap_logger.error("Error reading algorithm payload", ex)
                 sys.exit(1)
+
+        bootstrap_logger.stop()
+
+        root_logger: LoggerInterface = self._injector.get(LoggerFactory).create_logger(
+            logger_type=self.__class__,
+        )
+
+        root_logger.start()
 
         algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
         telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
@@ -300,7 +363,7 @@ class Nexus:
                 root_logger.error(
                     "Algorithm {algorithm} run failed on Nexus version {version}",
                     ex,
-                    algorithm=self._algorithm_class,
+                    algorithm=algorithm.__class__.__name__,
                     version=__version__,
                 )
 

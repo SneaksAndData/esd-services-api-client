@@ -22,7 +22,7 @@ import socketserver
 import threading
 from dataclasses import dataclass
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
-from typing import Dict, Optional, Any
+from typing import Optional, Any
 
 import pandas
 from adapta.metrics import MetricsProvider
@@ -30,6 +30,7 @@ from adapta.storage.query_enabled_store import QueryEnabledStore
 from dataclasses_json import DataClassJsonMixin
 from injector import inject
 
+from esd_services_api_client.crystal import CrystalEntrypointArguments
 from esd_services_api_client.nexus.abstractions.algrorithm_cache import InputCache
 from esd_services_api_client.nexus.abstractions.logger_factory import LoggerFactory
 from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
@@ -292,6 +293,15 @@ async def main():
      Mock HTTP Server
     :return:
     """
+    def tags_from_payload(payload: MyAlgorithmPayload, _: CrystalEntrypointArguments) -> dict[str, str]:
+        return {
+            "test_tag": str(payload.x)
+        }
+    def enrich_from_payload(payload: MyAlgorithmPayload2, run_args: CrystalEntrypointArguments) -> dict[str, dict[str, str]]:
+        return {
+            "(value of y:{y})": {"y": payload.y},
+            "(request_id:{request_id})": {"request_id": run_args.request_id}
+        }
     with ThreadingHTTPServer(("localhost", 9876), MockRequestHandler) as server:
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
@@ -306,6 +316,7 @@ async def main():
             .on_complete(ObjectiveAnalytics)
             .inject_configuration(MyAlgorithmConfiguration)
             .inject_payload(MyAlgorithmPayload, MyAlgorithmPayload2)
+            .with_log_enricher(tags_from_payload, enrich_from_payload)
         )
 
         await nexus.activate()
