@@ -260,8 +260,6 @@ class Nexus:
 
         self._injector = Injector(self._configurator.injection_binds)
 
-        algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
-        telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
         root_logger: LoggerInterface = self._injector.get(LoggerFactory).create_logger(
             logger_type=self.__class__,
         )
@@ -277,6 +275,9 @@ class Nexus:
             except BaseException as ex:  # pylint: disable=broad-except
                 root_logger.error("Error reading algorithm payload", ex)
                 sys.exit(1)
+
+        algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
+        telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
 
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
