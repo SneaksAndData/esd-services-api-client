@@ -27,12 +27,11 @@ from typing import final, Type, Optional
 
 import backoff
 import urllib3.exceptions
-import azure.core.exceptions
 from adapta.logs import LoggerInterface
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
-from injector import Injector, Module
+from injector import Injector, Module, singleton
 
 import esd_services_api_client.nexus.exceptions
 from esd_services_api_client.crystal import (
@@ -119,6 +118,7 @@ class Nexus:
         self._run_args = args
         self._algorithm_run_task: Optional[asyncio.Task] = None
         self._on_complete_tasks: list[type[UserTelemetryRecorder]] = []
+        self._payload_types: list[type[AlgorithmPayload]] = []
 
         attach_signal_handlers()
 
@@ -157,22 +157,11 @@ class Nexus:
         self._algorithm_class = algorithm
         return self
 
-    async def inject_payload(self, *payload_types: Type[AlgorithmPayload]) -> "Nexus":
+    def inject_payload(self, *payload_types: Type[AlgorithmPayload]) -> "Nexus":
         """
-        Adds payloads processed into the specified types to the DI container
+        Adds payload types to inject to the DI container. Payloads will be deserialized at runtime.
         """
-        for payload_type in payload_types:
-
-            async def get_payload() -> payload_type:  # pylint: disable=W0640
-                async with AlgorithmPayloadReader(
-                    payload_uri=self._run_args.sas_uri,
-                    payload_type=payload_type,  # pylint: disable=W0640
-                ) as reader:
-                    return reader.payload
-
-            # pylint warnings are silenced here because closure is called inside the same loop it is defined, thus each value of a loop variable is used
-
-            self._configurator = self._configurator.with_payload((await get_payload()))
+        self._payload_types = payload_types
         return self
 
     def inject_configuration(
@@ -202,10 +191,7 @@ class Nexus:
     ) -> None:
         @backoff.on_exception(
             wait_gen=backoff.expo,
-            exception=(
-                azure.core.exceptions.HttpResponseError,
-                urllib3.exceptions.HTTPError,
-            ),
+            exception=(urllib3.exceptions.HTTPError,),
             max_time=10,
             raise_on_giveup=True,
         )
@@ -258,6 +244,15 @@ class Nexus:
             case _:
                 sys.exit(1)
 
+    async def _get_payload(
+        self, payload_type: type[AlgorithmPayload]
+    ) -> AlgorithmPayload:
+        async with AlgorithmPayloadReader(
+            payload_uri=self._run_args.sas_uri,
+            payload_type=payload_type,
+        ) as reader:
+            return reader.payload
+
     async def activate(self):
         """
         Activates the run sequence.
@@ -265,13 +260,24 @@ class Nexus:
 
         self._injector = Injector(self._configurator.injection_binds)
 
-        algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
-        telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
         root_logger: LoggerInterface = self._injector.get(LoggerFactory).create_logger(
             logger_type=self.__class__,
         )
 
         root_logger.start()
+
+        for payload_type in self._payload_types:
+            try:
+                payload = await self._get_payload(payload_type=payload_type)
+                self._injector.binder.bind(
+                    payload.__class__, to=payload, scope=singleton
+                )
+            except BaseException as ex:  # pylint: disable=broad-except
+                root_logger.error("Error reading algorithm payload", ex)
+                sys.exit(1)
+
+        algorithm: BaselineAlgorithm = self._injector.get(self._algorithm_class)
+        telemetry_recorder: TelemetryRecorder = self._injector.get(TelemetryRecorder)
 
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
@@ -283,8 +289,20 @@ class Nexus:
             self._algorithm_run_task = asyncio.create_task(
                 instance.run(**self._run_args.__dict__)
             )
-            await self._algorithm_run_task
+
+            # avoid exception propagation to main thread, since we need to handle it later
+            await asyncio.wait(
+                [self._algorithm_run_task], return_when=asyncio.FIRST_EXCEPTION
+            )
             ex = self._algorithm_run_task.exception()
+
+            if ex is not None:
+                root_logger.error(
+                    "Algorithm {algorithm} run failed on Nexus version {version}",
+                    ex,
+                    algorithm=self._algorithm_class,
+                    version=__version__,
+                )
 
             await self._submit_result(
                 self._algorithm_run_task.result() if not ex else None,
