@@ -20,7 +20,11 @@ import os
 from functools import reduce
 from typing import Optional, Iterator, final
 
-from adapta.security.clients import AzureClient
+try:
+    from adapta.security.clients import AzureClient
+except ImportError:
+    pass
+
 from adapta.utils import session_with_retries
 from requests import Session, Response
 
