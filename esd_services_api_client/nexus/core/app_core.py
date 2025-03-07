@@ -289,7 +289,11 @@ class Nexus:
             self._algorithm_run_task = asyncio.create_task(
                 instance.run(**self._run_args.__dict__)
             )
-            await self._algorithm_run_task
+
+            # avoid exception propagation to main thread, since we need to handle it later
+            await asyncio.wait(
+                [self._algorithm_run_task], return_when=asyncio.FIRST_EXCEPTION
+            )
             ex = self._algorithm_run_task.exception()
 
             if ex is not None:
