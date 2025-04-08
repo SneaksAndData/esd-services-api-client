@@ -72,6 +72,7 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
     Base class for user-defined telemetry recorders.
     """
 
+    # pylint: disable=too-many-positional-arguments
     @inject
     def __init__(
         self,
