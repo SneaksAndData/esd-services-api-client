@@ -1,6 +1,7 @@
 """
  Code infrastructure for manipulating payload received from Crystal SAS URI
 """
+import os
 
 #  Copyright (c) 2023-2024. ECCO Sneaks & Data
 #
@@ -62,8 +63,15 @@ class AlgorithmPayloadReader:
         self._http.close()
         self._http = None
 
-    def __init__(self, payload_uri: str, payload_type: Type[AlgorithmPayload]):
-        self._http = session_with_retries()
+    def __init__(
+        self,
+        payload_uri: str,
+        payload_type: Type[AlgorithmPayload],
+    ):
+        self._http = session_with_retries(
+            file_protocol_supported=os.getenv("NEXUS__SUPPORT_FILE_PROTOCOL_PAYLOADS")
+            is not None
+        )
         self._payload: Optional[AlgorithmPayload] = None
         self._payload_uri = payload_uri
         self._payload_type = payload_type
