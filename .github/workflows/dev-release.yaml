@@ -1,6 +1,8 @@
 name: Create development package
 
-on: issue_comment
+on:
+  - issue_comment
+  - workflow_dispatch
 
 jobs:
   pr_commented:
