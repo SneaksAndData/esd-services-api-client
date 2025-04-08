@@ -9,7 +9,7 @@ jobs:
     # This job only runs for pull request comments
     name: PR comment
     runs-on: ubuntu-latest
-    if: ${{ github.event.issue.pull_request && github.event.comment.body == 'create_package' && github.event.issue.state == 'open' }}
+    if: ${{ (github.event.issue.pull_request && github.event.comment.body == 'create_package' && github.event.issue.state == 'open') || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/setup-python@v2
         with:
