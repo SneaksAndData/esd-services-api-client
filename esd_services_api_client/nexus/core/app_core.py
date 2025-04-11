@@ -378,8 +378,8 @@ class Nexus:
 
             # record telemetry
             root_logger.info(
-                "Recording telemetry for the run {request_id}",
-                request_id=self._run_args.request_id,
+                "Recording telemetry for the run {run_id}",
+                run_id=self._run_args.request_id,
             )
             async with telemetry_recorder as recorder:
                 await recorder.record(
