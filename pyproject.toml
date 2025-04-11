@@ -9,8 +9,8 @@ license = 'Apache 2.0'
 repository = 'https://github.com/SneaksAndData/esd-services-api-client'
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
-adapta = { version = "^3.2", extras = ["azure", "storage", "datadog"] }
+python = ">=3.11,<3.12"
+adapta = { version = "^3.3", extras = ["azure", "storage", "datadog"] }
 dataclasses-json = "^0.6.0"
 pycryptodome = "~3.15"
 azure-identity = { version = "~1.7", optional = true }
