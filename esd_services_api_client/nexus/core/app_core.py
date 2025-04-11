@@ -318,16 +318,17 @@ class Nexus:
                 self._injector.binder.bind(
                     payload.__class__, to=payload, scope=singleton
                 )
+                logger_factory = LoggerFactory(
+                    fixed_template=None
+                    if not self._log_enricher
+                    else self._log_enricher(payload, self._run_args),
+                    fixed_template_delimiter=self._log_enrichment_delimiter,
+                    global_tags=self._log_tagger(payload, self._run_args),
+                )
                 # bind app-level LoggerFactory now
                 self._injector.binder.bind(
-                    LoggerFactory.__class__,
-                    to=LoggerFactory(
-                        fixed_template=None
-                        if not self._log_enricher
-                        else self._log_enricher(payload, self._run_args),
-                        fixed_template_delimiter=self._log_enrichment_delimiter,
-                        global_tags=self._log_tagger(payload, self._run_args),
-                    ),
+                    logger_factory.__class__,
+                    to=logger_factory,
                     scope=singleton,
                 )
             except BaseException as ex:  # pylint: disable=broad-except
