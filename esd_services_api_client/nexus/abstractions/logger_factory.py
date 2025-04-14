@@ -36,8 +36,6 @@ class BootstrapLogger(LoggerInterface, ABC):
     Dummy class to separate bootstrap logging from core app loggers
     """
 
-    pass
-
 
 @final
 class BootstrapLoggerFactory:

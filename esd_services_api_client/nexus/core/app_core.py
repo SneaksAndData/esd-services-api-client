@@ -215,6 +215,11 @@ class Nexus:
         | None = None,
         delimiter: str = ", ",
     ) -> "Nexus":
+        """
+        Adds a log `tagger` and a log `enricher` to be used with injected logger.
+        A log `tagger` will add key-value tags to each emitted log message, and those tags can be inferred from the payload and entrypoint arguments.
+        A log `enricher` will add additional static templated content to log messages, and render those templates using payload properties entrypoint argyments.
+        """
         self._log_tagger = tagger
         self._log_enricher = enricher
         self._log_enrichment_delimiter = delimiter
