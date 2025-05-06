@@ -328,7 +328,9 @@ class Nexus:
                     if not self._log_enricher
                     else self._log_enricher(payload, self._run_args),
                     fixed_template_delimiter=self._log_enrichment_delimiter,
-                    global_tags=self._log_tagger(payload, self._run_args) if self._log_tagger else None,
+                    global_tags=self._log_tagger(payload, self._run_args)
+                    if self._log_tagger
+                    else None,
                 )
                 # bind app-level LoggerFactory now
                 self._injector.binder.bind(
@@ -423,7 +425,7 @@ class Nexus:
 
         root_logger.stop()
 
-        if os.getenv('NEXUS__RAISE_ERROR_ON_COMPLETE') and ex is not None:
+        if os.getenv("NEXUS__RAISE_ERROR_ON_COMPLETE") and ex is not None:
             raise ex
 
     @classmethod
