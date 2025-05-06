@@ -44,6 +44,7 @@ class RemoteAlgorithm(NexusObject[TPayload, AlgorithmResult]):
     Base class for all algorithm implementations.
     """
 
+    # pylint: disable=too-many-positional-arguments
     @inject
     def __init__(
         self,
