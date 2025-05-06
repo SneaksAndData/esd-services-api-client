@@ -499,7 +499,7 @@ class Nexus:
 
         root_logger.stop()
 
-        if os.getenv('NEXUS__RAISE_ERROR_ON_COMPLETE') and ex is not None:
+        if os.getenv("NEXUS__RAISE_ERROR_ON_COMPLETE") and ex is not None:
             raise ex
 
     @classmethod
