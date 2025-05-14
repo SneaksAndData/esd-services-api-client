@@ -45,6 +45,9 @@ from esd_services_api_client.nexus.abstractions.logger_factory import (
     LoggerFactory,
     BootstrapLoggerFactory,
 )
+from esd_services_api_client.nexus.abstractions.metrics_provider_factory import (
+    MetricsProviderFactory,
+)
 from esd_services_api_client.nexus.abstractions.nexus_object import AlgorithmResult
 from esd_services_api_client.nexus.algorithms import (
     BaselineAlgorithm,
@@ -138,6 +141,14 @@ class Nexus:
         ] | None = None
         self._log_enrichment_delimiter: str = ", "
 
+        self._metric_tagger: Callable[
+            [
+                AlgorithmPayload,
+                CrystalEntrypointArguments,
+            ],
+            dict[str, str],
+        ] | None = None
+
         attach_signal_handlers()
 
     @property
@@ -223,6 +234,23 @@ class Nexus:
         self._log_tagger = tagger
         self._log_enricher = enricher
         self._log_enrichment_delimiter = delimiter
+        return self
+
+    def with_metric_tagger(
+        self,
+        tagger: Callable[
+            [
+                AlgorithmPayload,
+                CrystalEntrypointArguments,
+            ],
+            dict[str, str],
+        ]
+        | None = None,
+    ) -> "Nexus":
+        """
+        Adds a metric `enricher` to be used with injected metrics provider to assign additional tags to emitted metrics.
+        """
+        self._metric_tagger = tagger
         return self
 
     def with_module(self, module: Type[Module]) -> "Nexus":
@@ -317,28 +345,59 @@ class Nexus:
 
         bootstrap_logger.start()
 
-        for payload_type in self._payload_types:
-            try:
+        try:
+            logger_fixed_template = {}
+            logger_tags = {}
+            metric_tags = {}
+
+            for payload_type in self._payload_types:
                 payload = await self._get_payload(payload_type=payload_type)
                 self._injector.binder.bind(
                     payload.__class__, to=payload, scope=singleton
                 )
-                logger_factory = LoggerFactory(
-                    fixed_template=None
-                    if not self._log_enricher
-                    else self._log_enricher(payload, self._run_args),
-                    fixed_template_delimiter=self._log_enrichment_delimiter,
-                    global_tags=self._log_tagger(payload, self._run_args),
+                logger_fixed_template |= (
+                    self._log_enricher(payload, self._run_args)
+                    if self._log_enricher
+                    else {}
                 )
-                # bind app-level LoggerFactory now
-                self._injector.binder.bind(
-                    logger_factory.__class__,
-                    to=logger_factory,
-                    scope=singleton,
+                logger_tags |= (
+                    self._log_tagger(payload, self._run_args)
+                    if self._log_tagger
+                    else {}
                 )
-            except BaseException as ex:  # pylint: disable=broad-except
-                bootstrap_logger.error("Error reading algorithm payload", ex)
-                sys.exit(1)
+                metric_tags |= (
+                    self._metric_tagger(payload, self._run_args)
+                    if self._metric_tagger
+                    else {}
+                )
+
+            logger_factory = LoggerFactory(
+                fixed_template=logger_fixed_template,
+                fixed_template_delimiter=self._log_enrichment_delimiter,
+                global_tags=logger_tags,
+            )
+            # bind app-level LoggerFactory now
+            self._injector.binder.bind(
+                logger_factory.__class__,
+                to=logger_factory,
+                scope=singleton,
+            )
+
+            # bind app-level MetricsProvider now
+            metrics_provider = MetricsProviderFactory(
+                global_tags=metric_tags,
+            ).create_provider()
+            self._injector.binder.bind(
+                metrics_provider.__class__,
+                to=metrics_provider,
+                scope=singleton,
+            )
+        except BaseException as ex:  # pylint: disable=broad-except
+            bootstrap_logger.error("Error reading algorithm payload", ex)
+
+            # ensure we flush bootstrap logger before we exit
+            bootstrap_logger.stop()
+            sys.exit(1)
 
         bootstrap_logger.stop()
 
@@ -400,7 +459,9 @@ class Nexus:
                     for on_complete_task_class in self._on_complete_tasks
                 ]
                 if len(on_complete_tasks) > 0:
-                    done, pending = await asyncio.wait(on_complete_tasks)
+                    done, pending = await asyncio.wait(
+                        on_complete_tasks, return_when=asyncio.FIRST_EXCEPTION
+                    )
                     if len(pending) > 0:
                         root_logger.warning(
                             "Some post-processing operations did not complete or failed. Please review application logs for more information"
