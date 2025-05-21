@@ -43,7 +43,10 @@ class UserTelemetry:
     """
 
     def __init__(
-        self, telemetry: DataFrame, *telemetry_path_segments: UserTelemetryPathSegment, telemetry_file_extension: str = ""
+        self,
+        telemetry: DataFrame,
+        *telemetry_path_segments: UserTelemetryPathSegment,
+        telemetry_file_extension: str = "",
     ):
         self._telemetry = telemetry
         self._telemetry_path_segments = telemetry_path_segments
