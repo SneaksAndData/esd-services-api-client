@@ -46,11 +46,9 @@ class UserTelemetry:
         self,
         telemetry: DataFrame,
         *telemetry_path_segments: UserTelemetryPathSegment,
-        telemetry_file_extension: str = "",
     ):
         self._telemetry = telemetry
         self._telemetry_path_segments = telemetry_path_segments
-        self._telemetry_file_extension = telemetry_file_extension
 
     @property
     def telemetry(self) -> DataFrame:
@@ -67,14 +65,6 @@ class UserTelemetry:
         if len(self._telemetry_path_segments) == 0:
             return ""
         return "/".join([str(t_path) for t_path in self._telemetry_path_segments])
-
-    @property
-    def file_extension(self) -> str:
-        """
-        File extension for user telemetry data.
-        """
-        return self._telemetry_file_extension
-
 
 class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
     """
@@ -154,6 +144,10 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
             )
             return
 
+        serializer = self._serializer.get_serialization_format(
+                telemetry.telemetry
+        )
+
         self._storage_client.save_data_as_blob(
             data=telemetry.telemetry,
             blob_path=DataSocket(
@@ -163,13 +157,11 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
                     telemetry.telemetry_path,  # path join eliminates empty segments
-                    run_id + telemetry.file_extension,
+                    serializer.get_output_name(output_name=run_id)
                 ),
                 data_format="null",
             ).parse_data_path(),
-            serialization_format=self._serializer.get_serialization_format(
-                telemetry.telemetry
-            ),
+            serialization_format=serializer,
             overwrite=True,
         )
 
