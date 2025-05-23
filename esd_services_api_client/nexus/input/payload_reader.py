@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 from typing import final, Optional, Type
 
-from adapta.storage.models.format import DictJsonSerializationFormat
+from adapta.storage.models.formatters import DictJsonSerializationFormat
 from adapta.utils import session_with_retries
 
 from dataclasses_json import DataClassJsonMixin
