@@ -66,6 +66,7 @@ class UserTelemetry:
             return ""
         return "/".join([str(t_path) for t_path in self._telemetry_path_segments])
 
+
 class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
     """
     Base class for user-defined telemetry recorders.
@@ -144,9 +145,7 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
             )
             return
 
-        serializer = self._serializer.get_serialization_format(
-                telemetry.telemetry
-        )
+        serializer = self._serializer.get_serialization_format(telemetry.telemetry)
 
         self._storage_client.save_data_as_blob(
             data=telemetry.telemetry,
@@ -157,7 +156,7 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
                     telemetry.telemetry_path,  # path join eliminates empty segments
-                    serializer.get_output_name(output_name=run_id)
+                    serializer.get_output_name(output_name=run_id),
                 ),
                 data_format="null",
             ).parse_data_path(),
