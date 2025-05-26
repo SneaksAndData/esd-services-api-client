@@ -220,6 +220,7 @@ class BeastConnector:
                 f"Execution failed, please find request's log at: {self.base_url}/job/logs/{request_id}"
             )
 
+    # pylint: disable=too-many-positional-arguments
     @staticmethod
     def _report_backoff_failure(
         target: Any, args: Any, kwargs: Any, tries: int, elapsed: int, wait: int, **_
