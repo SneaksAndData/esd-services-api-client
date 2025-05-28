@@ -43,7 +43,9 @@ class UserTelemetry:
     """
 
     def __init__(
-        self, telemetry: DataFrame, *telemetry_path_segments: UserTelemetryPathSegment
+        self,
+        telemetry: DataFrame,
+        *telemetry_path_segments: UserTelemetryPathSegment,
     ):
         self._telemetry = telemetry
         self._telemetry_path_segments = telemetry_path_segments
@@ -143,6 +145,8 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
             )
             return
 
+        serializer = self._serializer.get_serialization_format(telemetry.telemetry)
+
         self._storage_client.save_data_as_blob(
             data=telemetry.telemetry,
             blob_path=DataSocket(
@@ -152,13 +156,11 @@ class UserTelemetryRecorder(Generic[TPayload, TResult], ABC):
                     "telemetry_group=user",
                     f"recorder_class={self.__class__.alias()}",
                     telemetry.telemetry_path,  # path join eliminates empty segments
-                    run_id,
+                    serializer().get_output_name(output_name=run_id),
                 ),
                 data_format="null",
             ).parse_data_path(),
-            serialization_format=self._serializer.get_serialization_format(
-                telemetry.telemetry
-            ),
+            serialization_format=serializer,
             overwrite=True,
         )
 

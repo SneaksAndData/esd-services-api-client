@@ -18,11 +18,11 @@ import pytest
 from typing import Type
 import pandas
 import requests.exceptions
-from adapta.storage.models.format import (
+from adapta.storage.models.format import SerializationFormat
+from adapta.storage.models.formatters import (
     DictJsonSerializationFormat,
-    SerializationFormat,
-    DataFrameParquetSerializationFormat,
-    DataFrameJsonSerializationFormat,
+    PandasDataFrameParquetSerializationFormat,
+    PandasDataFrameJsonSerializationFormat,
 )
 
 from esd_services_api_client.boxer import (
@@ -67,10 +67,13 @@ class MockHttpConnection:
     [
         (DictJsonSerializationFormat, {"test": "test"}),
         (
-            DataFrameParquetSerializationFormat,
+            PandasDataFrameParquetSerializationFormat,
             pandas.DataFrame(data={"test": [1, 2, 3]}),
         ),
-        (DataFrameJsonSerializationFormat, pandas.DataFrame(data={"test": [1, 2, 3]})),
+        (
+            PandasDataFrameJsonSerializationFormat,
+            pandas.DataFrame(data={"test": [1, 2, 3]}),
+        ),
     ],
 )
 def test_crystal_read_input(mocker, serializer: Type[SerializationFormat], data: any):

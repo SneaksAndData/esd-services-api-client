@@ -2,10 +2,10 @@
 from typing import final, Any, TypeVar, Type
 
 import pandas
-from adapta.storage.models.format import (
-    DataFrameParquetSerializationFormat,
+from adapta.storage.models.format import SerializationFormat
+from adapta.storage.models.formatters import (
+    PandasDataFrameParquetSerializationFormat,
     DictJsonSerializationFormat,
-    SerializationFormat,
 )
 
 T = TypeVar("T")  # pylint: disable=C0103
@@ -59,7 +59,7 @@ class TelemetrySerializer(Serializer):
     def __init__(self):
         super().__init__(
             default_serialization_formats={
-                pandas.DataFrame: DataFrameParquetSerializationFormat,
+                pandas.DataFrame: PandasDataFrameParquetSerializationFormat,
                 dict: DictJsonSerializationFormat,
             }
         )
@@ -72,7 +72,7 @@ class ResultSerializer(Serializer):
     def __init__(self):
         super().__init__(
             default_serialization_formats={
-                pandas.DataFrame: DataFrameParquetSerializationFormat,
+                pandas.DataFrame: PandasDataFrameParquetSerializationFormat,
                 dict: DictJsonSerializationFormat,
             }
         )
