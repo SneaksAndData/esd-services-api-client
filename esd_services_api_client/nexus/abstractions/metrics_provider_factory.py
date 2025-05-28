@@ -99,4 +99,9 @@ class MetricsProviderFactory:
             if self._metrics_settings.protocol == "uds":
                 return self._metrics_class.uds(**self._metrics_settings.init_args)
 
-        return self._metrics_class(**self._metrics_settings.init_args)
+        return self._metrics_class(
+            **(
+                self._metrics_settings.init_args
+                | {"fixed_tags": self._metrics_settings.fixed_tags}
+            )
+        )
