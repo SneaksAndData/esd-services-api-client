@@ -17,7 +17,6 @@
 #  limitations under the License.
 #
 
-import json
 import os
 from dataclasses import dataclass
 from pydoc import locate
