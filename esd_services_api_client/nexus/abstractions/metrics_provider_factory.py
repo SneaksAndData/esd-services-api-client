@@ -19,11 +19,39 @@
 
 import json
 import os
+from dataclasses import dataclass
 from pydoc import locate
 from typing import final
 
 from adapta.metrics import MetricsProvider
 from adapta.metrics.providers.datadog_provider import DatadogMetricsProvider
+from dataclasses_json import DataClassJsonMixin
+
+from esd_services_api_client.nexus.exceptions.startup_error import (
+    FatalStartupConfigurationError,
+)
+
+
+@final
+@dataclass
+class MetricsProviderSettings(DataClassJsonMixin):
+    """
+    Settings model for the metrics provider
+    """
+
+    init_args: dict
+    fixed_tags: dict[str, str] | None = None
+    protocol: str | None = None
+
+    def __post_init__(self):
+        """
+        Force not-null values with default constructor, even if the source provides nulls.
+        """
+        if self.protocol is None:
+            self.protocol = "udp"
+
+        if self.fixed_tags is None:
+            self.fixed_tags = {}
 
 
 @final
@@ -43,8 +71,16 @@ class MetricsProviderFactory:
                 "adapta.metrics.providers.datadog_provider.DatadogMetricsProvider",
             )
         )
-        self._metrics_settings: dict = json.loads(
-            os.getenv("NEXUS__METRICS_PROVIDER_CONFIGURATION")
+
+        if "NEXUS__METRICS_PROVIDER_CONFIGURATION" not in os.environ:
+            raise FatalStartupConfigurationError(
+                "NEXUS__METRICS_PROVIDER_CONFIGURATION is not provided, cannot initialize a metrics provider instance"
+            )
+
+        self._metrics_settings: MetricsProviderSettings = (
+            MetricsProviderSettings.from_json(
+                os.getenv("NEXUS__METRICS_PROVIDER_CONFIGURATION")
+            )
         )
 
     def create_provider(
@@ -54,17 +90,13 @@ class MetricsProviderFactory:
         Creates a metrics provider enriched with additional tags for each metric emitted by this algorithm.
         In case of DatadogMetricsProvider, takes care of UDP/UDS specific initialization.
         """
-        self._metrics_settings["fixed_tags"] = (
-            self._metrics_settings.get("fixed_tags", {}) | self._global_tags
-        )
+        self._metrics_settings.fixed_tags |= self._global_tags
 
-        if type(self._metrics_class) is DatadogMetricsProvider:
-            assert isinstance(self._metrics_class, DatadogMetricsProvider)
+        if self._metrics_class == DatadogMetricsProvider:
+            if self._metrics_settings.protocol == "udp":
+                return self._metrics_class.udp(**self._metrics_settings.init_args)
 
-            if self._metrics_settings["protocol"] == "udp":
-                return self._metrics_class.udp(**self._metrics_settings)
+            if self._metrics_settings.protocol == "uds":
+                return self._metrics_class.uds(**self._metrics_settings.init_args)
 
-            if self._metrics_settings["protocol"] == "uds":
-                return self._metrics_class.uds(**self._metrics_settings)
-
-        return self._metrics_class(**self._metrics_settings)
+        return self._metrics_class(**self._metrics_settings.init_args)
