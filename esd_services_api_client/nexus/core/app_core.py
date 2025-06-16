@@ -353,7 +353,7 @@ class Nexus:
 
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
-            algorithm=algorithm.__class__.alias(),
+            algorithm=algorithm.__class__.alias().upper(),
             version=__version__,
         )
 
