@@ -28,6 +28,7 @@ from typing import final, Type, Optional, Callable
 import backoff
 import urllib3.exceptions
 from adapta.logs import LoggerInterface
+from adapta.metrics import MetricsProvider
 from adapta.process_communication import DataSocket
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
@@ -387,6 +388,13 @@ class Nexus:
             metrics_provider = MetricsProviderFactory(
                 global_tags=metric_tags,
             ).create_provider()
+
+            self._injector.binder.bind(
+                MetricsProvider,
+                to=metrics_provider,
+                scope=singleton,
+            )
+
             self._injector.binder.bind(
                 metrics_provider.__class__,
                 to=metrics_provider,
