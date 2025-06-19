@@ -395,11 +395,6 @@ class Nexus:
                 scope=singleton,
             )
 
-            self._injector.binder.bind(
-                metrics_provider.__class__,
-                to=metrics_provider,
-                scope=singleton,
-            )
         except BaseException as ex:  # pylint: disable=broad-except
             bootstrap_logger.error("Error reading algorithm payload", ex)
 
