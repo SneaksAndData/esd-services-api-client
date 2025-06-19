@@ -415,7 +415,7 @@ class Nexus:
 
         root_logger.info(
             "Running algorithm {algorithm} on Nexus version {version}",
-            algorithm=algorithm.__class__.__name__,
+            algorithm=algorithm.__class__.alias().upper(),
             version=__version__,
         )
 
@@ -434,7 +434,7 @@ class Nexus:
                 root_logger.error(
                     "Algorithm {algorithm} run failed on Nexus version {version}",
                     ex,
-                    algorithm=algorithm.__class__.__name__,
+                    algorithm=algorithm.__class__.alias().upper(),
                     version=__version__,
                 )
 
