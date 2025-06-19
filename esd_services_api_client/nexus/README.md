@@ -302,6 +302,10 @@ async def main():
             "(value of y:{y})": {"y": payload.y},
             "(request_id:{request_id})": {"request_id": run_args.request_id}
         }
+    def tag_metrics(payload: MyAlgorithmPayload2, run_args: CrystalEntrypointArguments) -> dict[str, str]:
+        return {
+            "country": payload.y,
+        }
     with ThreadingHTTPServer(("localhost", 9876), MockRequestHandler) as server:
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
@@ -317,6 +321,7 @@ async def main():
             .inject_configuration(MyAlgorithmConfiguration)
             .inject_payload(MyAlgorithmPayload, MyAlgorithmPayload2)
             .with_log_enricher(tags_from_payload, enrich_from_payload)
+            .with_metric_tagger(tag_metrics)
         )
 
         await nexus.activate()

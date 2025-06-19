@@ -17,13 +17,11 @@
 #  limitations under the License.
 #
 
-import json
 import os
 import re
 from pydoc import locate
 from typing import final, Type, Any
 
-from adapta.metrics import MetricsProvider
 from adapta.storage.blob.base import StorageClient
 from adapta.storage.query_enabled_store import QueryEnabledStore
 from injector import Module, singleton, provider
@@ -49,28 +47,6 @@ from esd_services_api_client.nexus.core.serializers import (
     TelemetrySerializer,
     ResultSerializer,
 )
-
-
-@final
-class MetricsModule(Module):
-    """
-    Metrics provider module.
-    """
-
-    @singleton
-    @provider
-    def provide(self) -> MetricsProvider:
-        """
-        DI factory method.
-        """
-        metrics_class: Type[MetricsProvider] = locate(
-            os.getenv(
-                "NEXUS__METRIC_PROVIDER_CLASS",
-                "adapta.metrics.providers.datadog_provider.DatadogMetricsProvider",
-            )
-        )
-        metrics_settings = json.loads(os.getenv("NEXUS__METRIC_PROVIDER_CONFIGURATION"))
-        return metrics_class(**metrics_settings)
 
 
 @final
@@ -237,7 +213,6 @@ class ServiceConfigurator:
     def __init__(self):
         self._injection_binds = [
             BootstrapLoggerFactoryModule(),
-            MetricsModule(),
             CrystalReceiverClientModule(),
             QueryEnabledStoreModule(),
             StorageClientModule(),
