@@ -131,7 +131,7 @@ class ForkedAlgorithm(NexusObject[TPayload, AlgorithmResult]):
         """
 
         @run_time_metrics_async(
-            metric_name="algorthm_run",
+            metric_name="algorithm_run",
             on_finish_message_template="Finished running algorithm {algorithm} in {elapsed:.2f}s seconds",
             template_args={
                 "algorithm": self.__class__.alias().upper(),
