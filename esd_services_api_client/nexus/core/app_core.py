@@ -437,16 +437,15 @@ class Nexus:
                     algorithm=algorithm.__class__.alias().upper(),
                     version=__version__,
                 )
-                metrics_provider.gauge("failed_runs", 1)
-                metrics_provider.gauge("successful_runs", 0)
+                metrics_provider.increment("failed_runs")
+            else:
+                metrics_provider.increment("successful_runs")
 
             await self._submit_result(
                 self._algorithm_run_task.result() if not ex else None,
                 self._algorithm_run_task.exception(),
             )
 
-            metrics_provider.gauge("failed_runs", 0)
-            metrics_provider.gauge("successful_runs", 1)
 
             # record telemetry
             root_logger.info(
@@ -471,12 +470,10 @@ class Nexus:
                         on_complete_tasks, return_when=asyncio.FIRST_EXCEPTION
                     )
                     if len(pending) > 0:
-                        metrics_provider.gauge("telemetry_reports_incomplete", 1)
+                        metrics_provider.increment("telemetry_reports_incomplete")
                         root_logger.warning(
                             "Some post-processing operations did not complete or failed. Please review application logs for more information"
                         )
-                    else:
-                        metrics_provider.gauge("telemetry_reports_incomplete", 0)
 
                     for done_on_complete_task in done:
                         on_complete_task_exc = done_on_complete_task.exception()
