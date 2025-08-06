@@ -151,6 +151,7 @@ class CrystalConnector:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.dispose()
 
+    # pylint: disable=too-many-positional-arguments
     def create_run(
         self,
         algorithm: str,
