@@ -446,7 +446,6 @@ class Nexus:
                 self._algorithm_run_task.exception(),
             )
 
-
             # record telemetry
             root_logger.info(
                 "Recording telemetry for the run {run_id}",
