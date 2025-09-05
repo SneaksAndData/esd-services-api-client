@@ -2,14 +2,14 @@
 
 [[package]]
 name = "adapta"
-version = "3.5.2a548.dev2"
+version = "3.5.1"
 description = "Logging, data connectors, monitoring, secret handling and general lifehacks to make data people lives easier."
 optional = false
 python-versions = "<3.13,>=3.11"
 groups = ["main"]
 files = [
-    {file = "adapta-3.5.2a548.dev2-py3-none-any.whl", hash = "sha256:55f4a5cb4d4b8320663e39626ce6183ba5d853885af43f9f83990433c1be2109"},
-    {file = "adapta-3.5.2a548.dev2.tar.gz", hash = "sha256:dc81c800c7c56cb446acc3d26742f0355c91856538683828770d8b20e23073d2"},
+    {file = "adapta-3.5.1-py3-none-any.whl", hash = "sha256:46c3db34d95e0c97f421cf925b99766f89dfa2aac6175c1dcca935f2fc4348d5"},
+    {file = "adapta-3.5.1.tar.gz", hash = "sha256:21b5ee42e74670bd67a4bb84cdaa616adab12ec682c1defdc9502b79b61bbdad"},
 ]
 
 [package.dependencies]
@@ -3270,4 +3270,4 @@ nexus = ["httpx", "injector"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "3ded019a74549aaa9444691222c25ba1e46bf0d570179a6c856f553042da1732"
+content-hash = "35d77528efbed7daf53f3d5e41626fe53827547cfc7109c1a0b61924ac8f737f"
