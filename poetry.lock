@@ -2538,9 +2538,10 @@ typing-extensions = ">=4.14.1"
 name = "pyjwt"
 version = "2.12.0"
 description = "JSON Web Token implementation in Python"
-optional = false
+optional = true
 python-versions = ">=3.9"
 groups = ["main"]
+markers = "extra == \"azure\""
 files = [
     {file = "pyjwt-2.12.0-py3-none-any.whl", hash = "sha256:9bb459d1bdd0387967d287f5656bf7ec2b9a26645d1961628cda1764e087fd6e"},
     {file = "pyjwt-2.12.0.tar.gz", hash = "sha256:2f62390b667cd8257de560b850bb5a883102a388829274147f1d724453f8fb02"},
@@ -3278,4 +3279,4 @@ nexus = []
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "632643d29b483d3f8ba071138febf20d24c08a29dd437a1b1a294709ae9bc2cf"
+content-hash = "f91ded8b8d84fc2dd0230dffc947b9f332d0eb0f14c844dfb8d7d1fb105969af"
