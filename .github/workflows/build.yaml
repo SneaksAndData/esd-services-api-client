@@ -25,7 +25,7 @@ jobs:
           install_extras: all
       - name: Unit test
         run: |
-          set -euxo pipefail
+          set -euo pipefail
 
           poetry run pytest ./tests --doctest-modules --junitxml=junit/test-results.xml --cov=. --cov-report=term-missing:skip-covered | tee pytest-coverage.txt
       - name: Publish Code Coverage
