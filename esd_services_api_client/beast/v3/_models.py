@@ -90,24 +90,15 @@ class JobRequest(DataClassJsonMixin):
     expected_parallelism: Optional[int]
 
 
-class ArgumentValue:
+@dataclass
+class ArgumentValue(DataClassJsonMixin):
     """
     Wrapper around job argument value. Supports fernet encryption.
     """
-
-    def __init__(self, *, value: str, encrypt=False, quote=False, is_env=False):
-        """
-          Initializes a new ArgumentValue
-
-        :param value: Plain text value.
-        :param encrypt: If set to True, value will be replaced with a fernet-encrypted value.
-        :param quote: Whether a value should be quoted when it is stringified.
-        :param is_env: whether value should be derived from env instead, using value as var name.
-        """
-        self._is_env = is_env
-        self._encrypt = encrypt
-        self._quote = quote
-        self._value = value
+    is_env: str
+    encrypt: bool
+    quote: bool
+    raw_value: str
 
     @property
     def value(self):
@@ -117,9 +108,9 @@ class ArgumentValue:
         :return:
         """
         if self._is_env:
-            result = os.getenv(self._value)
+            result = os.getenv(self.raw_value)
         else:
-            result = self._value
+            result = self.raw_value
 
         if self._encrypt:
             result = self._encrypt_value(result)
