@@ -2,45 +2,46 @@
 
 [[package]]
 name = "adapta"
-version = "4.0.7"
+version = "5.1.4"
 description = "Logging, data connectors, monitoring, secret handling and general lifehacks to make data people lives easier."
 optional = false
-python-versions = "<3.13,>=3.11"
+python-versions = "<3.16,>=3.11"
 groups = ["main"]
 files = [
-    {file = "adapta-4.0.7-py3-none-any.whl", hash = "sha256:dae06eee7fed78893f714481c36906c75f948c197b3b5bcfd170f8ccf970df50"},
-    {file = "adapta-4.0.7.tar.gz", hash = "sha256:58286e873b5f215fc6b6faed1843e2aafe162882556aeed658b7f341dbaad26e"},
+    {file = "adapta-5.1.4-py3-none-any.whl", hash = "sha256:558f769c9d0cbcf269676c7e12fc23fe27d9375c05ca1d842946beb6d2702339"},
+    {file = "adapta-5.1.4.tar.gz", hash = "sha256:0927e03b60e581399d4508fe6a3df586bc160161317be1045d6041367eb4cbd7"},
 ]
 
 [package.dependencies]
-backoff = ">=2.2,<3.0"
+backoff = ">=2.2,<3"
+cassandra-sigv4 = ">=4.0.2"
 cryptography = ">=36"
 dataclasses-json = ">=0.6,<0.7"
 datadog = {version = ">=0.49.1,<0.50.0", optional = true, markers = "extra == \"datadog\""}
 datadog-api-client = {version = ">=2.18.0,<2.19.0", optional = true, markers = "extra == \"datadog\""}
 fsspec = ">=2025,<2026"
-limits = ">=5.8,<6.0"
+limits = ">=5.8,<6"
 pandas = {version = ">=2.0.0,<3.0", extras = ["performance"]}
 pandera = ">=0.20.3,<1.0"
 polars = ">=1.18"
 pyarrow = ">=7.0"
-requests = ">=2.26,<3.0"
+requests = ">=2.26,<3"
 
 [package.extras]
-aws = ["boto3 (>=1.28.0,<2.0.0)", "botocore (>=1.31,<2.0)"]
-aws-fileio = ["s3fs (>=2025.10.0,<2026.0.0)"]
-azure = ["adlfs (>=2025,<2026)", "azure-identity (>=1.7,<2.0)", "azure-keyvault-secrets (>=4.3,<5.0)", "azure-mgmt-storage (>=19.1.0,<19.2.0)", "azure-storage-blob (>=12.17.0,<=13)"]
+aws = ["boto3 (>=1.28.0,<2)", "botocore (>=1.31,<2)"]
+aws-fileio = ["s3fs (>=2025.10.0,<2026)"]
+azure = ["adlfs (>=2025,<2026)", "azure-identity (>=1.7,<2)", "azure-keyvault-secrets (>=4.3,<5)", "azure-mgmt-storage (>=19.1.0,<19.2.0)", "azure-storage-blob (>=12.17.0,<=13)"]
 azure-servicebus = ["azure-servicebus (>=7.6,<7.7)"]
 caching = ["redis[hiredis] (>=4.4.0,<4.5.0)"]
-databases = ["SQLAlchemy (>=2.0,<2.1)", "pyodbc (>=4.0,<4.1)"]
+databases = ["pyodbc (>=4.0,<4.1)", "sqlalchemy (>=2.0,<2.1)"]
 datadog = ["datadog (>=0.49.1,<0.50.0)", "datadog-api-client (>=2.18.0,<2.19.0)"]
-excel = ["fastexcel (>=0.14.0,<0.15.0)", "openpyxl (>=3.0,<4.0)", "xlsxwriter (>=3.0,<4.0)"]
+excel = ["fastexcel (>=0.14.0,<0.15)", "openpyxl (>=3.0,<4)", "xlsxwriter (>=3.0,<4)"]
 hashicorp = ["hvac (>=0.11.2,<0.12.0)"]
 ml = ["mlflow-skinny (>=2.17.0,<2.18.0)"]
-snowflake = ["snowflake-connector-python (>=3.4.0,<4.0.0)"]
+snowflake = ["snowflake-connector-python (>=3.4.0,<4)"]
 storage-cassandra = ["cassandra-driver (>=3.30.0,<3.31.0)"]
-storage-delta = ["deltalake (>=0.18.1,<0.19.0)"]
-storage-iceberg = ["pyiceberg (>=0.11.1,<0.12.0)"]
+storage-delta = ["deltalake (>=0.18.1,<0.19)"]
+storage-iceberg = ["pyiceberg (>=0.11.1,<0.13)"]
 trino = ["trino[sqlalchemy] (>=0.337,<0.338)"]
 
 [[package]]
@@ -188,6 +189,46 @@ files = [
     {file = "blinker-1.9.0-py3-none-any.whl", hash = "sha256:ba0efaa9080b619ff2f3459d1d500c57bddea4a6b424b60a91141db6fd2f08bc"},
     {file = "blinker-1.9.0.tar.gz", hash = "sha256:b4ce2265a7abece45e7cc896e98dbebe6cead56bcf805a3d23136d145f5445bf"},
 ]
+
+[[package]]
+name = "boto3"
+version = "1.43.105"
+description = "The AWS SDK for Python (Boto3)"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "boto3-1.43.105-py3-none-any.whl", hash = "sha256:b8b6236ae7fe2724eee608c9b0649afbb86f0ec98158f39f67e64e678ec47499"},
+    {file = "boto3-1.43.105.tar.gz", hash = "sha256:e51260aed9cc1474778b5488bc6f97ad28f27a0a7002f4bbaaf8191aff1422ea"},
+]
+
+[package.dependencies]
+botocore = ">=1.43.105,<1.44.0"
+jmespath = ">=0.7.1,<2.0.0"
+s3transfer = ">=0.19.0,<0.20.0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
+
+[[package]]
+name = "botocore"
+version = "1.43.105"
+description = "Low-level, data-driven core of boto 3."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "botocore-1.43.105-py3-none-any.whl", hash = "sha256:7abd19e1ef2c5e4a0314ca493fa7cebefabe33e559d7dd570fe2432a5431e6ec"},
+    {file = "botocore-1.43.105.tar.gz", hash = "sha256:afb3e7706b123ab069d1c34571ca1fdf82528a48425574fe4693df3d039d503f"},
+]
+
+[package.dependencies]
+jmespath = ">=0.7.1,<2.0.0"
+python-dateutil = ">=2.1,<3.0.0"
+urllib3 = ">=1.25.4,<2.2.0 || >2.2.0,<3"
+
+[package.extras]
+crt = ["awscrt (==0.36.0)"]
 
 [[package]]
 name = "bottleneck"
@@ -364,6 +405,68 @@ files = [
     {file = "brotli-1.2.0-cp39-cp39-win_amd64.whl", hash = "sha256:1ce223652fd4ed3eb2b7f78fbea31c52314baecfac68db44037bb4167062a937"},
     {file = "brotli-1.2.0.tar.gz", hash = "sha256:e310f77e41941c13340a95976fe66a8a95b01e783d430eeaf7a2f87e0a57dd0a"},
 ]
+
+[[package]]
+name = "cassandra-driver"
+version = "3.30.1"
+description = "Apache Cassandra Python Driver"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "cassandra_driver-3.30.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:80df7b705f71e1a6dae77aaea682cbe45fdd74b962cfcc6c6b0c05195f48b7c2"},
+    {file = "cassandra_driver-3.30.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:84b2cc578f542332b678fc3fcc801c6ef8110a377d3fd38c27eab5ec5f2d2b79"},
+    {file = "cassandra_driver-3.30.1-cp310-cp310-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:30686850b9e0d0d8326ee07219113170b4e1d041e4d1434521a2f342c471108e"},
+    {file = "cassandra_driver-3.30.1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:71f3ccc8c60f41c83306c60704f7b1ee1a8ccd312aae286bf75d318aa47d0e71"},
+    {file = "cassandra_driver-3.30.1-cp310-cp310-win_amd64.whl", hash = "sha256:222c704c72a5880cfe9c89f04b375d03d1152dbdb6ec8c25a325267b8bc2ca4e"},
+    {file = "cassandra_driver-3.30.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:9b54f7c6cbb1d9bb6a8b9f8ab6034e6f761527e97af0603aa1e9635720df03a0"},
+    {file = "cassandra_driver-3.30.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:546ad047abf96a6d7922d057010b4cfb22e9d473db7b907956bc7c6a8029f7d9"},
+    {file = "cassandra_driver-3.30.1-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:187bd1457e414bc019a0635603ea0001baada914942198ed23993198e44dec74"},
+    {file = "cassandra_driver-3.30.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:6c5ae0218e52944f92ddde07a03cfa941fa4a10097d501a18cfa1b525c92d013"},
+    {file = "cassandra_driver-3.30.1-cp311-cp311-win_amd64.whl", hash = "sha256:799af594364475656d9eea69606713fbaa98b10da82cc6d90286322477c72828"},
+    {file = "cassandra_driver-3.30.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:9ff317f79b09eba52a44d46d8c4773e47533dfdd8b9ba4984268dc4a1fe5206e"},
+    {file = "cassandra_driver-3.30.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ab853bd2806899c5612c3e4ac2a355a7811084d06692e4460255e3b0a4fa556a"},
+    {file = "cassandra_driver-3.30.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:e10784b4f7d77332dc1a5c72855977a0d797160fd8ba50785414caed07fce95b"},
+    {file = "cassandra_driver-3.30.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:af5c6f5d7d5a86725b908aba12d9554df60234c15bfe053a8175b15db791ada8"},
+    {file = "cassandra_driver-3.30.1-cp312-cp312-win_amd64.whl", hash = "sha256:e43d873de5f8dadf4c8dcc4fab87d66a8495137e844ae3c184fbc90a54c05bc0"},
+    {file = "cassandra_driver-3.30.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:0ea769cf9925206b8458db10477b78699660fbdaed7262157e43b8f21817f838"},
+    {file = "cassandra_driver-3.30.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:8f43abccb5b5a761582e4ba6d44a7ef4274b61b0bd3f8e3159af40ca2c10c0fa"},
+    {file = "cassandra_driver-3.30.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:ec04eebfadc74039b1f7df84356a822539992c7dc0b013fedbb5a33d9295af86"},
+    {file = "cassandra_driver-3.30.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:c0995dccff3df739a1df6e10da9f3fc95bbbc8b38bacc4cfb6172655f8351cba"},
+    {file = "cassandra_driver-3.30.1-cp313-cp313-win_amd64.whl", hash = "sha256:eba7931a615207aab84ebaa000330024f1c614aa86ca58d119556edd338883ce"},
+    {file = "cassandra_driver-3.30.1-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:87822d6cce2c586aa72733a9dd1858276cee795834f7ad949c783bf19cf7a3a7"},
+    {file = "cassandra_driver-3.30.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:3cb90ec9ac9d44cbfe17f1e9cb643dbc5f401e62980835aa6669a2fd5792863b"},
+    {file = "cassandra_driver-3.30.1-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:921403aa76c66d78d00c4a3dff542f989fa584b7450e3cb1dd2c267b4a5a55f0"},
+    {file = "cassandra_driver-3.30.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:61bf2ded460fb0d2e909b70c9d193588b71148540bd85e29fe6954e00bb1a869"},
+    {file = "cassandra_driver-3.30.1-cp314-cp314-win_amd64.whl", hash = "sha256:3c32513a2f2c6832d4fe3464e11be59dc21096dba296b18ec3454bc8354a78ba"},
+    {file = "cassandra_driver-3.30.1.tar.gz", hash = "sha256:0c6a3e1428f7c6a9aa6c944b9c47a37cd2cdbeb5b5a82d42c33afdd56f14e398"},
+]
+
+[package.dependencies]
+Deprecated = ">=1.3.1"
+geomet = ">=1.1"
+
+[package.extras]
+cle = ["cryptography (>=42.0)"]
+graph = ["gremlinpython (==3.4.6)"]
+test = ["PyYAML", "pytest", "pytz"]
+
+[[package]]
+name = "cassandra-sigv4"
+version = "4.0.2"
+description = "Implements a sigv4 authentication plugin for the open-source Datastax Python Driver for Apache Cassandra"
+optional = false
+python-versions = ">=2.7, <4"
+groups = ["main"]
+files = [
+    {file = "cassandra-sigv4-4.0.2.tar.gz", hash = "sha256:77ff6123ab941c50a70ae51779de5a7bbe2843d96b80c466acffdf2629748a98"},
+    {file = "cassandra_sigv4-4.0.2-py2.py3-none-any.whl", hash = "sha256:122e2a187937f0499fe25476eee88f69edd33defd4c3b005f2a79ccb04dfe71f"},
+]
+
+[package.dependencies]
+boto3 = "*"
+cassandra-driver = "*"
+six = "*"
 
 [[package]]
 name = "certifi"
@@ -603,7 +706,7 @@ version = "8.3.1"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "click-8.3.1-py3-none-any.whl", hash = "sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6"},
     {file = "click-8.3.1.tar.gz", hash = "sha256:12ff4785d337a1bb490bb7e9c2b1ee5da3112e94a8622f26a6c77f5d2fc6842a"},
@@ -618,12 +721,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["dev"]
-markers = "sys_platform == \"win32\" or platform_system == \"Windows\""
+groups = ["main", "dev"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+markers = {main = "platform_system == \"Windows\"", dev = "platform_system == \"Windows\" or sys_platform == \"win32\""}
 
 [[package]]
 name = "configargparse"
@@ -973,6 +1076,21 @@ test-full = ["adlfs", "aiohttp (!=4.0.0a0,!=4.0.0a1)", "cloudpickle", "dask", "d
 tqdm = ["tqdm"]
 
 [[package]]
+name = "geomet"
+version = "1.1.0"
+description = "Pure Python conversion library for common geospatial data formats"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "geomet-1.1.0-py3-none-any.whl", hash = "sha256:4372fe4e286a34acc6f2e9308284850bd8c4aa5bc12065e2abbd4995900db12f"},
+    {file = "geomet-1.1.0.tar.gz", hash = "sha256:51e92231a0ef6aaa63ac20c443377ba78a303fd2ecd179dc3567de79f3c11605"},
+]
+
+[package.dependencies]
+click = "*"
+
+[[package]]
 name = "gevent"
 version = "25.5.1"
 description = "Coroutine-based network library"
@@ -1285,6 +1403,18 @@ MarkupSafe = ">=2.0"
 
 [package.extras]
 i18n = ["Babel (>=2.7)"]
+
+[[package]]
+name = "jmespath"
+version = "1.1.0"
+description = "JSON Matching Expressions"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "jmespath-1.1.0-py3-none-any.whl", hash = "sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64"},
+    {file = "jmespath-1.1.0.tar.gz", hash = "sha256:472c87d80f36026ae83c6ddd0f1d05d4e510134ed462851fd5f754c8c3cbb88d"},
+]
 
 [[package]]
 name = "limits"
@@ -2801,6 +2931,24 @@ urllib3 = ">=1.25.10"
 tests = ["coverage (>=6.0.0)", "flake8", "mypy", "pytest (>=7.0.0)", "pytest-asyncio", "pytest-cov", "pytest-localserver", "types-mock", "types-requests"]
 
 [[package]]
+name = "s3transfer"
+version = "0.19.2"
+description = "An Amazon S3 Transfer Manager"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "s3transfer-0.19.2-py3-none-any.whl", hash = "sha256:d8168eccca828cbb2cd573675333f3bddd254313a9c42494b84c76b539e8ba25"},
+    {file = "s3transfer-0.19.2.tar.gz", hash = "sha256:ba0309fd86be3c27dbf78cdd813c13c5e1df16e5874b99d2535ebbdfb9892993"},
+]
+
+[package.dependencies]
+botocore = ">=1.37.4,<2.0a0"
+
+[package.extras]
+crt = ["botocore[crt] (>=1.37.4,<2.0a0)"]
+
+[[package]]
 name = "setuptools"
 version = "80.10.2"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -3158,4 +3306,4 @@ nexus = []
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<3.12"
-content-hash = "8079c285dd826aa93fbcaf3be6e77b243ca35b85c8750e4f24b2c84eed5026c0"
+content-hash = "29f310c9f27e773c5d5b344db6c3e1570da82c98f72aecba81e7fb19b8738e99"
